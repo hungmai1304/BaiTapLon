@@ -7,9 +7,12 @@ import java.net.Socket;
 
 import javax.print.attribute.standard.Severity;
 
+import com.auction.common.model.User;
 import com.auction.protocol.MessageType;
 import com.auction.protocol.Request;
 import com.auction.protocol.Response;
+
+import main.java.com.auction.server.service.UserService;
 // Nhan vien xu ly du lieu dau vao
 public class ClientHandler implements Runnable {
     private Socket clienSocket;
@@ -31,8 +34,20 @@ public class ClientHandler implements Runnable {
                         System.out.println("[SERVER] Dang xu ly yeu cau dang nhap...");
                         // TODO xu ly kiem tra tai khoan password
                         // Response một Class.Đại diện phản hồi từ server gửi về cho client 
-                        Response logiResp=new Response(MessageType.LOGIN_REQUEST, true, "Dang nhap thanh cong", null);
-                        out.writeObject(logiResp); // GuI TRA LAI Client
+                        User loginInfo=(User) request.getPayload();
+                        // phương thức request.getPayload() được dùng để lấy phần nội dung dữ liệu chính (Payload)
+                        UserService userService=new UserService();
+                        User authenticatedUser=userService.authenticate(loginInfo.getUsername(),loginInfo.getPassword());
+                        Response loginResp;
+                        if (authenticatedUser!=null) {
+                            System.out.println("Dang nhap thanh cong.");
+                            loginResp=new Response(MessageType.LOGIN_RESPONSE, true, "Dang hap", authenticatedUser);
+                        }
+                        else {
+                            System.out.println("Dang nhap that bai: Sai tai khoan hoac mat khau khong dung.");
+                            loginResp=new Response(MessageType.LOGIN_RESPONSE, false, "Sai Email hoac mat khau", null);
+                        }
+                        out.writeObject(loginResp);
                         break;
                     case PLACE_BID_REQUEST:
                         System.out.println("SERVER Dang xu ly yeu cau dat gia");
