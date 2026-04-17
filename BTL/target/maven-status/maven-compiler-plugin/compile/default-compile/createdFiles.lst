@@ -1,4 +1,4 @@
 com/auction/client/controller/LoginController.class
-com/auction/client/AuctionClient.class
 com/auction/server/service/AuctionServer.class
 com/auction/client/controller/RegisterController.class
+com/auction/client/AuctionClient.class

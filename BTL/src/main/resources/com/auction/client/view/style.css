@@ -69,22 +69,33 @@
 
 
 .btn2 {
-    -fx-background-color: -color-quicksand;
-    -fx-text-fill: -color-royal-blue;
-    -fx-background-radius: 8;
+    -fx-background-color: #e6f2ff;   /* xanh rất nhạt */
+    -fx-text-fill: #1e3a8a;          /* xanh đậm */
+
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+
     -fx-font-weight: bold;
+    -fx-font-size: 14px;
+
+    -fx-padding: 8 16;
     -fx-cursor: hand;
+
+    -fx-border-color: transparent;
 }
 
+/* hover */
 .btn2:hover {
+    -fx-background-color: #cfe8ff;
+    -fx-text-fill: #1d4ed8;
 
-    -fx-background-color: #b2dcf2;
-    -fx-effect: dropshadow(three-pass-box, rgb(16 14 14 / 0.57), 10, 0, 0, 0);
-    -fx-text-fill: -text-on-dark;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 8, 0, 0, 2);
 }
 
-.btn2:armed {
-    -fx-background-color: #5c717c; /* Đậm lại khi nhấn */
+/* khi nhấn */
+.btn2:pressed {
+    -fx-background-color: #93c5fd;
+    -fx-translate-y: 1; /* hiệu ứng nhấn xuống */
 }
 
 
@@ -109,4 +120,102 @@
     -fx-background-color: rgba(245, 240, 233, 0.3);
 }
 
+
+.h3{
+    -fx-font-size: 16;
+}
+.h1{
+    -fx-font-size: 30;
+}
+
+
+.small_window{
+    -fx-background-size: 100% 100%;
+}
+
+.choice-box {
+    -fx-background-color: white;
+    -fx-border-color: #ccc;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 5 10 5 10;
+}
+
+/* text */
+.choice-box .label {
+    -fx-text-fill: #333;
+    -fx-font-size: 14px;
+}
+
+/* nút mũi tên */
+.choice-box .arrow {
+    -fx-background-color: #666;
+}
+
+/* vùng dropdown */
+.choice-box .context-menu {
+    -fx-background-color: white;
+    -fx-border-color: #ccc;
+}
+
+/* item trong dropdown */
+.choice-box .menu-item {
+    -fx-background-color: white;
+}
+
+/* hover item */
+.choice-box .menu-item:hover {
+    -fx-background-color: #f0f0f0;
+}
+.choice-box {
+    -fx-background-color: white;
+    -fx-border-color: #ddd;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 2);
+}
+
+
+.text-field {
+    -fx-background-color: white;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+
+    -fx-padding: 10 14;
+    -fx-font-size: 14px;
+}
+
+.text-field:focused {
+    -fx-border-color: #6C63FF; /* tím nhẹ */
+    -fx-effect: dropshadow(gaussian, rgba(108,99,255,0.2), 8, 0, 0, 2);
+}
+
+
+.title {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
+
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 3, 0, 0, 1);
+}
+
+.bogoc{
+    -fx-background-radius: 15;
+    -fx-border-radius: 15;
+}
+
+.btn-back {
+    -fx-background-color: transparent;
+    -fx-text-fill: #555;
+
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+
+    -fx-cursor: hand;
+}
+
+.btn-back:hover {
+    -fx-text-fill: #000;
+}
 
