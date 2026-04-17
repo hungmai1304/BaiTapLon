@@ -1,1 +1,62 @@
-<!---->
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<StackPane prefHeight="710.0" prefWidth="1155.0" style="-fx-background-color: #ff0000;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.RegisterController">
+    <children>
+        <VBox alignment="TOP_CENTER" maxHeight="659.0" maxWidth="480.0" prefHeight="659.0" prefWidth="480.0" spacing="15.0" style="-fx-background-color: #0000ff; -fx-padding: 20;">
+            <children>
+                <Label alignment="TOP_CENTER" prefHeight="26.0" prefWidth="262.0" style="-fx-font-size: 24; -fx-font-weight: bold;" text="Đấu cmn giá" textFill="WHITE" />
+
+                <VBox prefHeight="495.0" prefWidth="440.0" spacing="5.0" style="-fx-background-color: #ffff00; -fx-padding: 10;">
+                    <children>
+                        <Label prefHeight="18.0" prefWidth="220.0" text="Tên:">
+                            <font>
+                                <Font size="22.0" />
+                            </font>
+                        </Label>
+                        <TextField fx:id="boxfield_register_name" promptText="enter your name" />
+                        <Label prefHeight="18.0" prefWidth="220.0" text="Email:">
+                            <font>
+                                <Font size="22.0" />
+                            </font>
+                        </Label>
+                        <TextField fx:id="textfield_register_email" layoutX="20.0" layoutY="57.0" promptText="enter your email" />
+                        <Label layoutX="20.0" layoutY="88.0" prefHeight="18.0" prefWidth="220.0" text="Password:">
+                            <font>
+                                <Font size="22.0" />
+                            </font>
+                        </Label>
+                        <PasswordField fx:id="password_register_pass" promptText="password" />
+                        <Label layoutX="20.0" layoutY="156.0" prefHeight="18.0" prefWidth="220.0" text="Reconfirm:">
+                            <font>
+                                <Font size="22.0" />
+                            </font>
+                        </Label>
+                        <PasswordField fx:id="password_register_reconfirm" layoutX="20.0" layoutY="193.0" promptText="your password" />
+                        <Label layoutX="20.0" layoutY="224.0" prefHeight="18.0" prefWidth="220.0" text="Open A Shop?:">
+                            <font>
+                                <Font size="22.0" />
+                            </font>
+                        </Label>
+                        <ChoiceBox fx:id="choices_register_openashop"  prefWidth="150.0" />
+                        <HBox prefHeight="100.0" prefWidth="200.0">
+                            <children>
+                                <Button fx:id="button_register_confirm" mnemonicParsing="false"  prefHeight="124.0" prefWidth="153.0" text="Confirm " />
+                                <Button fx:id="button_register_backtologin" mnemonicParsing="false" onAction="#handleBackToLoginButton" prefHeight="119.0" prefWidth="275.0" text="back to login" />
+                            </children>
+                        </HBox>
+                    </children>
+                </VBox>
+            </children>
+        </VBox>
+    </children>
+</StackPane>
