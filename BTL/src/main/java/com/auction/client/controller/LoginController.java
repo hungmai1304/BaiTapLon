@@ -28,10 +28,12 @@ public class LoginController {
 
     @FXML
     public void handleButtonClick(ActionEvent event) throws  IOException{
+        //load giao diện mới
         Parent loader= FXMLLoader.load(getClass().getResource("/com/auction/client/view/register.fxml"));
         Scene scene_register=new Scene(loader);
-
+        //Lấy cửa số gốc
         Stage prStage=(Stage) ((Node) event.getSource()).getScene().getWindow();
+        //đặt scene mới lên cửa sổ gốc
         prStage.setScene(scene_register);
         prStage.show();
 
@@ -48,7 +50,14 @@ public class LoginController {
         else{
             boolean isValid= AuctionServer.checkLogin(email,password);
             if(isValid){
-                announcement.setText("Xin chào: "+email+"đang chuyển hướng");
+                announcement.setText("Xin chào: "+email+" đang chuyển hướng");
+                Parent loader= FXMLLoader.load(getClass().getResource("/com/auction/client/view/home.fxml"));
+                Scene home=new Scene(loader);
+
+                Stage prStage=(Stage) ((Node) event.getSource()).getScene().getWindow();
+                prStage.setScene(home);
+                prStage.show();
+
             }
             else{
                 announcement.setText("mật khẩu hoặc email không hợp lệ!");

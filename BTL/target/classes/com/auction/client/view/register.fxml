@@ -99,7 +99,7 @@
                         <Font size="22.0" />
                      </font>
                   </Label>
-                  <ChoiceBox fx:id="choices_register_openashop"  prefHeight="31.0" prefWidth="130.0" />
+                  <ChoiceBox fx:id="choices_register_openashop" prefHeight="31.0" prefWidth="130.0" />
                   <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="100.0">
                      <children>
                         <Button fx:id="button_register_confirm" mnemonicParsing="false" onAction="#handleConfirm" prefHeight="53.0" prefWidth="129.0" styleClass="btn2" text="Confirm " />
