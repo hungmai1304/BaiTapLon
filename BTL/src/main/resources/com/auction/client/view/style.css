@@ -219,3 +219,45 @@
     -fx-text-fill: #000;
 }
 
+
+.Scene-Black{
+    -fx-background-color: black;
+}
+.Scene-Back-1{
+    -fx-background-color: #383838;
+}
+.Scene-back-2{
+    -fx-background-color: #6e6d6d;
+}
+.Scene-black-3{
+    -fx-background-color: #b5b5b5;
+}
+.Scene-black-4{
+    -fx-background-color: #fcfcfc;
+}
+
+
+.transparent{
+    -fx-background-color: transparent;
+}
+
+
+
+
+/* Khi di chuột qua (Hover) */
+.toggle-button:hover {
+    -fx-background-color: #e0e0e0;
+}
+
+/* Khi ĐANG ĐƯỢC CHỌN (Tối màu lại) */
+.toggle-button:selected {
+    -fx-background-color: #a0a0a0; /* Màu tối để báo hiệu đang chọn tool này */
+}
+
+
+.btn-transparent {
+    -fx-background-color: transparent; /* Làm nền trong suốt */
+    -fx-background-radius: 0;          /* Khử bo góc mặc định */
+    -fx-border-color: transparent;     /* Khử viền */
+    -fx-cursor: hand;                  /* Đổi con trỏ chuột thành hình bàn tay */
+}
