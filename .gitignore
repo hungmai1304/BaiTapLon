@@ -1,1 +1,8 @@
 target/
+
+.project
+.classpath
+.settings/
+
+.env*
+!.env.example
