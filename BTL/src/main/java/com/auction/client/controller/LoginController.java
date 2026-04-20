@@ -8,6 +8,8 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.PasswordField;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -39,33 +41,45 @@ public class LoginController {
 
 
     }
+
     @FXML
-    public void handleGetText(ActionEvent event)throws IOException{
-        String email=mail.getText();
-        String password=passwordtext.getText();
+    public void handleGetText(ActionEvent event) throws IOException {
+        String email = mail.getText();
+        String password = passwordtext.getText();
 
-        if(email.isEmpty() || password.isEmpty()){
+        if (email.isEmpty() || password.isEmpty()) {
             announcement.setText("Vui lòng nhập đầy đủ thông tin");
-        }
-        else{
-            boolean isValid= AuctionServer.checkLogin(email,password);
-            if(isValid){
-                announcement.setText("Xin chào: "+email+" đang chuyển hướng");
-                Parent loader= FXMLLoader.load(getClass().getResource("/com/auction/client/view/home.fxml"));
-                Scene home=new Scene(loader);
+        } else {
+            boolean isValid = AuctionServer.checkLogin(email, password);
+            if (isValid) {
+                announcement.setText("Xin chào: " + email + " đang chuyển hướng");
 
-                Stage prStage=(Stage) ((Node) event.getSource()).getScene().getWindow();
-                prStage.setScene(home);
+                // 1. CHỈ DÙNG 1 LOADER DUY NHẤT CHO HOME
+                FXMLLoader home_loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/home.fxml"));
+                Parent homeRoot = home_loader.load(); // PHẢI GỌI .load() TRƯỚC KHI LẤY CONTROLLER
+
+                // 2. LẤY CONTROLLER SAU KHI ĐÃ LOAD
+                HomeController homeController = home_loader.getController();
+
+                // 3. LOAD MAIN FXML (VÙNG CENTER)
+                StackPane mainView = FXMLLoader.load(getClass().getResource("/com/auction/client/view/main.fxml"));
+
+                // 4. ĐƯA MAIN VÀO CENTER CỦA HOME (Lúc này homeController không còn bị null nữa)
+                if (homeController != null && homeController.getBorderpaneHome() != null) {
+                    homeController.getBorderpaneHome().setCenter(mainView);
+                }
+
+                // 5. HIỂN THỊ LÊN STAGE
+                Stage prStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                Scene homeScene = new Scene(homeRoot);
+                prStage.setScene(homeScene);
+
+                prStage.setFullScreen(true);
                 prStage.show();
 
-            }
-            else{
-                announcement.setText("mật khẩu hoặc email không hợp lệ!");
+            } else {
+                announcement.setText("Mật khẩu hoặc email không hợp lệ!");
             }
         }
-
     }
-
-
-
 }

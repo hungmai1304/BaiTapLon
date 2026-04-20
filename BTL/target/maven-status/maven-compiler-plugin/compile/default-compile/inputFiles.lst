@@ -3,9 +3,7 @@
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/server/service/AuctionServer.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/client/controller/SellerDashboardController.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/server/service/AntiSnipingService.java
-/home/enix/BaiTapLon/BTL/src/main/java/com/auction/client/controller/AuctionListController.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/server/dao/UserDao.java
-/home/enix/BaiTapLon/BTL/src/main/java/com/auction/client/controller/AdminDashboardController.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/common/model/Bidder.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/server/service/ClientHandler.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/server/observer/AuctionObserver.java
@@ -29,7 +27,6 @@
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/client/controller/MainController.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/client/AuctionClient.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/server/observer/AuctionEventManager.java
-/home/enix/BaiTapLon/BTL/src/main/java/com/auction/client/controller/AuctionDetailController.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/server/dao/ItemDao.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/client/controller/RegisterController.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/server/service/AutoBidService.java
@@ -38,6 +35,7 @@
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/server/controller/AuctionController.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/server/dao/AuctionDao.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/common/model/Seller.java
+/home/enix/BaiTapLon/BTL/src/main/java/com/auction/client/controller/HomeController.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/server/service/AuctionManager.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/common/exception/InvalidBidException.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/common/exception/AuctionException.java

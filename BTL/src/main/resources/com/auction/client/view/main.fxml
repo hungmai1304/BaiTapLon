@@ -1,140 +1,327 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.lang.String?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="722.0" prefWidth="943.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+<StackPane prefHeight="1080.0" prefWidth="1831.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.MainController">
    <children>
-      <AnchorPane prefHeight="722.0" prefWidth="943.0" styleClass="Scene-Black" stylesheets="@style.css">
+      <AnchorPane fx:id="balance_anchorpane" prefHeight="200.0" prefWidth="200.0" styleClass="Scene-black-4" stylesheets="@style.css">
          <children>
-            <Label layoutX="89.0" layoutY="36.0" text="Label" textFill="WHITE" />
-            <Label layoutX="89.0" layoutY="75.0" text="Label" textFill="WHITE" />
-            <AnchorPane layoutX="31.0" layoutY="126.0" prefHeight="200.0" prefWidth="200.0" styleClass="Scene-black-4" stylesheets="@style.css">
-               <children>
-                  <Label layoutX="39.0" layoutY="25.0" text="Label" />
-                  <Label layoutX="39.0" layoutY="108.0" text="Label" />
-                  <ImageView fitHeight="62.0" fitWidth="64.0" layoutX="124.0" layoutY="86.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@dollar-symbol.png" />
-                     </image>
-                  </ImageView>
-               </children>
-            </AnchorPane>
-            <AnchorPane layoutX="348.0" layoutY="126.0" prefHeight="200.0" prefWidth="200.0" styleClass="Scene-Back-1" stylesheets="@style.css">
-               <children>
-                  <Label layoutX="35.0" layoutY="30.0" text="Label" textFill="WHITE" />
-                  <Label layoutX="35.0" layoutY="108.0" text="Label" textFill="WHITE" />
-                  <ImageView fitHeight="79.0" fitWidth="69.0" layoutX="117.0" layoutY="92.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@account.png" />
-                     </image>
-                  </ImageView>
-               </children>
-            </AnchorPane>
-            <AnchorPane layoutX="687.0" layoutY="110.0" prefHeight="200.0" prefWidth="200.0" styleClass="Scene-Back-1" stylesheets="@style.css" />
-            <AnchorPane layoutX="358.0" layoutY="424.0" prefHeight="200.0" prefWidth="200.0" styleClass="Scene-Back-1" stylesheets="@style.css">
-               <children>
-                  <Label layoutX="28.0" layoutY="30.0" text="Label" textFill="WHITE" />
-                  <Label layoutX="28.0" layoutY="91.0" text="Label" textFill="WHITE" />
-                  <Label layoutX="141.0" layoutY="109.0" text="Label" textFill="WHITE" />
-                  <ImageView fitHeight="62.0" fitWidth="72.0" layoutX="110.0" layoutY="127.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@products.png" />
-                     </image>
-                  </ImageView>
-               </children>
-            </AnchorPane>
-            <AnchorPane layoutX="55.0" layoutY="424.0" prefHeight="200.0" prefWidth="200.0" styleClass="Scene-Back-1" stylesheets="@style.css">
-               <children>
-                  <Label layoutX="36.0" layoutY="28.0" text="Label" textFill="WHITE" />
-                  <Label layoutX="44.0" layoutY="91.0" text="Label" textFill="WHITE" />
-                  <Label layoutX="144.0" layoutY="109.0" text="Label" textFill="WHITE" />
-                  <Label layoutX="44.0" layoutY="153.0" text="Label" textFill="WHITE" />
-                  <ImageView fitHeight="51.0" fitWidth="51.0" layoutX="119.0" layoutY="128.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@products.png" />
-                     </image>
-                  </ImageView>
-               </children>
-            </AnchorPane>
-            <AnchorPane layoutX="661.0" layoutY="410.0" prefHeight="200.0" prefWidth="200.0" styleClass="Scene-Back-1" stylesheets="@style.css">
-               <children>
-                  <Label layoutX="28.0" layoutY="28.0" text="Label" textFill="WHITE" />
-                  <Label layoutX="135.0" layoutY="75.0" text="Label" textFill="WHITE" />
-                  <Label layoutX="142.0" layoutY="116.0" text="Label" textFill="WHITE" />
-                  <ImageView fitHeight="102.0" fitWidth="99.0" layoutX="12.0" layoutY="67.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@pie-chart.png" />
-                     </image>
-                  </ImageView>
-               </children>
-            </AnchorPane>
-            <ImageView fitHeight="62.0" fitWidth="75.0" layoutX="275.0" layoutY="36.0" pickOnBounds="true" preserveRatio="true">
-               <image>
-                  <Image url="@wave.png" />
-               </image>
-            </ImageView>
-         </children>
-      </AnchorPane>
-      <AnchorPane prefHeight="200.0" prefWidth="200.0" styleClass="Scene-black-4" stylesheets="@style.css">
-         <children>
-            <AnchorPane layoutX="32.0" layoutY="38.0" prefHeight="226.0" prefWidth="878.0" stylesheets="@style.css">
+            <AnchorPane layoutX="191.0" layoutY="86.0" prefHeight="455.0" prefWidth="1459.0" stylesheets="@style.css">
                <styleClass>
                   <String fx:value="Scene-back-2" />
                   <String fx:value="bogoc" />
                </styleClass>
                <children>
-                  <Label layoutX="133.0" layoutY="104.0" text="Label" />
-                  <Label layoutX="117.0" layoutY="21.0" text="Label" />
-                  <ToggleButton layoutX="115.0" layoutY="168.0" mnemonicParsing="false" text="ToggleButton" />
-                  <ToggleButton layoutX="306.0" layoutY="168.0" mnemonicParsing="false" text="ToggleButton" />
-                  <ImageView fitHeight="51.0" fitWidth="76.0" layoutX="31.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" />
+                  <Label layoutX="362.0" layoutY="149.0" text="0" textFill="WHITE">
+                     <font>
+                        <Font size="72.0" />
+                     </font></Label>
+                  <Label layoutX="153.0" layoutY="25.0" styleClass="label-super-bold" text="Your Wallet Balance" textFill="WHITE">
+                     <font>
+                        <Font size="46.0" />
+                     </font></Label>
+                  <ImageView fitHeight="87.0" fitWidth="115.0" layoutX="67.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@wallet.png" />
+                     </image>
+                  </ImageView>
                   <ImageView fitHeight="69.0" fitWidth="93.0" layoutX="446.0" layoutY="70.0" pickOnBounds="true" preserveRatio="true" />
-                  <ImageView fitHeight="119.0" fitWidth="141.0" layoutX="713.0" layoutY="45.0" pickOnBounds="true" preserveRatio="true" />
-                  <ImageView fitHeight="69.0" fitWidth="83.0" layoutX="14.0" layoutY="70.0" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fitHeight="277.0" fitWidth="277.0" layoutX="1106.0" layoutY="70.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@qr.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fitHeight="125.0" fitWidth="129.0" layoutX="864.0" layoutY="128.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@dollar-symbol.png" />
+                     </image>
+                  </ImageView>
+                  <Button layoutX="63.0" layoutY="349.0" mnemonicParsing="false" onAction="#handleWithdrawClicked" prefHeight="72.0" prefWidth="175.0" styleClass="btn2" text="Withdraw" />
+                  <Button layoutX="287.0" layoutY="348.0" mnemonicParsing="false" onAction="#handleDepositeClicked" prefHeight="72.0" prefWidth="175.0" styleClass="btn2" text="Deposite" />
                </children>
             </AnchorPane>
-            <StackPane layoutX="148.0" layoutY="407.0" prefHeight="194.0" prefWidth="648.0">
+            <StackPane layoutX="457.0" layoutY="631.0" prefHeight="335.0" prefWidth="853.0">
                <children>
-                  <AnchorPane prefHeight="200.0" prefWidth="682.0" stylesheets="@style.css">
+                  <AnchorPane fx:id="deposit_anchor" prefHeight="200.0" prefWidth="682.0" stylesheets="@style.css" visible="false">
                      <styleClass>
-                        <String fx:value="Scene-back-2" />
-                        <String fx:value="bogoc" />
-                     </styleClass>
-                  </AnchorPane>
-                  <AnchorPane prefHeight="200.0" prefWidth="682.0" stylesheets="@style.css">
-                     <styleClass>
-                        <String fx:value="Scene-black-3" />
+                        <String fx:value="Scene-Black" />
                         <String fx:value="bogoc" />
                      </styleClass>
                      <children>
-                        <Label layoutX="36.0" layoutY="44.0" text="Label" />
-                        <Label layoutX="36.0" layoutY="122.0" text="Label" />
-                        <TextField layoutX="162.0" layoutY="40.0" />
-                        <TextField layoutX="162.0" layoutY="131.0" />
-                        <Button layoutX="503.0" layoutY="24.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="51.0">
+                        <Label layoutX="21.0" layoutY="34.0" styleClass="h1" text="Amount :" textFill="WHITE" />
+                        <Label layoutX="21.0" layoutY="125.0" styleClass="h1" text="State :" textFill="WHITE" />
+                        <TextField layoutX="175.0" layoutY="38.0" prefHeight="57.0" prefWidth="323.0" promptText="Enter your deposit amount" />
+                        <Button layoutX="522.0" layoutY="18.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="51.0" styleClass="btn-transparent">
                            <graphic>
-                              <ImageView fitHeight="51.0" fitWidth="56.0" pickOnBounds="true" preserveRatio="true" />
+                              <ImageView fitHeight="67.0" fitWidth="65.0" pickOnBounds="true" preserveRatio="true">
+                                 <image>
+                                    <Image url="@arrow.png" />
+                                 </image>
+                              </ImageView>
                            </graphic>
                         </Button>
-                        <ImageView fitHeight="59.0" fitWidth="74.0" layoutX="513.0" layoutY="131.0" pickOnBounds="true" preserveRatio="true" />
+                        <ImageView fitHeight="59.0" fitWidth="74.0" layoutX="535.0" layoutY="117.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@cancel.png" />
+                           </image>
+                        </ImageView>
+                        <Label fx:id="state_withdraw1" layoutX="177.0" layoutY="125.0" prefHeight="18.0" prefWidth="335.0" styleClass="h1" />
+                     </children>
+                  </AnchorPane>
+                  <AnchorPane fx:id="withdraw_anchor" prefHeight="200.0" prefWidth="682.0" stylesheets="@style.css" visible="false">
+                     <styleClass>
+                        <String fx:value="Scene-Black" />
+                        <String fx:value="bogoc" />
+                     </styleClass>
+                     <children>
+                        <Label layoutX="10.0" layoutY="40.0" styleClass="h1" text="Amount :" textFill="WHITE" />
+                        <Label layoutX="14.0" layoutY="119.0" styleClass="h1" text="State :" textFill="WHITE" />
+                        <TextField layoutX="162.0" layoutY="40.0" prefHeight="57.0" prefWidth="323.0" promptText="Enter your withdraw amount" />
+                        <Button layoutX="503.0" layoutY="24.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="51.0" styleClass="btn-transparent">
+                           <graphic>
+                              <ImageView fitHeight="67.0" fitWidth="65.0" pickOnBounds="true" preserveRatio="true">
+                                 <image>
+                                    <Image url="@arrow.png" />
+                                 </image>
+                              </ImageView>
+                           </graphic>
+                        </Button>
+                        <ImageView fitHeight="59.0" fitWidth="74.0" layoutX="516.0" layoutY="111.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@cancel.png" />
+                           </image>
+                        </ImageView>
+                        <Label fx:id="state_withdraw" layoutX="162.0" layoutY="119.0" prefHeight="18.0" prefWidth="335.0" styleClass="h1" />
                      </children>
                   </AnchorPane>
                </children>
             </StackPane>
-            <Button layoutX="14.0" layoutY="297.0" mnemonicParsing="false" prefHeight="51.0" prefWidth="33.0">
+            <Button layoutX="21.0" layoutY="17.0" mnemonicParsing="false" onAction="#handleClickedBack" styleClass="btn-transparent">
                <graphic>
-                  <ImageView fitHeight="79.0" fitWidth="70.0" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fitHeight="107.0" fitWidth="117.0" pickOnBounds="true" preserveRatio="true" rotate="180.0">
+                     <image>
+                        <Image url="@arrow.png" />
+                     </image>
+                  </ImageView>
                </graphic>
             </Button>
          </children>
       </AnchorPane>
+      <GridPane fx:id="gidpane_main" styleClass="Scene-Black" stylesheets="@style.css">
+        <columnConstraints>
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints maxHeight="396.0" minHeight="10.0" prefHeight="126.0" vgrow="SOMETIMES" />
+          <RowConstraints maxHeight="621.0" minHeight="10.0" prefHeight="477.0" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="616.0" minHeight="10.0" prefHeight="470.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <children>
+            <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onMouseClicked="#handleBalanceClicked" prefHeight="254.0" prefWidth="270.0" stylesheets="@style.css" GridPane.rowIndex="1">
+               <children>
+                  <Label layoutX="20.0" layoutY="25.0" prefHeight="61.0" prefWidth="387.0" styleClass="label-super-bold" text="Your Balance">
+                     <font>
+                        <Font size="50.0" />
+                     </font>
+                  </Label>
+                  <Label layoutX="26.0" layoutY="183.0" prefHeight="67.0" prefWidth="38.0" styleClass="label-super-bold" text="0">
+                     <font>
+                        <Font size="69.0" />
+                     </font>
+                  </Label>
+                  <ImageView fitHeight="122.0" fitWidth="122.0" layoutX="390.0" layoutY="170.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="147.0" AnchorPane.leftAnchor="390.0" AnchorPane.rightAnchor="59.0" AnchorPane.topAnchor="170.0">
+                     <image>
+                        <Image url="@dollar-symbol.png" />
+                     </image>
+                  </ImageView>
+               </children>
+               <styleClass>
+                  <String fx:value="Scene-black-4" />
+                  <String fx:value="bogoc" />
+                  <String fx:value="hover-mouse" />
+               </styleClass>
+               <GridPane.margin>
+                  <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+               </GridPane.margin>
+            </AnchorPane>
+            <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="254.0" prefWidth="270.0" stylesheets="@style.css" GridPane.columnIndex="1" GridPane.rowIndex="1">
+               <children>
+                  <VBox alignment="CENTER" layoutX="21.0" prefHeight="254.0" prefWidth="228.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="21.0" AnchorPane.rightAnchor="21.0" AnchorPane.topAnchor="0.0">
+                     <children>
+                        <Label styleClass="label-super-bold" text="About You" textFill="WHITE">
+                           <font>
+                              <Font size="55.0" />
+                           </font>
+                        </Label>
+                        <ImageView fitHeight="99.0" fitWidth="109.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@account.png" />
+                           </image>
+                        </ImageView>
+                        <Label styleClass="label-super-bold" text="Name" textFill="WHITE">
+                           <font>
+                              <Font size="45.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+               </children>
+               <styleClass>
+                  <String fx:value="Scene-Back-1" />
+                  <String fx:value="bogoc" />
+                  <String fx:value="hover-mouse" />
+               </styleClass>
+               <GridPane.margin>
+                  <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+               </GridPane.margin>
+            </AnchorPane>
+            <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="254.0" prefWidth="270.0" stylesheets="@style.css" GridPane.columnIndex="2" GridPane.rowIndex="1">
+               <styleClass>
+                  <String fx:value="Scene-Back-1" />
+                  <String fx:value="bogoc" />
+                  <String fx:value="hover-mouse" />
+               </styleClass>
+               <GridPane.margin>
+                  <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+               </GridPane.margin>
+            </AnchorPane>
+            <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="254.0" prefWidth="270.0" stylesheets="@style.css" GridPane.columnIndex="1" GridPane.rowIndex="2">
+               <styleClass>
+                  <String fx:value="Scene-Back-1" />
+                  <String fx:value="bogoc" />
+                  <String fx:value="hover-mouse" />
+               </styleClass>
+               <GridPane.margin>
+                  <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+               </GridPane.margin>
+               <children>
+                  <Label layoutX="23.0" layoutY="13.0" prefHeight="81.0" prefWidth="323.0" styleClass="label-super-bold" text="Auction" textFill="WHITE">
+                     <font>
+                        <Font size="57.0" />
+                     </font>
+                  </Label>
+                  <Label layoutX="29.0" layoutY="169.0" prefHeight="67.0" prefWidth="38.0" styleClass="label-super-bold" text="0" textFill="WHITE">
+                     <font>
+                        <Font size="69.0" />
+                     </font>
+                  </Label>
+                  <Label layoutX="349.0" layoutY="199.0" prefHeight="57.0" prefWidth="194.0" styleClass="label-super-bold" text="Products" textFill="WHITE">
+                     <font>
+                        <Font size="40.0" />
+                     </font>
+                  </Label>
+                  <ImageView fitHeight="62.0" fitWidth="72.0" layoutX="449.0" layoutY="306.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@products.png" />
+                     </image>
+                  </ImageView>
+               </children>
+            </AnchorPane>
+            <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="254.0" prefWidth="270.0" stylesheets="@style.css" GridPane.rowIndex="2">
+               <children>
+                  <Label layoutX="24.0" layoutY="15.0" prefHeight="81.0" prefWidth="146.0" styleClass="label-super-bold" text="Shop" textFill="WHITE">
+                     <font>
+                        <Font size="57.0" />
+                     </font>
+                  </Label>
+                  <Label layoutX="20.0" layoutY="337.0" prefHeight="66.0" prefWidth="466.0" styleClass="label-super-bold" text="with 0 ongoing" textFill="WHITE">
+                     <font>
+                        <Font size="47.0" />
+                     </font>
+                  </Label>
+                  <Label layoutX="346.0" layoutY="217.0" prefHeight="57.0" prefWidth="194.0" styleClass="label-super-bold" text="Products" textFill="WHITE">
+                     <font>
+                        <Font size="40.0" />
+                     </font>
+                  </Label>
+                  <ImageView fitHeight="62.0" fitWidth="72.0" layoutX="428.0" layoutY="310.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@products.png" />
+                     </image>
+                  </ImageView>
+                  <Label layoutX="36.0" layoutY="173.0" prefHeight="67.0" prefWidth="38.0" styleClass="label-super-bold" text="0" textFill="WHITE">
+                     <font>
+                        <Font size="69.0" />
+                     </font>
+                  </Label>
+               </children>
+               <styleClass>
+                  <String fx:value="Scene-Back-1" />
+                  <String fx:value="bogoc" />
+                  <String fx:value="hover-mouse" />
+               </styleClass>
+               <GridPane.margin>
+                  <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+               </GridPane.margin>
+            </AnchorPane>
+            <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="254.0" prefWidth="270.0" stylesheets="@style.css" GridPane.columnIndex="2" GridPane.rowIndex="2">
+               <children>
+                  <ImageView fitHeight="286.0" fitWidth="318.0" layoutX="42.0" layoutY="104.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="42.0" AnchorPane.leftAnchor="42.0" AnchorPane.rightAnchor="214.0" AnchorPane.topAnchor="104.0">
+                     <image>
+                        <Image url="@pie-chart.png" />
+                     </image>
+                  </ImageView>
+                  <Label layoutX="25.0" layoutY="9.0" prefHeight="81.0" prefWidth="323.0" styleClass="label-super-bold" text="Statistics" textFill="WHITE">
+                     <font>
+                        <Font size="57.0" />
+                     </font>
+                  </Label>
+                  <Label layoutX="377.0" layoutY="175.0" prefHeight="57.0" prefWidth="194.0" styleClass="label-super-bold" text="0%" textFill="WHITE">
+                     <font>
+                        <Font size="40.0" />
+                     </font>
+                  </Label>
+                  <Label layoutX="380.0" layoutY="262.0" prefHeight="57.0" prefWidth="194.0" styleClass="label-super-bold" text="0%" textFill="WHITE">
+                     <font>
+                        <Font size="40.0" />
+                     </font>
+                  </Label>
+               </children>
+               <styleClass>
+                  <String fx:value="Scene-Back-1" />
+                  <String fx:value="bogoc" />
+                  <String fx:value="hover-mouse" />
+               </styleClass>
+               <GridPane.margin>
+                  <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+               </GridPane.margin>
+            </AnchorPane>
+            <VBox prefHeight="200.0" prefWidth="100.0">
+               <children>
+                  <Label prefHeight="81.0" prefWidth="530.0" styleClass="label-super-bold" text="Hi, UserName !" textFill="WHITE">
+                     <font>
+                        <Font size="57.0" />
+                     </font>
+                     <VBox.margin>
+                        <Insets left="20.0" top="20.0" />
+                     </VBox.margin>
+                  </Label>
+                  <Label text="This is where you track your activities" textFill="WHITE">
+                     <VBox.margin>
+                        <Insets bottom="10.0" left="20.0" top="10.0" />
+                     </VBox.margin>
+                     <font>
+                        <Font size="25.0" />
+                     </font>
+                  </Label>
+               </children>
+            </VBox>
+         </children>
+      </GridPane>
    </children>
 </StackPane>

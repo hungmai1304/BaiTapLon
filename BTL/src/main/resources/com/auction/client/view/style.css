@@ -261,3 +261,60 @@
     -fx-border-color: transparent;     /* Khử viền */
     -fx-cursor: hand;                  /* Đổi con trỏ chuột thành hình bàn tay */
 }
+
+
+.label-super-bold {
+    /* 1. Chọn font có độ dày 'Black' hoặc 'Extra Bold' */
+    -fx-font-family: "Archivo Black";
+
+
+
+    /* 3. Độ đậm tối đa */
+    -fx-font-weight: 900;
+
+
+
+    /* 5. Ép khoảng cách dòng (để các chữ trông vuông và sát nhau hơn) */
+    -fx-line-spacing: -10;
+}
+
+
+
+/* Khi di chuột qua (Hover) */
+.hover-mouse:hover {
+
+    /* 2. Hiệu ứng bay lên: nhích nhẹ lên trên 4px */
+    -fx-translate-y: -4;
+
+
+}
+
+
+.text-field {
+    /* 1. Màu nền xám tối đặc trưng của Discord */
+    -fx-background-color: #1e1f22;
+
+    /* 2. Màu chữ trắng xám nhẹ */
+    -fx-text-fill: #dbdee1;
+
+    /* 3. Bo góc (Discord dùng bo góc nhỏ, rất hiện đại) */
+    -fx-background-radius: 3;
+
+    /* 4. Padding để chữ không dính sát viền */
+    -fx-padding: 10;
+
+    /* 5. Font chữ (nên dùng Inter hoặc Whitney nếu có) */
+    -fx-font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+    -fx-font-size: 14px;
+}
+
+/* HIỆU ỨNG KHI CLICK CHUỘT VÀO (FOCUS) */
+.text-field:focused {
+    /* Giữ màu nền cũ */
+    -fx-background-color: #1e1f22;
+
+    /* Tạo viền màu xanh Discord nổi bật khi focus */
+    -fx-border-color: #00a8fc;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+}

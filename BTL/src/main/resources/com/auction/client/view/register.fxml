@@ -15,13 +15,13 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<StackPane prefHeight="710.0" prefWidth="1155.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.RegisterController">
+<StackPane prefHeight="878.0" prefWidth="1251.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.RegisterController">
    <styleClass>
       <String fx:value="small_window" />
       <String fx:value="Scene1" />
    </styleClass>
    <children>
-      <AnchorPane prefHeight="200.0" prefWidth="200.0">
+      <AnchorPane prefHeight="878.0" prefWidth="1251.0" styleClass="Scene-Black">
          <children>
             <ImageView fitHeight="77.0" fitWidth="111.0" layoutX="848.0" layoutY="573.0" opacity="0.52" pickOnBounds="true" preserveRatio="true">
                <image>
@@ -68,33 +68,33 @@
                   <String fx:value="h1" />
                </styleClass>
             </Label>
-            <VBox prefHeight="495.0" prefWidth="440.0" spacing="5.0" style="-fx-padding: 10;" styleClass="Scene3">
+            <VBox prefHeight="495.0" prefWidth="440.0" spacing="5.0" style="-fx-padding: 10;">
                <children>
-                  <Label prefHeight="18.0" prefWidth="220.0" styleClass="h3" text="Name:">
+                  <Label prefHeight="18.0" prefWidth="220.0" styleClass="h3" text="Name:" textFill="WHITE">
                      <font>
                         <Font size="22.0" />
                      </font>
                   </Label>
                   <TextField fx:id="boxfield_register_name" promptText="enter your name" styleClass="text-field" />
-                  <Label prefHeight="18.0" prefWidth="220.0" styleClass="h3" text="Email:">
+                  <Label prefHeight="18.0" prefWidth="220.0" styleClass="h3" text="Email:" textFill="WHITE">
                      <font>
                         <Font size="22.0" />
                      </font>
                   </Label>
                   <TextField fx:id="textfield_register_email" layoutX="20.0" layoutY="57.0" promptText="enter your email" styleClass="text-field" />
-                  <Label layoutX="20.0" layoutY="88.0" prefHeight="18.0" prefWidth="220.0" styleClass="h3" text="Password:">
+                  <Label layoutX="20.0" layoutY="88.0" prefHeight="18.0" prefWidth="220.0" styleClass="h3" text="Password:" textFill="WHITE">
                      <font>
                         <Font size="22.0" />
                      </font>
                   </Label>
                   <PasswordField fx:id="password_register_pass" promptText="password" styleClass="text-field" />
-                  <Label layoutX="20.0" layoutY="156.0" prefHeight="18.0" prefWidth="220.0" styleClass="h3" text="Reconfirm:">
+                  <Label layoutX="20.0" layoutY="156.0" prefHeight="18.0" prefWidth="220.0" styleClass="h3" text="Reconfirm:" textFill="WHITE">
                      <font>
                         <Font size="22.0" />
                      </font>
                   </Label>
                   <PasswordField fx:id="password_register_reconfirm" layoutX="20.0" layoutY="193.0" promptText="your password" styleClass="text-field" />
-                  <Label layoutX="20.0" layoutY="224.0" prefHeight="18.0" prefWidth="220.0" styleClass="h3" text="Open A Shop?:">
+                  <Label layoutX="20.0" layoutY="224.0" prefHeight="18.0" prefWidth="220.0" styleClass="h3" text="Open A Shop?:" textFill="WHITE">
                      <font>
                         <Font size="22.0" />
                      </font>
@@ -111,6 +111,10 @@
                      </children>
                   </VBox>
                </children>
+               <styleClass>
+                  <String fx:value="Scene-Black" />
+                  <String fx:value="bogoc" />
+               </styleClass>
             </VBox>
          </children>
          <styleClass>

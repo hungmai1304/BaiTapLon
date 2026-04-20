@@ -12,7 +12,8 @@ public class AuctionClient extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/auction/client/view/login.fxml"));
 
         Scene scene = new Scene(fxmlLoader.load());
-
+        stage.setX(0);
+        stage.setY(0);
         stage.setTitle("JavaFX Button Event");
         stage.setScene(scene);
 
