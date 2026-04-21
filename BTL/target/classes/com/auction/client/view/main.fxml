@@ -2,9 +2,7 @@
 
 <?import java.lang.String?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -17,109 +15,6 @@
 
 <StackPane prefHeight="1080.0" prefWidth="1831.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.MainController">
    <children>
-      <AnchorPane fx:id="balance_anchorpane" prefHeight="200.0" prefWidth="200.0" styleClass="Scene-black-4" stylesheets="@style.css">
-         <children>
-            <AnchorPane layoutX="191.0" layoutY="86.0" prefHeight="455.0" prefWidth="1459.0" stylesheets="@style.css">
-               <styleClass>
-                  <String fx:value="Scene-back-2" />
-                  <String fx:value="bogoc" />
-               </styleClass>
-               <children>
-                  <Label layoutX="362.0" layoutY="149.0" text="0" textFill="WHITE">
-                     <font>
-                        <Font size="72.0" />
-                     </font></Label>
-                  <Label layoutX="153.0" layoutY="25.0" styleClass="label-super-bold" text="Your Wallet Balance" textFill="WHITE">
-                     <font>
-                        <Font size="46.0" />
-                     </font></Label>
-                  <ImageView fitHeight="87.0" fitWidth="115.0" layoutX="67.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@wallet.png" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="69.0" fitWidth="93.0" layoutX="446.0" layoutY="70.0" pickOnBounds="true" preserveRatio="true" />
-                  <ImageView fitHeight="277.0" fitWidth="277.0" layoutX="1106.0" layoutY="70.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@qr.png" />
-                     </image>
-                  </ImageView>
-                  <ImageView fitHeight="125.0" fitWidth="129.0" layoutX="864.0" layoutY="128.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@dollar-symbol.png" />
-                     </image>
-                  </ImageView>
-                  <Button layoutX="63.0" layoutY="349.0" mnemonicParsing="false" onAction="#handleWithdrawClicked" prefHeight="72.0" prefWidth="175.0" styleClass="btn2" text="Withdraw" />
-                  <Button layoutX="287.0" layoutY="348.0" mnemonicParsing="false" onAction="#handleDepositeClicked" prefHeight="72.0" prefWidth="175.0" styleClass="btn2" text="Deposite" />
-               </children>
-            </AnchorPane>
-            <StackPane layoutX="457.0" layoutY="631.0" prefHeight="335.0" prefWidth="853.0">
-               <children>
-                  <AnchorPane fx:id="deposit_anchor" prefHeight="200.0" prefWidth="682.0" stylesheets="@style.css" visible="false">
-                     <styleClass>
-                        <String fx:value="Scene-Black" />
-                        <String fx:value="bogoc" />
-                     </styleClass>
-                     <children>
-                        <Label layoutX="21.0" layoutY="34.0" styleClass="h1" text="Amount :" textFill="WHITE" />
-                        <Label layoutX="21.0" layoutY="125.0" styleClass="h1" text="State :" textFill="WHITE" />
-                        <TextField layoutX="175.0" layoutY="38.0" prefHeight="57.0" prefWidth="323.0" promptText="Enter your deposit amount" />
-                        <Button layoutX="522.0" layoutY="18.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="51.0" styleClass="btn-transparent">
-                           <graphic>
-                              <ImageView fitHeight="67.0" fitWidth="65.0" pickOnBounds="true" preserveRatio="true">
-                                 <image>
-                                    <Image url="@arrow.png" />
-                                 </image>
-                              </ImageView>
-                           </graphic>
-                        </Button>
-                        <ImageView fitHeight="59.0" fitWidth="74.0" layoutX="535.0" layoutY="117.0" pickOnBounds="true" preserveRatio="true">
-                           <image>
-                              <Image url="@cancel.png" />
-                           </image>
-                        </ImageView>
-                        <Label fx:id="state_withdraw1" layoutX="177.0" layoutY="125.0" prefHeight="18.0" prefWidth="335.0" styleClass="h1" />
-                     </children>
-                  </AnchorPane>
-                  <AnchorPane fx:id="withdraw_anchor" prefHeight="200.0" prefWidth="682.0" stylesheets="@style.css" visible="false">
-                     <styleClass>
-                        <String fx:value="Scene-Black" />
-                        <String fx:value="bogoc" />
-                     </styleClass>
-                     <children>
-                        <Label layoutX="10.0" layoutY="40.0" styleClass="h1" text="Amount :" textFill="WHITE" />
-                        <Label layoutX="14.0" layoutY="119.0" styleClass="h1" text="State :" textFill="WHITE" />
-                        <TextField layoutX="162.0" layoutY="40.0" prefHeight="57.0" prefWidth="323.0" promptText="Enter your withdraw amount" />
-                        <Button layoutX="503.0" layoutY="24.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="51.0" styleClass="btn-transparent">
-                           <graphic>
-                              <ImageView fitHeight="67.0" fitWidth="65.0" pickOnBounds="true" preserveRatio="true">
-                                 <image>
-                                    <Image url="@arrow.png" />
-                                 </image>
-                              </ImageView>
-                           </graphic>
-                        </Button>
-                        <ImageView fitHeight="59.0" fitWidth="74.0" layoutX="516.0" layoutY="111.0" pickOnBounds="true" preserveRatio="true">
-                           <image>
-                              <Image url="@cancel.png" />
-                           </image>
-                        </ImageView>
-                        <Label fx:id="state_withdraw" layoutX="162.0" layoutY="119.0" prefHeight="18.0" prefWidth="335.0" styleClass="h1" />
-                     </children>
-                  </AnchorPane>
-               </children>
-            </StackPane>
-            <Button layoutX="21.0" layoutY="17.0" mnemonicParsing="false" onAction="#handleClickedBack" styleClass="btn-transparent">
-               <graphic>
-                  <ImageView fitHeight="107.0" fitWidth="117.0" pickOnBounds="true" preserveRatio="true" rotate="180.0">
-                     <image>
-                        <Image url="@arrow.png" />
-                     </image>
-                  </ImageView>
-               </graphic>
-            </Button>
-         </children>
-      </AnchorPane>
       <GridPane fx:id="gidpane_main" styleClass="Scene-Black" stylesheets="@style.css">
         <columnConstraints>
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -159,7 +54,7 @@
                   <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
                </GridPane.margin>
             </AnchorPane>
-            <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="254.0" prefWidth="270.0" stylesheets="@style.css" GridPane.columnIndex="1" GridPane.rowIndex="1">
+            <AnchorPane fx:id="aboutYou" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onMouseClicked="#handleAboutYouClicked" prefHeight="254.0" prefWidth="270.0" stylesheets="@style.css" GridPane.columnIndex="1" GridPane.rowIndex="1">
                <children>
                   <VBox alignment="CENTER" layoutX="21.0" prefHeight="254.0" prefWidth="228.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="21.0" AnchorPane.rightAnchor="21.0" AnchorPane.topAnchor="0.0">
                      <children>

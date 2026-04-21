@@ -60,6 +60,7 @@ public class LoginController {
 
                 // 2. LẤY CONTROLLER SAU KHI ĐÃ LOAD
                 HomeController homeController = home_loader.getController();
+                SomeGlobal.storeHomeController(homeController);
 
                 // 3. LOAD MAIN FXML (VÙNG CENTER)
                 StackPane mainView = FXMLLoader.load(getClass().getResource("/com/auction/client/view/main.fxml"));

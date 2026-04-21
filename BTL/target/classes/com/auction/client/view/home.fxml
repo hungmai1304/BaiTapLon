@@ -37,7 +37,7 @@
                         <ToggleGroup fx:id="menu" />
                      </toggleGroup>
                   </ToggleButton>
-                  <ToggleButton mnemonicParsing="false" selected="true" toggleGroup="$menu">
+                  <ToggleButton mnemonicParsing="false" onAction="#handleSearchClicked" selected="true" toggleGroup="$menu">
                      <graphic>
                         <ImageView fitHeight="33.0" fitWidth="32.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -53,7 +53,7 @@
                         <String fx:value="toggle-button" />
                      </styleClass>
                   </ToggleButton>
-                  <ToggleButton mnemonicParsing="false" selected="true" toggleGroup="$menu">
+                  <ToggleButton mnemonicParsing="false" onAction="#handleBankButtonClicked" selected="true" toggleGroup="$menu">
                      <graphic>
                         <ImageView fitHeight="33.0" fitWidth="32.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -69,7 +69,7 @@
                         <String fx:value="toggle-button" />
                      </styleClass>
                   </ToggleButton>
-                  <ToggleButton mnemonicParsing="false" selected="true" toggleGroup="$menu">
+                  <ToggleButton mnemonicParsing="false" onAction="#handleTikTokAuction" selected="true" toggleGroup="$menu">
                      <graphic>
                         <ImageView fitHeight="33.0" fitWidth="32.0" pickOnBounds="true" preserveRatio="true">
                            <image>

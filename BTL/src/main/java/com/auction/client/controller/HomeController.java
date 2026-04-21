@@ -8,6 +8,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.PasswordField;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -34,6 +35,28 @@ public class HomeController{
     public BorderPane getBorderpaneHome(){
         return borderpane_home;
     }
+
+
+    @FXML
+    public void handleSearchClicked(ActionEvent event)throws IOException{
+        // tai search
+        // dat search vao center
+        VBox search=FXMLLoader.load(getClass().getResource("/com/auction/client/view/search.fxml"));
+        borderpane_home.setCenter(search);
+    }
+    @FXML
+    public void handleTikTokAuction(ActionEvent event) throws IOException{
+        //tai tik tok
+        // dat tik tok vao center
+        VBox tiktok=FXMLLoader.load(getClass().getResource("/com/auction/client/view/tiktokAuction.fxml"));
+        borderpane_home.setCenter(tiktok);
+    }
+    @FXML
+    public void handleBankButtonClicked(ActionEvent event) throws IOException{
+        AnchorPane bank_view=FXMLLoader.load(getClass().getResource("/com/auction/client/view/bank.fxml"));
+        borderpane_home.setCenter(bank_view);
+    }
+
 
 
 

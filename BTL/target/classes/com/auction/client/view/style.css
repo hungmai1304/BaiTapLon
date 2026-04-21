@@ -318,3 +318,217 @@
     -fx-border-width: 1;
     -fx-border-radius: 3;
 }
+
+/* Tổng thể */
+.root {
+    -fx-font-family: "Segoe UI", sans-serif;
+}
+
+.hero-section {
+    -fx-background-color: linear-gradient(to right, #00c4cc, #7d2ae8);
+}
+
+/* Nav Bar scale up */
+.logo-text {
+    -fx-text-fill: white;
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+}
+
+.sub-logo {
+    -fx-text-fill: white;
+    -fx-font-size: 22px;
+}
+
+.nav-link {
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+}
+
+.btn-create {
+    -fx-background-color: #5d34a4;
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-background-radius: 8;
+    -fx-padding: 12 25;
+}
+
+/* Search Area scale up */
+.main-title {
+    -fx-text-fill: white;
+    -fx-font-size: 56px; /* Chữ to hơn cho màn hình rộng */
+    -fx-font-weight: 300;
+}
+
+.search-container {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-padding: 8;
+}
+
+.search-field {
+    -fx-background-color: transparent;
+    -fx-font-size: 20px;
+    -fx-padding: 15;
+}
+
+.btn-search {
+    -fx-background-color: #82bc41;
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-padding: 15 45;
+    -fx-background-radius: 6;
+}
+
+/* Cards Section scale up */
+.cards-section {
+    -fx-background-color: #f4f7f8;
+}
+
+.info-card {
+    -fx-background-color: white;
+    -fx-padding: 60; /* Tăng padding trong card */
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 20, 0, 0, 5);
+    -fx-spacing: 25;
+    -fx-min-width: 400; /* Đảm bảo card đủ to */
+}
+
+.card-title {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
+}
+
+.card-desc {
+    -fx-fill: #666;
+    -fx-font-size: 18px;
+}
+
+
+/* Tổng thể nền tối */
+.main-container {
+    -fx-background-color: #121212;
+    -fx-font-family: "Segoe UI", system-ui;
+}
+
+.header {
+    -fx-background-color: #1E1E1E;
+}
+
+.header-title {
+    -fx-text-fill: #A7D3A6; /* Xanh Pastel */
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+}
+
+/* Card nội dung */
+.content-card {
+    -fx-background-color: #1E1E1E;
+    -fx-background-radius: 20;
+    -fx-border-color: rgba(167, 211, 166, 0.2); /* Viền xanh pastel nhạt */
+    -fx-border-radius: 20;
+}
+
+/* Khung ảnh */
+.image-container {
+    -fx-background-color: #2A2A2A;
+    -fx-background-radius: 15;
+    -fx-border-color: #A7D3A6;
+    -fx-border-width: 1;
+    -fx-border-radius: 15;
+}
+
+.image-placeholder {
+    -fx-text-fill: #B0B0B0;
+    -fx-font-size: 24px;
+}
+
+/* Nút điều hướng ảnh */
+.nav-button {
+    -fx-background-color: #A7D3A6;
+    -fx-text-fill: #121212;
+    -fx-font-size: 24px;
+    -fx-background-radius: 50;
+    -fx-cursor: hand;
+}
+
+/* Text thông tin */
+.label-title {
+    -fx-text-fill: white;
+    -fx-font-size: 22px;
+}
+
+.label-value {
+    -fx-text-fill: #B0B0B0;
+    -fx-font-size: 22px;
+}
+
+.label-value-highlight {
+    -fx-text-fill: #A7D3A6;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.section-title {
+    -fx-text-fill: white;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+/* Box người dẫn đầu */
+.leader-box {
+    -fx-background-color: #2A2A2A;
+    -fx-padding: 20;
+    -fx-background-radius: 10;
+    -fx-border-color: #A7D3A6;
+    -fx-border-width: 0 0 0 5; /* Border trái làm điểm nhấn */
+}
+
+.leader-name {
+    -fx-text-fill: #A7D3A6;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+/* Khung Chat */
+.chat-area {
+    -fx-control-inner-background: #2A2A2A;
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-background-color: transparent;
+    -fx-border-color: #333333;
+    -fx-border-radius: 10;
+}
+
+/* Nút bấm Đấu giá & Bot */
+.btn-bid {
+    -fx-background-color: #A7D3A6;
+    -fx-text-fill: #121212;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-padding: 15 40;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+}
+
+.btn-bid:hover {
+    -fx-background-color: #8fb88e;
+}
+
+.btn-bot {
+    -fx-background-color: transparent;
+    -fx-text-fill: #A7D3A6;
+    -fx-border-color: #A7D3A6;
+    -fx-border-width: 2;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-padding: 15 40;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+}
+
+.btn-bot:hover {
+    -fx-background-color: rgba(167, 211, 166, 0.1);
+}

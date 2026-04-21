@@ -28,38 +28,39 @@ public class MainController {
 
     @FXML
     public void handleBalanceClicked(MouseEvent event) throws IOException {
-        //1.khi ấn vào , cho màn balance đang ẩn hiện lên
-        balance_anchorpane.setVisible(true);
-        balance_anchorpane.setManaged(true);
-        // cho man grid pane an di
-        gidpane_main.setVisible(false);
-        gidpane_main.setManaged(false);
-    }
-    @FXML
-    public void handleClickedBack(ActionEvent event){
-        balance_anchorpane.setVisible(false);
-        balance_anchorpane.setManaged(false);
+        //tai bank
+        //cho bank len giua man hinh
+        AnchorPane bank_view = FXMLLoader.load(getClass().getResource("/com/auction/client/view/bank.fxml"));
 
-        gidpane_main.setVisible(true);
-        gidpane_main.setManaged(true);
+        HomeController homeController = SomeGlobal.getHomeController();
+
+        if (homeController != null && homeController.getBorderpaneHome() != null) {
+            homeController.getBorderpaneHome().setCenter(bank_view);
+        }
     }
     @FXML
-    private AnchorPane withdraw_anchor;
-    @FXML
-    private AnchorPane deposit_anchor;
-    @FXML
-    public void handleWithdrawClicked(ActionEvent event){
-        // hien withdraw len, an deposit di
-        withdraw_anchor.setVisible(true);
-        withdraw_anchor.setManaged(true);
-        deposit_anchor.setVisible(false);
-        deposit_anchor.setManaged(false);
+    public void handleAboutYouClicked(MouseEvent event) throws IOException{
+        AnchorPane aboutYou_view = FXMLLoader.load(getClass().getResource("/com/auction/client/view/aboutYou.fxml"));
+
+        HomeController homeController = SomeGlobal.getHomeController();
+
+        if (homeController != null && homeController.getBorderpaneHome() != null) {
+            homeController.getBorderpaneHome().setCenter(aboutYou_view);
+        }
     }
     @FXML
-    public void handleDepositeClicked(ActionEvent event){
-        deposit_anchor.setVisible(true);
-        deposit_anchor.setVisible(true);
-        withdraw_anchor.setVisible(false);
-        withdraw_anchor.setManaged(false);
+    public void handleBackMain(ActionEvent event) throws IOException{
+        StackPane main_view=FXMLLoader.load(getClass().getResource("/com/auction/client/view/main.fxml"));
+
+
+        HomeController homeController = SomeGlobal.getHomeController();
+
+        if (homeController != null && homeController.getBorderpaneHome() != null) {
+            homeController.getBorderpaneHome().setCenter(main_view);
+        }
     }
-}
+    }
+
+
+
+

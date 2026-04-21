@@ -15,12 +15,14 @@
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/server/controller/ItemController.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/common/model/Art.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/common/model/Entity.java
+/home/enix/BaiTapLon/BTL/src/main/java/com/auction/client/controller/SomeGlobal.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/protocol/Request.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/common/model/AuctionStatus.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/common/model/AutoBidConfig.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/common/model/Item.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/common/model/Auction.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/common/model/BidTransaction.java
+/home/enix/BaiTapLon/BTL/src/main/java/com/auction/client/controller/BankController.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/common/model/Admin.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/client/controller/LoginController.java
 /home/enix/BaiTapLon/BTL/src/main/java/com/auction/client/NetworkClient.java
