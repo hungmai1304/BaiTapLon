@@ -329,10 +329,17 @@
 }
 
 /* Nav Bar scale up */
-.logo-text {
-    -fx-text-fill: white;
+.logo-text2 {
     -fx-font-size: 32px;
     -fx-font-weight: bold;
+    -fx-text-fill: #007acc; /* Màu xanh VS Code mặc định */
+    -fx-cursor: hand;       /* Hiện bàn tay khi rà vào */
+}
+
+.logo-text2:hover {
+    -fx-text-fill: #005a9e; /* Màu xanh đậm hơn khi hover */
+    /* Hoặc thêm hiệu ứng phát sáng nhẹ (Glow) */
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 122, 204, 0.5), 10, 0, 0, 0);
 }
 
 .sub-logo {
@@ -372,13 +379,29 @@
     -fx-padding: 15;
 }
 
+/* Trạng thái bình thường bạn đã gửi */
 .btn-search {
-    -fx-background-color: #82bc41;
+    -fx-background-color: #6cb221;
     -fx-text-fill: white;
     -fx-font-size: 20px;
     -fx-font-weight: bold;
     -fx-padding: 15 45;
     -fx-background-radius: 6;
+    -fx-cursor: hand; /* Thêm bàn tay khi rà vào cho đúng điệu button */
+}
+
+/* KHI DI CHUỘT VÀO (HOVER): Màu xanh sẽ đậm hơn */
+.btn-search:hover {
+    -fx-background-color: #5a961b; /* Màu xanh lá đậm hơn một tông */
+    /* Thêm một chút bóng đổ nhẹ cho nút nổi bật hẳn lên */
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 0);
+}
+
+/* KHI ẤN GIỮ CHUỘT (PRESSED): Màu cực đậm để tạo cảm giác nút bị lún xuống */
+.btn-search:pressed {
+    -fx-background-color: #4a7c16;
+    -fx-scale-x: 0.98; /* Co nhẹ nút lại một chút tạo hiệu ứng vật lý */
+    -fx-scale-y: 0.98;
 }
 
 /* Cards Section scale up */
@@ -570,7 +593,7 @@
     -fx-padding: 10;
 }
 
-.btn-search {
+.btn-search2 {
     -fx-background-color: #D4A373;
     -fx-text-fill: black;
     -fx-cursor: hand;
@@ -777,4 +800,97 @@
     -fx-background-color: #333;
     -fx-text-fill: white;
     -fx-padding: 15 40;
+}
+
+/* Nền tối toàn màn hình */
+.main-container {
+    -fx-background-color: #0f0f0f;
+}
+
+/* Khung Setting Card */
+.setting-card {
+    -fx-background-color: #1e1e1e;
+    -fx-background-radius: 8;
+    -fx-border-color: #333333;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 20, 0, 0, 10);
+}
+
+/* Tiêu đề chính */
+.header-title {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.header-subtitle {
+    -fx-text-fill: #858585;
+    -fx-font-size: 13px;
+}
+
+/* Tiêu đề từng mục */
+.section-header {
+    -fx-text-fill: #007acc; /* Màu xanh đặc trưng VS Code */
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-padding: 10 0 0 0;
+}
+
+/* Nút chức năng chung */
+.action-button {
+    -fx-background-color: #252526;
+    -fx-text-fill: #cccccc;
+    -fx-background-radius: 4;
+    -fx-padding: 12 15;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+}
+
+.action-button:hover {
+    -fx-background-color: #2d2d2d;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #007acc;
+    -fx-border-radius: 4;
+}
+
+/* Thông tin phiên bản & trạng thái */
+.version-label {
+    -fx-text-fill: #4ec9b0; /* Màu xanh lá đặc trưng mã code */
+    -fx-font-family: "Consolas", monospace;
+}
+
+.status-tag {
+    -fx-background-color: #0e639c;
+    -fx-text-fill: white;
+    -fx-font-size: 10px;
+    -fx-padding: 2 5;
+    -fx-background-radius: 3;
+}
+
+/* Nút Đăng xuất */
+.logout-button {
+    -fx-background-color: #3e3e3e;
+    -fx-text-fill: white;
+    -fx-padding: 12;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+}
+
+.logout-button:hover {
+    -fx-background-color: #4e4e4e;
+}
+
+/* Nút Xóa tài khoản (Màu đỏ cảnh báo) */
+.delete-account-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #f44747;
+    -fx-border-radius: 4;
+    -fx-text-fill: #f44747;
+    -fx-padding: 10;
+    -fx-cursor: hand;
+}
+
+.delete-account-button:hover {
+    -fx-background-color: #f44747;
+    -fx-text-fill: white;
 }

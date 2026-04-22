@@ -18,13 +18,13 @@
         <HBox alignment="CENTER_LEFT" prefHeight="100.0" spacing="40.0" styleClass="header">
             <children>
                 <Label styleClass="logo-text" text="MY SHOP" />
-            <Button mnemonicParsing="false" onAction="#handleShopImport" prefHeight="39.0" prefWidth="173.0" styleClass="btn-search" text="import" />
-            <Button mnemonicParsing="false" onAction="#handleShopSell" prefHeight="45.0" prefWidth="189.0" styleClass="btn-search" text="sell" />
+            <Button mnemonicParsing="false" onAction="#handleShopImport" prefHeight="39.0" prefWidth="173.0" styleClass="btn-search2" text="import" />
+            <Button mnemonicParsing="false" onAction="#handleShopSell" prefHeight="45.0" prefWidth="189.0" styleClass="btn-search2" text="sell" />
                 <Region HBox.hgrow="ALWAYS" />
                 <HBox alignment="CENTER" maxWidth="700.0" styleClass="search-box" HBox.hgrow="ALWAYS">
                     <children>
                         <TextField promptText="Tìm kiếm sản phẩm" styleClass="search-input" HBox.hgrow="ALWAYS" />
-                        <Button styleClass="btn-search" text="🔍" />
+                        <Button styleClass="btn-search2" text="🔍" />
                     </children>
                 </HBox>
                 <Region HBox.hgrow="ALWAYS" />

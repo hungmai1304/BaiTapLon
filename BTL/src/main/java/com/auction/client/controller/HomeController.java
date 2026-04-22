@@ -56,6 +56,11 @@ public class HomeController{
         AnchorPane bank_view=FXMLLoader.load(getClass().getResource("/com/auction/client/view/bank.fxml"));
         borderpane_home.setCenter(bank_view);
     }
+    @FXML
+    public void handleSettingClicked(ActionEvent event) throws IOException{
+        AnchorPane setting_view=FXMLLoader.load(getClass().getResource("/com/auction/client/view/Settings.fxml"));
+        borderpane_home.setCenter(setting_view);
+    }
 
 
 

@@ -1,4 +1,5 @@
 com/auction/client/controller/HomeController.class
+com/auction/client/controller/SettingsController.class
 com/auction/server/service/AuctionServer.class
 com/auction/client/controller/BankController.class
 com/auction/client/AuctionClient.class
