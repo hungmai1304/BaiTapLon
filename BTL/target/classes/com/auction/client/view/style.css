@@ -532,3 +532,249 @@
 .btn-bot:hover {
     -fx-background-color: rgba(167, 211, 166, 0.1);
 }
+/* BẢNG MÀU:
+   - Đen chủ đạo: #121212
+   - Vàng cacton (Kraft): #D4A373
+   - Đen xám (Card): #1E1E1E
+*/
+
+.main-root {
+    -fx-background-color: #121212;
+    -fx-font-family: "Segoe UI", system-ui;
+}
+
+/* Header */
+.header {
+    -fx-background-color: #000000;
+    -fx-border-color: #D4A373;
+    -fx-border-width: 0 0 2 0; /* Gạch chân màu vàng cacton */
+}
+
+.logo-text {
+    -fx-text-fill: #D4A373;
+    -fx-font-size: 36px;
+    -fx-font-weight: 900;
+}
+
+.search-box {
+    -fx-background-color: #1E1E1E;
+    -fx-background-radius: 5;
+    -fx-border-color: #333;
+    -fx-border-radius: 5;
+}
+
+.search-input {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-padding: 10;
+}
+
+.btn-search {
+    -fx-background-color: #D4A373;
+    -fx-text-fill: black;
+    -fx-cursor: hand;
+    -fx-padding: 10 20;
+}
+
+.nav-item {
+    -fx-text-fill: #B0B0B0;
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+}
+
+.btn-cart {
+    -fx-background-color: transparent;
+    -fx-border-color: #D4A373;
+    -fx-text-fill: #D4A373;
+    -fx-padding: 10 25;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-font-weight: bold;
+}
+
+/* Sidebar */
+.sidebar {
+    -fx-background-color: #0A0A0A;
+}
+
+.sidebar-title {
+    -fx-text-fill: #D4A373;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 2px;
+}
+
+.sidebar-link, .sidebar-link-active {
+    -fx-background-color: transparent;
+    -fx-text-fill: #B0B0B0;
+    -fx-font-size: 17px;
+    -fx-alignment: center-left;
+    -fx-padding: 12 15;
+    -fx-cursor: hand;
+}
+
+.sidebar-link-active {
+    -fx-text-fill: black;
+    -fx-background-color: #D4A373;
+    -fx-background-radius: 5;
+}
+
+.sidebar-link:hover {
+    -fx-text-fill: #D4A373;
+}
+
+/* Main Content & Banner */
+.content-scroll {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+}
+
+.hero-banner {
+    -fx-background-color: linear-gradient(to right, #D4A373, #121212);
+    -fx-background-radius: 15;
+}
+
+.hero-tag {
+    -fx-text-fill: black;
+    -fx-font-weight: bold;
+    -fx-background-color: white;
+    -fx-padding: 5 15;
+}
+
+.hero-title {
+    -fx-text-fill: white;
+    -fx-font-size: 48px;
+    -fx-font-weight: 900;
+}
+
+.btn-hero {
+    -fx-background-color: black;
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-padding: 15 40;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+
+.section-title {
+    -fx-text-fill: white;
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+}
+
+/* Product Card */
+.product-card {
+    -fx-background-color: #1E1E1E;
+    -fx-background-radius: 10;
+    -fx-border-color: #333;
+    -fx-border-radius: 10;
+    -fx-overflow: hidden;
+}
+
+.product-card:hover {
+    -fx-border-color: #D4A373;
+    -fx-effect: dropshadow(three-pass-box, rgba(212, 163, 115, 0.2), 15, 0, 0, 0);
+}
+
+.product-name {
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.product-price {
+    -fx-text-fill: #D4A373;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.btn-add-cart {
+    -fx-background-color: #333;
+    -fx-text-fill: white;
+    -fx-padding: 10;
+    -fx-cursor: hand;
+    -fx-background-radius: 5;
+}
+
+.btn-add-cart:hover {
+    -fx-background-color: #D4A373;
+    -fx-text-fill: black;
+}
+/* Màu bổ sung cho phong cách Kraft */
+.header-sub-title {
+    -fx-text-fill: #B0B0B0;
+    -fx-font-size: 24px;
+}
+
+.content-card {
+    -fx-background-color: #1E1E1E;
+    -fx-background-radius: 15;
+    -fx-border-color: #333;
+    -fx-border-radius: 15;
+}
+
+/* Các Input field màu tối */
+.custom-text-field, .custom-text-area, .custom-combo-box {
+    -fx-background-color: #2A2A2A;
+    -fx-text-fill: white;
+    -fx-border-color: #444;
+    -fx-border-radius: 5;
+    -fx-padding: 12;
+    -fx-font-size: 16px;
+}
+
+.custom-text-field:focused {
+    -fx-border-color: #D4A373; /* Vàng carton khi chọn */
+}
+
+/* Khu vực upload ảnh */
+.image-upload-area {
+    -fx-background-color: #2A2A2A;
+    -fx-border-color: #D4A373;
+    -fx-border-style: dashed;
+    -fx-border-radius: 10;
+    -fx-cursor: hand;
+}
+
+.upload-text {
+    -fx-text-fill: #D4A373;
+    -fx-font-size: 18px;
+}
+
+/* Table View phong cách đen vàng */
+.custom-table {
+    -fx-background-color: transparent;
+    -fx-border-color: #333;
+}
+
+.custom-table .column-header {
+    -fx-background-color: #D4A373;
+}
+
+.custom-table .column-header .label {
+    -fx-text-fill: black;
+    -fx-font-weight: bold;
+}
+
+.custom-table .cell {
+    -fx-background-color: #1E1E1E;
+    -fx-text-fill: white;
+    -fx-border-color: #2A2A2A;
+}
+
+/* Button */
+.btn-submit {
+    -fx-background-color: #D4A373;
+    -fx-text-fill: black;
+    -fx-font-weight: bold;
+    -fx-padding: 15 40;
+    -fx-font-size: 18px;
+    -fx-background-radius: 5;
+}
+
+.btn-cancel {
+    -fx-background-color: #333;
+    -fx-text-fill: white;
+    -fx-padding: 15 40;
+}

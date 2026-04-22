@@ -59,7 +59,15 @@ public class MainController {
             homeController.getBorderpaneHome().setCenter(main_view);
         }
     }
+    @FXML
+    public void handleShopClicked(MouseEvent event) throws IOException{
+        VBox shop_view=FXMLLoader.load(getClass().getResource("/com/auction/client/view/Shop.fxml"));
+        HomeController homeController=SomeGlobal.getHomeController();
+        if(homeController!=null && homeController.getBorderpaneHome()!=null){
+            homeController.getBorderpaneHome().setCenter(shop_view);
+        }
     }
+}
 
 
 

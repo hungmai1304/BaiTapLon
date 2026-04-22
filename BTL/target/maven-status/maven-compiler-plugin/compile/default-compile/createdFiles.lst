@@ -3,6 +3,9 @@ com/auction/server/service/AuctionServer.class
 com/auction/client/controller/BankController.class
 com/auction/client/AuctionClient.class
 com/auction/client/controller/LoginController.class
+com/auction/client/controller/ShopController.class
+com/auction/client/controller/ShopSellController.class
+com/auction/client/controller/ShopImportController.class
 com/auction/client/controller/RegisterController.class
 com/auction/client/controller/MainController.class
 com/auction/client/controller/SomeGlobal.class

@@ -16,7 +16,7 @@ public class AuctionClient extends Application {
         stage.setY(0);
         stage.setTitle("JavaFX Button Event");
         stage.setScene(scene);
-
+        stage.setFullScreen(true);
         stage.show();
 
     }

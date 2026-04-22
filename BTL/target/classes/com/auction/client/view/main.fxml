@@ -127,7 +127,7 @@
                   </ImageView>
                </children>
             </AnchorPane>
-            <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="254.0" prefWidth="270.0" stylesheets="@style.css" GridPane.rowIndex="2">
+            <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onMouseClicked="#handleShopClicked" prefHeight="254.0" prefWidth="270.0" stylesheets="@style.css" GridPane.rowIndex="2">
                <children>
                   <Label layoutX="24.0" layoutY="15.0" prefHeight="81.0" prefWidth="146.0" styleClass="label-super-bold" text="Shop" textFill="WHITE">
                      <font>

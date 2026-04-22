@@ -1,6 +1,5 @@
 package com.auction.client.controller;
-import com.auction.server.service.AuctionServer;
-import com.auction.server.service.AuctionServer;
+
 import javafx.fxml.FXML;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
@@ -17,7 +16,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
 
-import java.awt.*;
+
 import java.io.IOException;
 
 public class LoginController {
@@ -50,7 +49,13 @@ public class LoginController {
         if (email.isEmpty() || password.isEmpty()) {
             announcement.setText("Vui lòng nhập đầy đủ thông tin");
         } else {
-            boolean isValid = AuctionServer.checkLogin(email, password);
+            boolean isValid;
+            if(email.contains("@") && password.length()>=6){
+                isValid=true;
+            }
+            else{
+                isValid=false;
+            }
             if (isValid) {
                 announcement.setText("Xin chào: " + email + " đang chuyển hướng");
 
