@@ -48,7 +48,7 @@
                         <VBox alignment="CENTER" prefHeight="0.0" prefWidth="531.0">
                            <children>
                               <Button alignment="CENTER" contentDisplay="CENTER" onAction="#handleGetText" prefWidth="100.0" styleClass="btn1" text="OK" />
-                              <Label fx:id="announcement" alignment="CENTER" contentDisplay="CENTER" prefHeight="19.0" prefWidth="424.0" />
+                              <Label fx:id="announcement" alignment="CENTER" contentDisplay="CENTER" prefHeight="19.0" prefWidth="424.0" text="Hãy nhập thông tin" textFill="WHITE" />
                            </children>
                         </VBox>
                      </children>
