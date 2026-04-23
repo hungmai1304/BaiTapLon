@@ -8,7 +8,7 @@ import org.mindrot.jbcrypt.BCrypt;
 public class UserAuth {
 	// lưu trữ dữ liệu theo Type
 	public static void saveUserToDB(String email, String plainPassword) {
-		String sql = "INSERT INTO users (email, password_hash, user_type) VALUES (?, ?, ?)";
+		String sql = "INSERT INTO users (email, password, user_type) VALUES (?, ?, ?)";
 
 		// mã hóa mật khẩu
 		String hashedPassword = BCrypt.hashpw(plainPassword, BCrypt.gensalt());
@@ -22,9 +22,9 @@ public class UserAuth {
 			pstmt.setString(1, email);
 			pstmt.setString(2, hashedPassword);
 			if (type.equals("gmail.com")) {
-				pstmt.setString(3, "TYPE_A");
+				pstmt.setString(3, "VNU");
 			} else {
-				pstmt.setString(3, "TYPE_B");
+				pstmt.setString(3, "Other");
 			}
 
 			pstmt.executeUpdate();
@@ -42,6 +42,6 @@ public class UserAuth {
 
 		saveUserToDB("abc@gmail.com", "eujen3f94fn");
 
-		saveUserToDB("dvjbv@vnu.edu.vn", "123456");
+		saveUserToDB("svbk@vnu.edu.vn", "123456");
 	}
 }
