@@ -11,7 +11,8 @@
 /dataSources.local.xml
 
 # --- Maven (CỰC KỲ QUAN TRỌNG) ---
-target/
+BTL/target/
+BTL/.idea/
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
