@@ -80,7 +80,7 @@ public class LoginController {
                 Scene homeScene = new Scene(homeRoot);
                 prStage.setScene(homeScene);
 
-                prStage.setMaximized(true);
+
                 prStage.show();
 
             } else {

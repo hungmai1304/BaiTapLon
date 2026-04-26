@@ -24,23 +24,23 @@ import java.io.IOException;
 
 public class BankController {
     @FXML
-    private AnchorPane withdraw_anchor;
+    private VBox withdraw;
     @FXML
-    private AnchorPane deposit_anchor;
+    private VBox deposit;
     @FXML
     public void handleWithdrawClicked(ActionEvent event){
         // hien withdraw len, an deposit di
-        withdraw_anchor.setVisible(true);
-        withdraw_anchor.setManaged(true);
-        deposit_anchor.setVisible(false);
-        deposit_anchor.setManaged(false);
+        withdraw.setVisible(true);
+        withdraw.setManaged(true);
+        deposit.setVisible(false);
+        deposit.setManaged(false);
     }
     @FXML
     public void handleDepositeClicked(ActionEvent event){
-        deposit_anchor.setVisible(true);
-        deposit_anchor.setVisible(true);
-        withdraw_anchor.setVisible(false);
-        withdraw_anchor.setManaged(false);
+        deposit.setVisible(true);
+        deposit.setVisible(true);
+        withdraw.setVisible(false);
+        withdraw.setManaged(false);
     }
     @FXML
     public void handleClickedBack(ActionEvent event) throws IOException{

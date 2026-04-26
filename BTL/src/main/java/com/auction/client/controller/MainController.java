@@ -30,7 +30,7 @@ public class MainController {
     public void handleBalanceClicked(MouseEvent event) throws IOException {
         //tai bank
         //cho bank len giua man hinh
-        AnchorPane bank_view = FXMLLoader.load(getClass().getResource("/com/auction/client/view/bank.fxml"));
+        StackPane bank_view = FXMLLoader.load(getClass().getResource("/com/auction/client/view/bank.fxml"));
 
         HomeController homeController = SomeGlobal.getHomeController();
 

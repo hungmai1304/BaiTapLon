@@ -1,117 +1,188 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.lang.String?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="balance_anchorpane" prefHeight="1080.0" prefWidth="1831.0" styleClass="Scene-black-4" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.BankController">
+<StackPane fx:id="balance_anchorpane" minHeight="720.0" minWidth="1280.0" prefHeight="1080.0" prefWidth="1920.0" styleClass="Scene-black-4" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.BankController">
    <children>
-      <AnchorPane layoutX="191.0" layoutY="86.0" prefHeight="455.0" prefWidth="1459.0" stylesheets="@style.css">
-         <styleClass>
-            <String fx:value="Scene-back-2" />
-            <String fx:value="bogoc" />
-         </styleClass>
+      <VBox spacing="30.0">
          <children>
-            <Label layoutX="362.0" layoutY="149.0" text="0" textFill="WHITE">
-               <font>
-                  <Font size="72.0" />
-               </font>
-            </Label>
-            <Label layoutX="153.0" layoutY="25.0" styleClass="label-super-bold" text="Your Wallet Balance" textFill="WHITE">
-               <font>
-                  <Font size="46.0" />
-               </font>
-            </Label>
-            <ImageView fitHeight="87.0" fitWidth="115.0" layoutX="67.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true">
-               <image>
-                  <Image url="@wallet.png" />
-               </image>
-            </ImageView>
-            <ImageView fitHeight="69.0" fitWidth="93.0" layoutX="446.0" layoutY="70.0" pickOnBounds="true" preserveRatio="true" />
-            <ImageView fitHeight="277.0" fitWidth="277.0" layoutX="1106.0" layoutY="70.0" pickOnBounds="true" preserveRatio="true">
-               <image>
-                  <Image url="@qr.png" />
-               </image>
-            </ImageView>
-            <ImageView fitHeight="125.0" fitWidth="129.0" layoutX="864.0" layoutY="128.0" pickOnBounds="true" preserveRatio="true">
-               <image>
-                  <Image url="@dollar-symbol.png" />
-               </image>
-            </ImageView>
-            <Button layoutX="63.0" layoutY="349.0" mnemonicParsing="false" onAction="#handleWithdrawClicked" prefHeight="72.0" prefWidth="175.0" styleClass="btn2" text="Withdraw" />
-            <Button layoutX="287.0" layoutY="348.0" mnemonicParsing="false" onAction="#handleDepositeClicked" prefHeight="72.0" prefWidth="175.0" styleClass="btn2" text="Deposite" />
-         </children>
-      </AnchorPane>
-      <StackPane layoutX="457.0" layoutY="631.0" prefHeight="335.0" prefWidth="853.0">
-         <children>
-            <AnchorPane fx:id="deposit_anchor" prefHeight="200.0" prefWidth="682.0" stylesheets="@style.css" visible="false">
-               <styleClass>
-                  <String fx:value="Scene-Black" />
-                  <String fx:value="bogoc" />
-               </styleClass>
+            <HBox alignment="CENTER_LEFT">
                <children>
-                  <Label layoutX="21.0" layoutY="34.0" styleClass="h1" text="Amount :" textFill="WHITE" />
-                  <Label layoutX="21.0" layoutY="125.0" styleClass="h1" text="State :" textFill="WHITE" />
-                  <TextField layoutX="175.0" layoutY="38.0" prefHeight="57.0" prefWidth="323.0" promptText="Enter your deposit amount" />
-                  <Button layoutX="522.0" layoutY="18.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="51.0" styleClass="btn-transparent">
+                  <Button mnemonicParsing="false" onAction="#handleClickedBack" styleClass="btn-transparent">
                      <graphic>
-                        <ImageView fitHeight="67.0" fitWidth="65.0" pickOnBounds="true" preserveRatio="true">
-                           <image>
-                              <Image url="@arrow.png" />
-                           </image>
+                        <ImageView fitHeight="60.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true" rotate="180.0">
+                           <image><Image url="@arrow.png" /></image>
                         </ImageView>
                      </graphic>
                   </Button>
-                  <ImageView fitHeight="59.0" fitWidth="74.0" layoutX="535.0" layoutY="117.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@cancel.png" />
-                     </image>
-                  </ImageView>
-                  <Label fx:id="state_withdraw1" layoutX="177.0" layoutY="125.0" prefHeight="18.0" prefWidth="335.0" styleClass="h1" />
                </children>
-            </AnchorPane>
-            <AnchorPane fx:id="withdraw_anchor" prefHeight="200.0" prefWidth="682.0" stylesheets="@style.css" visible="false">
-               <styleClass>
-                  <String fx:value="Scene-Black" />
-                  <String fx:value="bogoc" />
-               </styleClass>
+               <padding><Insets left="20.0" top="20.0" /></padding>
+            </HBox>
+
+            <VBox alignment="CENTER" VBox.vgrow="ALWAYS">
                <children>
-                  <Label layoutX="10.0" layoutY="40.0" styleClass="h1" text="Amount :" textFill="WHITE" />
-                  <Label layoutX="14.0" layoutY="119.0" styleClass="h1" text="State :" textFill="WHITE" />
-                  <TextField layoutX="162.0" layoutY="40.0" prefHeight="57.0" prefWidth="323.0" promptText="Enter your withdraw amount" />
-                  <Button layoutX="503.0" layoutY="24.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="51.0" styleClass="btn-transparent">
-                     <graphic>
-                        <ImageView fitHeight="67.0" fitWidth="65.0" pickOnBounds="true" preserveRatio="true">
-                           <image>
-                              <Image url="@arrow.png" />
-                           </image>
-                        </ImageView>
-                     </graphic>
-                  </Button>
-                  <ImageView fitHeight="59.0" fitWidth="74.0" layoutX="516.0" layoutY="111.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@cancel.png" />
-                     </image>
-                  </ImageView>
-                  <Label fx:id="state_withdraw" layoutX="162.0" layoutY="119.0" prefHeight="18.0" prefWidth="335.0" styleClass="h1" />
+                  <GridPane maxWidth="1200.0" prefHeight="400.0" stylesheets="@style.css">
+                     <columnConstraints>
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="70.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="30.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                     </rowConstraints>
+                     <children>
+                        <VBox alignment="CENTER_LEFT" spacing="20.0">
+                           <children>
+                              <HBox alignment="CENTER_LEFT" spacing="15.0">
+                                 <children>
+                                    <ImageView fitHeight="60.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
+                                       <image><Image url="@wallet.png" /></image>
+                                    </ImageView>
+                                    <Label styleClass="label-super-bold" text="Your Wallet Balance" textFill="WHITE">
+                                       <font><Font size="40.0" /></font>
+                                    </Label>
+                                 </children>
+                              </HBox>
+                              <HBox alignment="CENTER_LEFT" spacing="20.0">
+                                 <children>
+                                    <Label text="0" textFill="WHITE">
+                                       <font><Font size="80.0" /></font>
+                                    </Label>
+                                    <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
+                                       <image><Image url="@dollar-symbol.png" /></image>
+                                    </ImageView>
+                                 </children>
+                                 <padding><Insets left="50.0" /></padding>
+                              </HBox>
+                              <HBox spacing="20.0">
+                                 <children>
+                                    <Button mnemonicParsing="false" onAction="#handleWithdrawClicked" prefHeight="60.0" prefWidth="180.0" styleClass="btn2" text="Withdraw" />
+                                    <Button mnemonicParsing="false" onAction="#handleDepositeClicked" prefHeight="60.0" prefWidth="180.0" styleClass="btn2" text="Deposit" />
+                                 </children>
+                                 <padding><Insets top="20.0" /></padding>
+                              </HBox>
+                           </children>
+                           <padding><Insets left="40.0" /></padding>
+                        </VBox>
+                        <VBox alignment="CENTER" GridPane.columnIndex="1">
+                           <children>
+                              <ImageView fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true">
+                                 <image><Image url="@qr.png" /></image>
+                              </ImageView>
+                           </children>
+                        </VBox>
+                     </children>
+                     <styleClass>
+                        <String fx:value="Scene-back-2" />
+                        <String fx:value="bogoc" />
+                     </styleClass>
+                  </GridPane>
                </children>
-            </AnchorPane>
+            </VBox>
+
+            <VBox alignment="TOP_CENTER" prefHeight="350.0">
+               <children>
+                  <StackPane maxWidth="800.0">
+                     <children>
+                        <VBox fx:id="deposit" spacing="20.0" visible="false">
+                           <styleClass>
+                              <String fx:value="Scene-Black" />
+                              <String fx:value="bogoc" />
+                           </styleClass>
+                           <children>
+                              <GridPane hgap="15.0" vgap="15.0">
+                                 <columnConstraints>
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="150.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="80.0" />
+                                 </columnConstraints>
+                                 <rowConstraints>
+                                    <RowConstraints minHeight="10.0" prefHeight="60.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="60.0" vgrow="SOMETIMES" />
+                                 </rowConstraints>
+                                 <children>
+                                    <Label styleClass="h1" text="Amount :" textFill="WHITE" />
+                                    <TextField prefHeight="50.0" promptText="Enter deposit amount" GridPane.columnIndex="1" />
+                                    <Button mnemonicParsing="false" styleClass="btn-transparent" GridPane.columnIndex="2">
+                                       <graphic>
+                                          <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
+                                             <image><Image url="@arrow.png" /></image>
+                                          </ImageView>
+                                       </graphic>
+                                    </Button>
+                                    <Label styleClass="h1" text="State :" textFill="WHITE" GridPane.rowIndex="1" />
+                                    <HBox alignment="CENTER_LEFT" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                       <children>
+                                          <Label fx:id="state_withdraw1" styleClass="h1" textFill="WHITE" />
+                                          <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                                             <image><Image url="@cancel.png" /></image>
+                                          </ImageView>
+                                       </children>
+                                    </HBox>
+                                 </children>
+                              </GridPane>
+                           </children>
+                           <padding><Insets bottom="30.0" left="30.0" right="30.0" top="30.0" /></padding>
+                        </VBox>
+
+                        <VBox fx:id="withdraw" spacing="20.0" visible="false">
+                           <styleClass>
+                              <String fx:value="Scene-Black" />
+                              <String fx:value="bogoc" />
+                           </styleClass>
+                           <children>
+                              <GridPane hgap="15.0" vgap="15.0">
+                                 <columnConstraints>
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="150.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="80.0" />
+                                 </columnConstraints>
+                                 <rowConstraints>
+                                    <RowConstraints minHeight="10.0" prefHeight="60.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="60.0" vgrow="SOMETIMES" />
+                                 </rowConstraints>
+                                 <children>
+                                    <Label styleClass="h1" text="Amount :" textFill="WHITE" />
+                                    <TextField prefHeight="50.0" promptText="Enter withdraw amount" GridPane.columnIndex="1" />
+                                    <Button mnemonicParsing="false" styleClass="btn-transparent" GridPane.columnIndex="2">
+                                       <graphic>
+                                          <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
+                                             <image><Image url="@arrow.png" /></image>
+                                          </ImageView>
+                                       </graphic>
+                                    </Button>
+                                    <Label styleClass="h1" text="State :" textFill="WHITE" GridPane.rowIndex="1" />
+                                    <HBox alignment="CENTER_LEFT" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                       <children>
+                                          <Label fx:id="state_withdraw" styleClass="h1" textFill="WHITE" />
+                                          <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                                             <image><Image url="@cancel.png" /></image>
+                                          </ImageView>
+                                       </children>
+                                    </HBox>
+                                 </children>
+                              </GridPane>
+                           </children>
+                           <padding><Insets bottom="30.0" left="30.0" right="30.0" top="30.0" /></padding>
+                        </VBox>
+                     </children>
+                  </StackPane>
+               </children>
+            </VBox>
          </children>
-      </StackPane>
-      <Button layoutX="21.0" layoutY="17.0" mnemonicParsing="false" onAction="#handleClickedBack" styleClass="btn-transparent">
-         <graphic>
-            <ImageView fitHeight="107.0" fitWidth="117.0" pickOnBounds="true" preserveRatio="true" rotate="180.0">
-               <image>
-                  <Image url="@arrow.png" />
-               </image>
-            </ImageView>
-         </graphic>
-      </Button>
+      </VBox>
    </children>
-</AnchorPane>
+</StackPane>

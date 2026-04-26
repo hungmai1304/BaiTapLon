@@ -53,7 +53,7 @@ public class HomeController{
     }
     @FXML
     public void handleBankButtonClicked(ActionEvent event) throws IOException{
-        AnchorPane bank_view=FXMLLoader.load(getClass().getResource("/com/auction/client/view/bank.fxml"));
+        StackPane bank_view=FXMLLoader.load(getClass().getResource("/com/auction/client/view/bank.fxml"));
         borderpane_home.setCenter(bank_view);
     }
     @FXML
