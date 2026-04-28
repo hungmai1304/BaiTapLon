@@ -41,51 +41,59 @@ public class LoginController {
 
     }
 
+    // xử lí chuyển giao diện sang main tại đây
     @FXML
     public void handleGetText(ActionEvent event) throws IOException {
-        String email = mail.getText();
+        String email = mail.getText().trim(); // Thêm .trim() để xóa khoảng trắng thừa
         String password = passwordtext.getText();
 
+        // 1. Kiểm tra rỗng
         if (email.isEmpty() || password.isEmpty()) {
-            announcement.setText("Vui lòng nhập đầy đủ thông tin");
-        } else {
-            boolean isValid;
-            if(email.contains("@") && password.length()>=6){
-                isValid=true;
-            }
-            else{
-                isValid=false;
-            }
-            if (isValid) {
-                announcement.setText("Xin chào: " + email + " đang chuyển hướng");
-
-                // 1. CHỈ DÙNG 1 LOADER DUY NHẤT CHO HOME
-                FXMLLoader home_loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/home.fxml"));
-                Parent homeRoot = home_loader.load(); // PHẢI GỌI .load() TRƯỚC KHI LẤY CONTROLLER
-
-                // 2. LẤY CONTROLLER SAU KHI ĐÃ LOAD
-                HomeController homeController = home_loader.getController();
-                SomeGlobal.storeHomeController(homeController);
-
-                // 3. LOAD MAIN FXML (VÙNG CENTER)
-                StackPane mainView = FXMLLoader.load(getClass().getResource("/com/auction/client/view/main.fxml"));
-
-                // 4. ĐƯA MAIN VÀO CENTER CỦA HOME (Lúc này homeController không còn bị null nữa)
-                if (homeController != null && homeController.getBorderpaneHome() != null) {
-                    homeController.getBorderpaneHome().setCenter(mainView);
-                }
-
-                // 5. HIỂN THỊ LÊN STAGE
-                Stage prStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                Scene homeScene = new Scene(homeRoot);
-                prStage.setScene(homeScene);
-
-
-                prStage.show();
-
-            } else {
-                announcement.setText("Mật khẩu hoặc email không hợp lệ!");
-            }
+            announcement.setText("Vui lòng nhập đầy đủ thông tin!");
+            return; // Thoát sớm để đỡ phải dùng else lồng nhau
         }
+
+        // 2. Kiểm tra định dạng (Dùng hàm riêng đã tạo ở trên)
+        if (!isValidCredentials(email, password)) {
+            announcement.setText("Email không hợp lệ hoặc mật khẩu dưới 6 ký tự!");
+            return;
+        }
+
+        // 3. Nếu mọi thứ OK -> Tiến hành chuyển hướng
+        announcement.setText("Xin chào: " + email + " Đang chuyển hướng...");
+        navigateToHome(event);
     }
+
+    // Tách luôn đoạn chuyển hướng ra một hàm cho dễ quản lý
+    private void navigateToHome(ActionEvent event) throws IOException {
+        FXMLLoader homeLoader = new FXMLLoader(getClass().getResource("/com/auction/client/view/home.fxml"));
+        Parent homeRoot = homeLoader.load();
+
+        HomeController homeController = homeLoader.getController();
+        SomeGlobal.storeHomeController(homeController);
+
+        // Load vùng trung tâm
+        StackPane mainView = FXMLLoader.load(getClass().getResource("/com/auction/client/view/main.fxml"));
+
+        if (homeController != null && homeController.getBorderpaneHome() != null) {
+            homeController.getBorderpaneHome().setCenter(mainView);
+        }
+
+        // Hiển thị Stage
+        Stage prStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        prStage.setScene(new Scene(homeRoot));
+        prStage.show();
+    }
+    private boolean isValidCredentials(String email, String password) {
+        // Check email bằng Regex (đảm bảo có dạng abc@xyz.com)
+        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        boolean isEmailValid = email.matches(emailRegex);
+
+        // Check độ dài mật khẩu
+        boolean isPasswordValid = password != null && password.length() >= 6;
+
+        return isEmailValid && isPasswordValid;
+    }
+
+
 }
