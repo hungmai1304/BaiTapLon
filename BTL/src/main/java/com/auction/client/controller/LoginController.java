@@ -15,9 +15,12 @@ import javafx.stage.Stage;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
+import com.auction.client.utils.ValidationUtils;
 
 
 import java.io.IOException;
+
+
 
 public class LoginController {
     @FXML
@@ -54,7 +57,7 @@ public class LoginController {
         }
 
         // 2. Kiểm tra định dạng (Dùng hàm riêng đã tạo ở trên)
-        if (!isValidCredentials(email, password)) {
+        if (!ValidationUtils.isValidCredentials(email, password)) {
             announcement.setText("Email không hợp lệ hoặc mật khẩu dưới 6 ký tự!");
             return;
         }
@@ -84,16 +87,7 @@ public class LoginController {
         prStage.setScene(new Scene(homeRoot));
         prStage.show();
     }
-    private boolean isValidCredentials(String email, String password) {
-        // Check email bằng Regex (đảm bảo có dạng abc@xyz.com)
-        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
-        boolean isEmailValid = email.matches(emailRegex);
 
-        // Check độ dài mật khẩu
-        boolean isPasswordValid = password != null && password.length() >= 6;
-
-        return isEmailValid && isPasswordValid;
-    }
 
 
 }
