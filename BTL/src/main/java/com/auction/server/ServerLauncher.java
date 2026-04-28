@@ -18,7 +18,7 @@ public class ServerLauncher {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("New client connected: " + clientSocket.getInetAddress());
-
+                clientSocket.getInputStream().read(new byte[1024]);
                 // Tại đây bạn sẽ gọi đến logic xử lý đấu giá của bạn
                 // Ví dụ: new Thread(new ClientHandler(clientSocket)).start();
             }
