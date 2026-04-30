@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane fx:id="borderpane_home" minHeight="720.0" minWidth="1280.0" prefHeight="720.0" prefWidth="1280.0" styleClass="background" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.HomeController">
+   <left>
+      <VBox prefWidth="85.0" styleClass="Scene-Back-1" BorderPane.alignment="CENTER">
+         <children>
+            <VBox alignment="TOP_CENTER" spacing="10.0">
+               <children>
+                  <ToggleButton maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleHomeClicked" selected="true">
+                     <graphic>
+                        <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                           <image><Image url="@home-button.png" /></image>
+                        </ImageView>
+                     </graphic>
+                     <styleClass>
+                        <String fx:value="transparent" />
+                        <String fx:value="toggle-button" />
+                     </styleClass>
+                     <toggleGroup>
+                        <ToggleGroup fx:id="menu" />
+                     </toggleGroup>
+                  </ToggleButton>
+
+                  <ToggleButton maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSearchClicked" toggleGroup="$menu">
+                     <graphic>
+                        <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                           <image><Image url="@3d-magnifier.png" /></image>
+                        </ImageView>
+                     </graphic>
+                     <styleClass>
+                        <String fx:value="transparent" />
+                        <String fx:value="toggle-button" />
+                     </styleClass>
+                  </ToggleButton>
+
+                  <ToggleButton maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleBankButtonClicked" toggleGroup="$menu">
+                     <graphic>
+                        <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                           <image><Image url="@dollar-symbol.png" /></image>
+                        </ImageView>
+                     </graphic>
+                     <styleClass>
+                        <String fx:value="transparent" />
+                        <String fx:value="toggle-button" />
+                     </styleClass>
+                  </ToggleButton>
+
+                  <ToggleButton maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleTikTokAuction" toggleGroup="$menu">
+                     <graphic>
+                        <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                           <image><Image url="@shopping-cart.png" /></image>
+                        </ImageView>
+                     </graphic>
+                     <styleClass>
+                        <String fx:value="transparent" />
+                        <String fx:value="toggle-button" />
+                     </styleClass>
+                  </ToggleButton>
+               </children>
+               <padding>
+                  <Insets top="30.0" />
+               </padding>
+            </VBox>
+
+            <Region VBox.vgrow="ALWAYS" />
+
+            <VBox alignment="BOTTOM_CENTER">
+               <children>
+                  <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSettingClicked">
+                     <styleClass>
+                        <String fx:value="transparent" />
+                        <String fx:value="toggle-button" />
+                     </styleClass>
+                     <graphic>
+                        <ImageView fitHeight="32.0" fitWidth="32.0" pickOnBounds="true" preserveRatio="true">
+                           <image><Image url="@settings.png" /></image>
+                        </ImageView>
+                     </graphic>
+                  </Button>
+               </children>
+               <padding>
+                  <Insets bottom="30.0" />
+               </padding>
+            </VBox>
+         </children>
+      </VBox>
+   </left>
+
+   <center>
+      <StackPane fx:id="contentArea" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="Scene-Black" BorderPane.alignment="CENTER" />
+   </center>
+</BorderPane>

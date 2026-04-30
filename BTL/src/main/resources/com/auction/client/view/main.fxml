@@ -1,1 +1,198 @@
-<!---->
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<StackPane minHeight="720.0" minWidth="1280.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.MainController">
+   <children>
+      <GridPane fx:id="gidpane_main" styleClass="Scene-Black" stylesheets="@style.css">
+         <columnConstraints>
+            <ColumnConstraints hgrow="SOMETIMES" percentWidth="33.34" />
+            <ColumnConstraints hgrow="SOMETIMES" percentWidth="33.33" />
+            <ColumnConstraints hgrow="SOMETIMES" percentWidth="33.33" />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints percentHeight="20.0" vgrow="SOMETIMES" />
+            <RowConstraints percentHeight="40.0" vgrow="SOMETIMES" />
+            <RowConstraints percentHeight="40.0" vgrow="SOMETIMES" />
+         </rowConstraints>
+         <children>
+
+            <VBox alignment="CENTER_LEFT" spacing="10.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+               <children>
+                  <Label styleClass="label-super-bold" text="Hi, UserName !" textFill="WHITE">
+                     <font><Font size="50.0" /></font>
+                  </Label>
+                  <Label text="This is where you track your activities" textFill="WHITE">
+                     <font><Font size="22.0" /></font>
+                  </Label>
+               </children>
+               <padding><Insets left="40.0" /></padding>
+            </VBox>
+
+            <AnchorPane onMouseClicked="#handleBalanceClicked" stylesheets="@style.css" GridPane.rowIndex="1">
+               <children>
+                  <VBox alignment="CENTER" spacing="20.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <children>
+                        <Label styleClass="label-super-bold" text="Your Balance">
+                           <font><Font size="45.0" /></font>
+                        </Label>
+                        <HBox alignment="CENTER" spacing="15.0">
+                           <children>
+                              <Label styleClass="label-super-bold" text="0">
+                                 <font><Font size="65.0" /></font>
+                              </Label>
+                              <ImageView fitHeight="80.0" fitWidth="80.0" pickOnBounds="true" preserveRatio="true">
+                                 <image><Image url="@dollar-symbol.png" /></image>
+                              </ImageView>
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </children>
+               <styleClass>
+                  <String fx:value="Scene-black-4" />
+                  <String fx:value="bogoc" />
+                  <String fx:value="hover-mouse" />
+               </styleClass>
+               <GridPane.margin><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></GridPane.margin>
+            </AnchorPane>
+
+            <AnchorPane fx:id="aboutYou" onMouseClicked="#handleAboutYouClicked" stylesheets="@style.css" GridPane.columnIndex="1" GridPane.rowIndex="1">
+               <children>
+                  <VBox alignment="CENTER" spacing="15.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <children>
+                        <Label styleClass="label-super-bold" text="About You" textFill="WHITE">
+                           <font><Font size="45.0" /></font>
+                        </Label>
+                        <ImageView fitHeight="90.0" fitWidth="90.0" pickOnBounds="true" preserveRatio="true">
+                           <image><Image url="@account.png" /></image>
+                        </ImageView>
+                        <Label styleClass="label-super-bold" text="Name" textFill="WHITE">
+                           <font><Font size="35.0" /></font>
+                        </Label>
+                     </children>
+                  </VBox>
+               </children>
+               <styleClass>
+                  <String fx:value="Scene-Back-1" />
+                  <String fx:value="bogoc" />
+                  <String fx:value="hover-mouse" />
+               </styleClass>
+               <GridPane.margin><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></GridPane.margin>
+            </AnchorPane>
+
+            <AnchorPane stylesheets="@style.css" GridPane.columnIndex="2" GridPane.rowIndex="1">
+               <children>
+                  <VBox alignment="CENTER" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <children>
+                        <Label styleClass="label-super-bold" text="Statistics" textFill="WHITE">
+                           <font><Font size="45.0" /></font>
+                        </Label>
+                        <HBox alignment="CENTER" spacing="30.0">
+                           <children>
+                              <ImageView fitHeight="130.0" fitWidth="130.0" pickOnBounds="true" preserveRatio="true">
+                                 <image><Image url="@pie-chart.png" /></image>
+                              </ImageView>
+                              <VBox alignment="CENTER_LEFT" spacing="10.0">
+                                 <children>
+                                    <Label styleClass="label-super-bold" text="0%" textFill="WHITE"><font><Font size="35.0" /></font></Label>
+                                    <Label styleClass="label-super-bold" text="0%" textFill="WHITE"><font><Font size="35.0" /></font></Label>
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </children>
+               <styleClass>
+                  <String fx:value="Scene-Back-1" />
+                  <String fx:value="bogoc" />
+                  <String fx:value="hover-mouse" />
+               </styleClass>
+               <GridPane.margin><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></GridPane.margin>
+            </AnchorPane>
+
+            <AnchorPane onMouseClicked="#handleShopClicked" stylesheets="@style.css" GridPane.rowIndex="2">
+               <children>
+                  <VBox alignment="CENTER" spacing="15.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <children>
+                        <Label styleClass="label-super-bold" text="Shop" textFill="WHITE">
+                           <font><Font size="45.0" /></font>
+                        </Label>
+                        <HBox alignment="CENTER" spacing="15.0">
+                           <children>
+                              <Label styleClass="label-super-bold" text="0" textFill="WHITE"><font><Font size="60.0" /></font></Label>
+                              <Label styleClass="label-super-bold" text="Products" textFill="WHITE"><font><Font size="30.0" /></font></Label>
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER" spacing="10.0">
+                           <children>
+                              <Label text="with 0 ongoing" textFill="WHITE"><font><Font size="25.0" /></font></Label>
+                              <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                                 <image><Image url="@products.png" /></image>
+                              </ImageView>
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </children>
+               <styleClass>
+                  <String fx:value="Scene-Back-1" />
+                  <String fx:value="bogoc" />
+                  <String fx:value="hover-mouse" />
+               </styleClass>
+               <GridPane.margin><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></GridPane.margin>
+            </AnchorPane>
+
+            <AnchorPane stylesheets="@style.css" GridPane.columnIndex="1" GridPane.rowIndex="2">
+               <children>
+                  <VBox alignment="CENTER" spacing="15.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <children>
+                        <Label styleClass="label-super-bold" text="Auction" textFill="WHITE">
+                           <font><Font size="45.0" /></font>
+                        </Label>
+                        <HBox alignment="CENTER" spacing="20.0">
+                           <children>
+                              <Label styleClass="label-super-bold" text="0" textFill="WHITE"><font><Font size="60.0" /></font></Label>
+                              <Label styleClass="label-super-bold" text="Products" textFill="WHITE"><font><Font size="30.0" /></font></Label>
+                              <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
+                                 <image><Image url="@products.png" /></image>
+                              </ImageView>
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </children>
+               <styleClass>
+                  <String fx:value="Scene-Back-1" />
+                  <String fx:value="bogoc" />
+                  <String fx:value="hover-mouse" />
+               </styleClass>
+               <GridPane.margin><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></GridPane.margin>
+            </AnchorPane>
+
+            <AnchorPane stylesheets="@style.css" GridPane.columnIndex="2" GridPane.rowIndex="2">
+               <styleClass>
+                  <String fx:value="Scene-Back-1" />
+                  <String fx:value="bogoc" />
+                  <String fx:value="hover-mouse" />
+               </styleClass>
+               <GridPane.margin><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></GridPane.margin>
+            </AnchorPane>
+
+         </children>
+      </GridPane>
+   </children>
+</StackPane>

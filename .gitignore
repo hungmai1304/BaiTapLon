@@ -6,3 +6,34 @@ target/
 
 .env*
 !.env.example
+# --- JetBrains (Nội dung bạn đã có) ---
+.idea/
+*.iws
+*.iml
+*.ipr
+/shelf/
+/workspace.xml
+/httpRequests/
+/queries/
+/dataSources/
+/dataSources.local.xml
+
+# --- Maven (CỰC KỲ QUAN TRỌNG) ---
+BTL/target/
+BTL/.idea/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.restoreBackup
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# --- OS rác ---
+.DS_Store
+Thumbs.db
+
+# --- Log files ---
+*.log

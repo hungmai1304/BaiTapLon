@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefHeight="1080.0" prefWidth="1831.0" styleClass="main-root" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.ShopSellController">
+    <children>
+        <HBox alignment="CENTER_LEFT" prefHeight="100.0" spacing="20.0" styleClass="header">
+            <children>
+                <Label styleClass="logo-text" text="MY SHOP" />
+                <Label styleClass="header-sub-title" text="&gt; Sản phẩm chờ đăng bán" />
+                <Region HBox.hgrow="ALWAYS" />
+            <Button onAction="#handleBackClicked" prefHeight="45.0" prefWidth="103.0" styleClass="btn3" text="Quay lại" />
+                <TextField promptText="Tìm trong kho..." styleClass="search-input-small" />
+            </children>
+            <padding>
+                <Insets left="60.0" right="60.0" />
+            </padding>
+        </HBox>
+
+        <VBox spacing="30.0" VBox.vgrow="ALWAYS">
+            <padding>
+                <Insets bottom="40.0" left="60.0" right="60.0" top="40.0" />
+            </padding>
+            <children>
+                <TableView styleClass="custom-table" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn prefWidth="150.0" text="Hình ảnh" />
+                        <TableColumn prefWidth="400.0" text="Tên sản phẩm" />
+                        <TableColumn prefWidth="200.0" text="Giá vốn" />
+                        <TableColumn prefWidth="150.0" text="Số lượng tồn" />
+                        <TableColumn prefWidth="250.0" text="Ngày nhập" />
+                        <TableColumn prefWidth="300.0" text="Thao tác" />
+                    </columns>
+                </TableView>
+
+                <HBox alignment="CENTER_RIGHT" spacing="20.0">
+                    <children>
+                        <Label styleClass="label-value" text="Tổng cộng: 15 sản phẩm đang chờ" />
+                        <Button styleClass="btn-submit" text="Đăng sản phẩm đã chọn lên Auction" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </children>
+</VBox>
