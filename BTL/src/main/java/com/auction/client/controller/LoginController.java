@@ -85,6 +85,7 @@ public class LoginController {
         // Hiển thị Stage
         Stage prStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         prStage.setScene(new Scene(homeRoot));
+        prStage.setMaximized(true);
         prStage.show();
     }
 
