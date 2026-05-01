@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Line?>
 
-<VBox prefHeight="1080.0" prefWidth="1831.0" styleClass="main-container" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+<VBox prefHeight="1080.0" prefWidth="1831.0" styleClass="main-container" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.TikTokAuctionController">
     <children>
         <HBox alignment="CENTER_LEFT" prefHeight="80.0" styleClass="header">
             <children>
@@ -38,7 +38,7 @@
 
                         <VBox alignment="CENTER" prefWidth="80.0" spacing="20.0">
                             <children>
-                                <Button>
+                                <Button onAction="#handleUp">
                            <graphic>
                               <ImageView fitHeight="49.0" fitWidth="47.0" pickOnBounds="true" preserveRatio="true" rotate="270.0">
                                  <image>
@@ -51,7 +51,7 @@
                               <String fx:value="btn-transparent" />
                            </styleClass></Button>
                                 <Separator maxWidth="40" opacity="0.2" />
-                        <Button>
+                        <Button onAction="#handleDown">
                            <graphic>
                               <ImageView fitHeight="49.0" fitWidth="47.0" pickOnBounds="true" preserveRatio="true" rotate="90.0">
                                  <image>
@@ -107,18 +107,17 @@
 
                                 <VBox spacing="15.0" styleClass="info-section">
                                     <children>
-                                        <Label styleClass="label-value-highlight" text="SẢN PHẨM ĐANG CHỌN #02" />
                                         <HBox spacing="10.0">
                                             <Label styleClass="label-title" text="Tên sản phẩm:" />
-                                            <Label styleClass="label-value" text="iPhone 15 Pro Max New Seal" />
+                                            <Label fx:id="name" styleClass="label-value" text="iPhone 15 Pro Max New Seal" />
                                         </HBox>
                                         <HBox spacing="10.0">
                                             <Label styleClass="label-title" text="Giá khởi điểm:" />
-                                            <Label styleClass="label-value" text="2,500,000 VNĐ" />
+                                            <Label fx:id="price" styleClass="label-value" text="2,500,000 VNĐ" />
                                         </HBox>
                                         <HBox spacing="10.0">
                                             <Label styleClass="label-title" text="Bước giá:" />
-                                            <Label styleClass="label-value" text="50,000 VNĐ" />
+                                            <Label fx:id="step" styleClass="label-value" text="50,000 VNĐ" />
                                         </HBox>
                                     </children>
                                 </VBox>
