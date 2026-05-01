@@ -3,63 +3,69 @@ package com.auction.client;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import java.net.URI;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class NetworkClient {
-    // Luôn sử dụng wss:// cho Render
     private static final String SERVER_URL = "wss://baitaplon-qegw.onrender.com";
+    private static WebSocketClient webSocketClient;
 
-    public static String sendRequest(String command) {
-        // Dùng CompletableFuture để xử lý bất đồng bộ
-        CompletableFuture<String> responseFuture = new CompletableFuture<>();
+    // Giao diện để "bắn" dữ liệu về cho Controller
+    public interface MessageListener {
+        void onMessageReceived(String message);
+    }
+
+    private static MessageListener currentListener;
+
+    // Controller sẽ gọi hàm này để đăng ký nhận tin nhắn
+    public static void setListener(MessageListener listener) {
+        currentListener = listener;
+    }
+
+    // Hàm mở kết nối 24/7
+    public static void connectAndKeepAlive() {
+        if (webSocketClient != null && webSocketClient.isOpen()) {
+            return; // Nếu đang mở rồi thì thôi không mở lại
+        }
 
         try {
-            WebSocketClient client = new WebSocketClient(new URI(SERVER_URL)) {
+            webSocketClient = new WebSocketClient(new URI(SERVER_URL)) {
                 @Override
                 public void onOpen(ServerHandshake handshakedata) {
-                    System.out.println("[Network] Connected! Sending: " + command);
-                    send(command);
+                    System.out.println("🟢 Đã thiết lập kết nối Real-time!");
+                    // Vừa vào là xin thông tin sản phẩm luôn
+                    send("GET_CURRENT");
                 }
 
                 @Override
                 public void onMessage(String message) {
-                    System.out.println("[Network] Received response.");
-                    responseFuture.complete(message);
-                    this.close(); // Đóng kết nối sau khi nhận được data
-                }
-
-                @Override
-                public void onClose(int code, String reason, boolean remote) {
-                    if (!responseFuture.isDone()) {
-                        responseFuture.completeExceptionally(new Exception("Connection closed: " + reason));
+                    // CÓ TIN NHẮN TỪ SERVER -> Đẩy về cho Controller
+                    if (currentListener != null) {
+                        currentListener.onMessageReceived(message);
                     }
                 }
 
                 @Override
+                public void onClose(int code, String reason, boolean remote) {
+                    System.out.println("🔴 Mất kết nối: " + reason);
+                    // Có thể thêm logic tự động kết nối lại ở đây nếu muốn
+                }
+
+                @Override
                 public void onError(Exception ex) {
-                    System.err.println("[Network] Error: " + ex.getMessage());
-                    responseFuture.completeExceptionally(ex);
+                    System.err.println("❌ Lỗi mạng: " + ex.getMessage());
                 }
             };
-
-            // Bắt đầu kết nối
-            client.connect();
-
-            /**
-             * Cực kỳ quan trọng: Đợi tối đa 30 giây (vì Render ngủ đông cần thời gian dậy).
-             * Trong Java 25, cơ chế Virtual Threads (nếu bạn dùng) sẽ chạy cực mượt với .get()
-             */
-            return responseFuture.get(30, TimeUnit.SECONDS);
-
-        } catch (TimeoutException e) {
-            System.err.println("[Network] Server Render quá chậm, Timeout!");
-            return null;
+            webSocketClient.connect();
         } catch (Exception e) {
-            System.err.println("[Network] Lỗi thực thi: " + e.getMessage());
-            // e.printStackTrace();
-            return null;
+            e.printStackTrace();
+        }
+    }
+
+    // Hàm để Client gửi lệnh lên Server (ví dụ: "BID:50000")
+    public static void sendCommand(String command) {
+        if (webSocketClient != null && webSocketClient.isOpen()) {
+            webSocketClient.send(command);
+        } else {
+            System.err.println("⚠️ Chưa kết nối mạng, không thể gửi lệnh!");
         }
     }
 }

@@ -1,44 +1,69 @@
 package com.auction.server;
 
-
 import org.java_websocket.server.WebSocketServer;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.WebSocket;
 import java.net.InetSocketAddress;
 import com.google.gson.Gson;
-import com.auction.common.model.Product; // Đảm bảo import đúng class Product của bạn
+import com.auction.common.model.Product;
 
 public class AuctionWebSocketServer extends WebSocketServer {
 
     private Gson gson = new Gson();
 
+    // 🔥 ĐÂY LÀ "DATABASE TẠM THỜI" CỦA CHÚNG TA
+    private Product currentProduct;
+
     public AuctionWebSocketServer(int port) {
         super(new InetSocketAddress(port));
+
+        // Khởi tạo một sản phẩm mẫu khi Server vừa bật lên
+        currentProduct = new Product();
+        // Giả sử class Product của bạn có các hàm set này, hãy sửa lại cho khớp với class của bạn nhé
+        currentProduct.setId("P001");
+        currentProduct.setName("Laptop Gaming Siêu Cấp");
+        currentProduct.setCurrentPrice(100000); // Giá khởi điểm: 100k
     }
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        System.out.println("🟢 Có người vào xem đấu giá: " + conn.getRemoteSocketAddress());
+        System.out.println("🟢 Có người vào phòng: " + conn.getRemoteSocketAddress());
     }
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        System.out.println("📩 Lệnh nhận được: " + message);
+        System.out.println("📩 Nhận lệnh: " + message);
 
-        // Xử lý các lệnh từ Client gửi lên
-        if ("GET_CURRENT".equals(message)) {
-
-            // TẠM THỜI: Tạo cứng 1 sản phẩm để test.
-            // SAU NÀY: Bạn gọi hàm từ AuctionDao / AuctionManager ở đây nhé!
-            Product currentProduct = new Product();
-            // currentProduct.setId("P01");
-            // currentProduct.setName("Laptop Gaming xịn");
-            // ... set các thông số ...
-
-            // Chuyển Product thành chuỗi JSON và gửi về cho Client
+        if (message.equals("GET_CURRENT")) {
+            // Khi có người mới vào, gửi giá trị của "Database tạm" cho họ
             String jsonResponse = gson.toJson(currentProduct);
             conn.send(jsonResponse);
-            System.out.println("Đã gửi thông tin sản phẩm về Client.");
+        }
+        else if (message.startsWith("BID:")) {
+            try {
+                // Tách lấy số tiền từ chuỗi "BID:500000"
+                double bidAmount = Double.parseDouble(message.split(":")[1]);
+
+                // 🔥 LOGIC KIỂM TRA TRẢ GIÁ: Giá mới phải lớn hơn giá hiện tại
+                if (bidAmount > currentProduct.getCurrentPrice()) {
+
+                    // 1. Cập nhật giá mới vào "Database tạm"
+                    currentProduct.setCurrentPrice(bidAmount);
+
+                    // 2. Chuyển thành JSON
+                    String jsonToPush = gson.toJson(currentProduct);
+
+                    // 3. 📢 PHÁT LOA CHO TẤT CẢ MỌI NGƯỜI ĐANG XEM
+                    broadcast(jsonToPush);
+                    System.out.println("🚀 Đã có người trả giá mới: " + bidAmount);
+
+                } else {
+                    // Nếu trả giá thấp hơn hoặc bằng, báo lỗi cho riêng người đó
+                    conn.send("ERROR:Giá trả phải lớn hơn " + currentProduct.getCurrentPrice());
+                }
+            } catch (Exception e) {
+                conn.send("ERROR:Lệnh trả giá không hợp lệ!");
+            }
         }
     }
 
@@ -54,6 +79,6 @@ public class AuctionWebSocketServer extends WebSocketServer {
 
     @Override
     public void onStart() {
-        System.out.println("🚀 WebSocket Server đã sẵn sàng nhận kết nối!");
+        System.out.println("🚀 WebSocket Server Real-time đã sẵn sàng!");
     }
 }

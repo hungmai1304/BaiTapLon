@@ -1,18 +1,15 @@
-# BƯỚC 1: Build dự án bằng Maven
-FROM maven:3.8.5-openjdk-17 AS build
+# Sử dụng trực tiếp Maven kèm Java 25 mới nhất
+FROM maven:3.9-eclipse-temurin-25
 WORKDIR /app
+
+# Copy toàn bộ mã nguồn và file pom.xml vào Docker
 COPY . .
-RUN mvn clean package -DskipTests
 
-# BƯỚC 2: Chạy ứng dụng (Đã sửa dòng lỗi)
-FROM eclipse-temurin:17-jdk-alpine
-WORKDIR /app
+# Compile dự án bằng Java 25 (Sẽ không còn lỗi release version 25 not supported nữa)
+RUN mvn clean compile -DskipTests
 
-# Copy file JAR từ bước build sang
-COPY --from=build /app/target/*.jar app.jar
-
-# Port Render cấp
+# Port cho Render
 EXPOSE 8080
 
-# Chạy trực tiếp Class Server đầu não của bạn
-ENTRYPOINT ["java", "-cp", "app.jar", "com.auction.server.ServerLauncher"]
+# Chạy trực tiếp qua Maven Exec Plugin
+CMD ["mvn", "exec:java", "-Dexec.mainClass=com.auction.server.ServerLauncher"]

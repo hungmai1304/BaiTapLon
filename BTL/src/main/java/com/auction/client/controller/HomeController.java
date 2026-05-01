@@ -38,39 +38,32 @@ public class HomeController {
 
     @FXML
     public void handleTikTokAuction(ActionEvent event) {
-        // Chạy ngầm để Render có "ngủ" thì App vẫn không bị treo (tránh lỗi 137)
-        new Thread(() -> {
-            try {
-                System.out.println("Đang triệu hồi Server Render...");
-                String jsonResponse = NetworkClient.sendRequest("GET_CURRENT");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/tiktokAuction.fxml"));
+            VBox tiktokView = loader.load();
 
-                Platform.runLater(() -> {
-                    try {
-                        if (jsonResponse == null) {
-                            System.err.println("Lỗi: Server Render không phản hồi hoặc hết thời gian chờ.");
-                            return;
-                        }
+            TikTokAuctionController controller = loader.getController();
 
-                        Gson gson = new Gson();
-                        Product currentProduct = gson.fromJson(jsonResponse, Product.class);
-
-                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/tiktokAuction.fxml"));
-                        VBox tiktokView = loader.load();
-
-                        TikTokAuctionController controller = loader.getController();
-                        controller.setCurrentAuction(currentProduct);
-
-                        borderpane_home.setCenter(tiktokView);
-                        System.out.println("TikTok Auction đã sẵn sàng!");
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+            // 1. Đăng ký Listener: Khi có tin nhắn từ Server, báo cho Controller này
+            NetworkClient.setListener(jsonResponse -> {
+                // Nhớ chạy Platform.runLater vì đang ở luồng WebSocket
+                javafx.application.Platform.runLater(() -> {
+                    Gson gson = new Gson();
+                    Product currentProduct = gson.fromJson(jsonResponse, Product.class);
+                    controller.setCurrentAuction(currentProduct);
+                    System.out.println("Đã cập nhật giá mới trên UI!");
                 });
-            } catch (Exception e) {
-                System.err.println("Lỗi luồng mạng: " + e.getMessage());
-            }
-        }).start();
+            });
+
+            // 2. Chuyển giao diện ngay lập tức (không bị lag)
+            borderpane_home.setCenter(tiktokView);
+
+            // 3. Khởi động kết nối mạng ngầm
+            NetworkClient.connectAndKeepAlive();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
