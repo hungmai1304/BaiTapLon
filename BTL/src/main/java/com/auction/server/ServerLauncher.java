@@ -17,3 +17,9 @@ public class ServerLauncher {
         System.out.println("Đang chờ Client kết nối...");
     }
 }
+//-----------------------------------------------------------------------------------
+//1. Đọc PORT
+//2. Chọn cổng
+//3. Tạo WebSocket server
+//4. Start server
+//5. Chờ client vào

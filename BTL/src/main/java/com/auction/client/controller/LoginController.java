@@ -30,6 +30,10 @@ public class LoginController {
     @FXML
     private PasswordField passwordtext;
 
+
+
+
+    // nút đăng kí
     @FXML
     public void handleButtonClick(ActionEvent event) throws  IOException{
 
@@ -44,7 +48,7 @@ public class LoginController {
 
     }
 
-
+    // nút oke--> nếu oke-->load main vs home--> call navigateToHome
     @FXML
     public void handleGetText(ActionEvent event) throws IOException {
         String email = mail.getText().trim();
@@ -67,7 +71,7 @@ public class LoginController {
         navigateToHome(event);
     }
 
-
+    // hàm chuyển hướng đến màn hình home và main
     private void navigateToHome(ActionEvent event) throws IOException {
         FXMLLoader homeLoader = new FXMLLoader(getClass().getResource("/com/auction/client/view/home.fxml"));
         Parent homeRoot = homeLoader.load();

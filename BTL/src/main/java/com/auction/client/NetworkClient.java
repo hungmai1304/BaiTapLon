@@ -5,22 +5,32 @@ import org.java_websocket.handshake.ServerHandshake;
 import java.net.URI;
 
 public class NetworkClient {
+    // địa chỉ server
+    // đường dẫn nối server và client
     private static final String SERVER_URL = "wss://baitaplon-qegw.onrender.com";
     private static WebSocketClient webSocketClient;
 
-    // Giao diện để "bắn" dữ liệu về cho Controller
+    // Quy chuẩn, bất kì lớp nào muốn nhận về thông tin của server
+    // đều phải cài đặt interface này
     public interface MessageListener {
         void onMessageReceived(String message);
     }
-
+    // nhân vật hiện tại đang đợi yêu cầu từ server
     private static MessageListener currentListener;
 
-    // Controller sẽ gọi hàm này để đăng ký nhận tin nhắn
+    // khi đang đợi yêu cầu từ server, lưu nhân vật đang yêu cầu vào ram, sau có kết quả thì
+    // trả về kết quả cho nhân vật đó
     public static void setListener(MessageListener listener) {
         currentListener = listener;
     }
 
-    // Hàm mở kết nối 24/7
+    // check nếu đường nối đã mở thì thoát hàm bằng return
+    // không thì tạo đường nối mới
+    // vừa tạo 1 đường nối mới thì lập tức yêu cầu xin thông tin sản phầm(nên sửa)
+    // nếu có tin nhắn từ server thì đấy về : nếu có nhân vật đang đợi thì gọi hàm xử lí tin nhắn của hắn
+    // mất kết nối hoặc lỗi: in ra terminal
+    // kết nối đường ống
+
     public static void connectAndKeepAlive() {
         if (webSocketClient != null && webSocketClient.isOpen()) {
             return; // Nếu đang mở rồi thì thôi không mở lại
@@ -60,7 +70,9 @@ public class NetworkClient {
         }
     }
 
-    // Hàm để Client gửi lệnh lên Server (ví dụ: "BID:50000")
+    // hàm cho các nhân vật gửi tin nhắn
+    // nếu đường nối ổn định, send tin nhắn cho server
+    // nếu không in lỗi
     public static void sendCommand(String command) {
         if (webSocketClient != null && webSocketClient.isOpen()) {
             webSocketClient.send(command);

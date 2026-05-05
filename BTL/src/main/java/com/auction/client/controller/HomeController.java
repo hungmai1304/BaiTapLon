@@ -14,28 +14,41 @@ import com.google.gson.Gson;
 import java.io.IOException;
 
 public class HomeController {
+    //borderpane gốc cần để set mọi màn hình lên nó
     @FXML
     private BorderPane borderpane_home;
 
-    /**
-     * Getter quan trọng của bạn đây, mình đã trả lại nguyên vẹn nhé!
-     */
+
+
+
+    // hàm trả về borderpane hiện tại của màn hình Home gốc
     public BorderPane getBorderpaneHome() {
         return borderpane_home;
     }
 
+
+
+
+    // Điều hướng --> Home
     @FXML
     public void handleHomeClicked(ActionEvent event) throws IOException {
         StackPane main = FXMLLoader.load(getClass().getResource("/com/auction/client/view/main.fxml"));
         borderpane_home.setCenter(main);
     }
 
+
+
+    // điều hướng --> Search
     @FXML
     public void handleSearchClicked(ActionEvent event) throws IOException {
         VBox search = FXMLLoader.load(getClass().getResource("/com/auction/client/view/search.fxml"));
         borderpane_home.setCenter(search);
     }
 
+
+
+
+    // điều hướng --> TikTok
     @FXML
     public void handleTikTokAuction(ActionEvent event) {
         try {
@@ -44,9 +57,9 @@ public class HomeController {
 
             TikTokAuctionController controller = loader.getController();
 
-            // 1. Đăng ký Listener: Khi có tin nhắn từ Server, báo cho Controller này
+
             NetworkClient.setListener(jsonResponse -> {
-                // Nhớ chạy Platform.runLater vì đang ở luồng WebSocket
+
                 javafx.application.Platform.runLater(() -> {
                     Gson gson = new Gson();
                     Product currentProduct = gson.fromJson(jsonResponse, Product.class);
@@ -55,10 +68,10 @@ public class HomeController {
                 });
             });
 
-            // 2. Chuyển giao diện ngay lập tức (không bị lag)
+
             borderpane_home.setCenter(tiktokView);
 
-            // 3. Khởi động kết nối mạng ngầm
+
             NetworkClient.connectAndKeepAlive();
 
         } catch (Exception e) {
@@ -66,12 +79,19 @@ public class HomeController {
         }
     }
 
+
+
+    // điều hướng --> bank
     @FXML
     public void handleBankButtonClicked(ActionEvent event) throws IOException {
         StackPane bank_view = FXMLLoader.load(getClass().getResource("/com/auction/client/view/bank.fxml"));
         borderpane_home.setCenter(bank_view);
     }
 
+
+
+
+    // điều hướng --> setting
     @FXML
     public void handleSettingClicked(ActionEvent event) throws IOException {
         AnchorPane setting_view = FXMLLoader.load(getClass().getResource("/com/auction/client/view/Settings.fxml"));
