@@ -1,14 +1,18 @@
 package com.auction.protocol;
 
-
-import java.awt.*;
 import java.util.Map;
 
-public abstract class Request {
-    protected TrayIcon.MessageType type;
-    protected Map<String,Object> data;
+public class Request {
 
+    protected String type;
+    protected Map<String, Object> data;
 
-    //-----------------------------------------------------------------------------------
+    // Getters
+    public String getType() {
+        return type;
+    }
 
+    public Map<String, Object> getData() {
+        return data;
+    }
 }

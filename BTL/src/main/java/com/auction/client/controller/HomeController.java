@@ -1,8 +1,7 @@
 package com.auction.client.controller;
 
 import com.auction.client.NetworkClient;
-import com.auction.common.model.Product;
-import javafx.application.Platform;
+import com.auction.common.model.product.Product;
 import javafx.fxml.FXML;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;

@@ -1,4 +1,4 @@
 package com.auction.server.service;
 
-public  class AuctionServer {
+public class UserService {
 }

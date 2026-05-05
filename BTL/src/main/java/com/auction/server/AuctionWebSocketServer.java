@@ -1,11 +1,12 @@
 package com.auction.server;
 
+import com.auction.server.model.ServerContext;
 import org.java_websocket.server.WebSocketServer;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.WebSocket;
 import java.net.InetSocketAddress;
 import com.google.gson.Gson;
-import com.auction.common.model.Product;
+import com.auction.common.model.product.Product;
 
 
 // class cha có khả năng đẩy tin nhắn về cho nhiều nguoi khác
@@ -15,13 +16,16 @@ import com.auction.common.model.Product;
 public class AuctionWebSocketServer extends WebSocketServer {
 
     private Gson gson = new Gson();
-
-
+    private final MessageDispatcher dispatcher;
     private Product currentProduct;
 //-----------------------------------------------------------------------------------
     public AuctionWebSocketServer(int port) {
         super(new InetSocketAddress(port));
+        // Tạo túi đồ Context
+        ServerContext context = new ServerContext(this, currentProduct);
 
+        // Khởi tạo Dispatcher (nó sẽ tự động đi quét toàn bộ dự án)
+        this.dispatcher = new MessageDispatcher(gson, context);
 
         currentProduct = new Product();
 
@@ -39,49 +43,10 @@ public class AuctionWebSocketServer extends WebSocketServer {
 
 //-----------------------------------------------------------------------------------
     // nhận tin nhắn
-    // nếu client gửi get_current: chuyển product thành json rồi gửi
-    // nếu gửi lệnh bid thì kiểm tra và in ra có người đấu giá mới, gửi đi cho tất cả các người đang online
-    // if bidd is invalid : send error to player
-
     @Override
     public void onMessage(WebSocket conn, String message) {
-        System.out.println("📩 Nhận lệnh: " + message);
-
-        if (message.equals("GET_CURRENT")) {
-
-            String jsonResponse = gson.toJson(currentProduct);
-            conn.send(jsonResponse);
-        }
-        else if (message.startsWith("BID:")) {
-            try {
-
-                double bidAmount = Double.parseDouble(message.split(":")[1]);
-
-
-                if (bidAmount > currentProduct.getCurrentPrice()) {
-
-
-                    currentProduct.setCurrentPrice(bidAmount);
-
-
-                    String jsonToPush = gson.toJson(currentProduct);
-
-
-                    broadcast(jsonToPush);
-                    System.out.println("🚀 Đã có người trả giá mới: " + bidAmount);
-
-                } else {
-
-                    conn.send("ERROR:Giá trả phải lớn hơn " + currentProduct.getCurrentPrice());
-                }
-            } catch (Exception e) {
-                conn.send("ERROR:Lệnh trả giá không hợp lệ!");
-            }
-        }
+        dispatcher.dispatch(conn, message);
     }
-
-
-
 
 //-----------------------------------------------------------------------------------
     // client out: print client out
@@ -90,9 +55,6 @@ public class AuctionWebSocketServer extends WebSocketServer {
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         System.out.println("🔴 Client đã thoát: " + conn.getRemoteSocketAddress());
     }
-
-
-
 //-----------------------------------------------------------------------------------
     @Override
     public void onError(WebSocket conn, Exception ex) {
