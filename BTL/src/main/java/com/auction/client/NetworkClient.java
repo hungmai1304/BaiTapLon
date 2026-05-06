@@ -8,6 +8,7 @@ public class NetworkClient {
     // địa chỉ server
     // đường dẫn nối server và client
     private static final String SERVER_URL = "wss://baitaplon-qegw.onrender.com";
+    //private static final String SERVER_URL = "ws://localhost:10000";
     private static WebSocketClient webSocketClient;
 
     // Quy chuẩn, bất kì lớp nào muốn nhận về thông tin của server
