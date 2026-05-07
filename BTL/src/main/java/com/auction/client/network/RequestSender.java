@@ -5,46 +5,45 @@ public class RequestSender {
     private RequestSender() {
     }
 
+    // =====================================================
     // LOGIN
-    public static void sendLoginRequest(String email,
-                                        String password) {
+    // =====================================================
+    public static void sendLoginRequest(
+            String email,
+            String password
+    ) {
 
-        String jsonRequest = "{"
+        String json = "{"
                 + "\"type\":\"LOGIN_REQUEST\","
                 + "\"data\":{"
-                + "\"username\":\"" + email + "\","
+                + "\"email\":\"" + email + "\","
                 + "\"password\":\"" + password + "\""
                 + "}"
                 + "}";
 
-        NetworkClient.sendCommand(jsonRequest);
+        NetworkClient.sendCommand(json);
     }
 
+    // =====================================================
     // REGISTER
-    public static void sendRegisterRequest(String email,
-                                           String password) {
+    // =====================================================
+    public static void sendRegisterRequest(
+            String name,
+            String email,
+            String password,
+            String role
+    ) {
 
-        String jsonRequest = "{"
+        String json = "{"
                 + "\"type\":\"REGISTER_REQUEST\","
                 + "\"data\":{"
-                + "\"username\":\"" + email + "\","
-                + "\"password\":\"" + password + "\""
+                + "\"name\":\"" + name + "\","
+                + "\"email\":\"" + email + "\","
+                + "\"password\":\"" + password + "\","
+                + "\"role\":\"" + role + "\""
                 + "}"
                 + "}";
 
-        NetworkClient.sendCommand(jsonRequest);
-    }
-
-    // BID
-    public static void sendBidRequest(double amount) {
-
-        String jsonRequest = "{"
-                + "\"type\":\"BID_REQUEST\","
-                + "\"data\":{"
-                + "\"amount\":" + amount
-                + "}"
-                + "}";
-
-        NetworkClient.sendCommand(jsonRequest);
+        NetworkClient.sendCommand(json);
     }
 }
