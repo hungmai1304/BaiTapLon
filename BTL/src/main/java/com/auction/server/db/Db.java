@@ -13,7 +13,10 @@ public class Db {
 			// Chỉ tạo kết nối mới nếu chưa có hoặc đã bị đóng
 			if (connection == null || connection.isClosed()) {
 				// Tải các biến từ file .env
-				Dotenv dotenv = Dotenv.load();
+				Dotenv dotenv =  Dotenv
+						.configure()
+						.ignoreIfMissing()
+						.load();
 				String DB_URL = dotenv.get("DB_URL");
 				String DB_USER = dotenv.get("DB_USER");
 				String DB_PASSWORD = dotenv.get("DB_PASSWORD");
