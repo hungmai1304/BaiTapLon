@@ -22,7 +22,11 @@ public class AuctionWebSocketServer extends WebSocketServer {
     public AuctionWebSocketServer(int port) {
         super(new InetSocketAddress(port));
         // Tạo túi đồ Context
-        ServerContext context = new ServerContext(this, currentProduct);
+
+        // Sửa đổi: Chuyển ServerContext sang Singleton để đảm bảo duy nhất 1 bộ nhớ dùng chung,
+        // tránh việc khởi tạo nhiều instance gây sai lệch dữ liệu online/đấu giá.
+        ServerContext context = ServerContext.getInstance();
+        context.initData(this, currentProduct);
 
         // Khởi tạo Dispatcher (nó sẽ tự động đi quét toàn bộ dự án)
         this.dispatcher = new MessageDispatcher(gson, context);
