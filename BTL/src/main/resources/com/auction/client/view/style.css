@@ -160,7 +160,7 @@
 
 /* item trong dropdown */
 .choice-box .menu-item {
-    -fx-background-color: white;
+    -fx-background-color: black;
 }
 
 /* hover item */

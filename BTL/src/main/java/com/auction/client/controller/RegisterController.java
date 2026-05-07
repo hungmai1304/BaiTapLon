@@ -15,6 +15,9 @@ import javafx.scene.control.TextField;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import javafx.scene.control.Alert;
+import javafx.scene.layout.Pane;
+import javafx.scene.Node;
 
 import static com.auction.client.utils.NavigationService.navigate;
 
@@ -30,12 +33,34 @@ public class RegisterController implements Initializable {
 
     private final String[] box = {"open a shop", "not open a shop"};
 
+
+    @FXML
+    private TextField textfield_shop_name;
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+
+        // 1. Ẩn shop name ban đầu
+        textfield_shop_name.setVisible(false);
+        textfield_shop_name.setManaged(false);
+
+        // 2. Setup ChoiceBox
         choices_register_openashop.getItems().addAll(box);
-        choices_register_openashop.setOnAction(this::getChoice);
+
+        // 3. Lắng nghe thay đổi để show/hide shop name
+        choices_register_openashop.getSelectionModel().selectedItemProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    boolean isSeller = "open a shop".equals(newValue);
+                    textfield_shop_name.setVisible(isSeller);
+                    textfield_shop_name.setManaged(isSeller);
+                    if (!isSeller) {
+                        textfield_shop_name.clear();
+                    }
+                }
+        );
+
         ControllerRegistry.register("RegisterController", this);
     }
+
 
     @FXML
     public void handleBackToLoginButton(ActionEvent event) throws IOException {
@@ -50,6 +75,12 @@ public class RegisterController implements Initializable {
         String password = password_register_pass.getText();
         String reconfirm = password_register_reconfirm.getText();
         String shopChoice = choices_register_openashop.getValue();
+        if ("open a shop".equals(shopChoice)) {
+            if (textfield_shop_name.getText().trim().isEmpty()) {
+                updateAnnouncement("Vui lòng nhập tên shop!", "red");
+                return;
+            }
+        }
 
         String validationResult = ValidationUtils.validateRegister(
                 registerName, registerEmail, password, reconfirm, shopChoice
