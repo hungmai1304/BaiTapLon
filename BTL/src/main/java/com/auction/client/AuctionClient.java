@@ -2,6 +2,7 @@ package com.auction.client;
 
 import com.auction.client.network.NetworkClient;
 
+import com.auction.client.utils.NavigationService;
 import javafx.application.Application;
 
 import javafx.fxml.FXMLLoader;
@@ -15,8 +16,9 @@ public class AuctionClient extends Application {
     @Override
     public void start(Stage stage) throws Exception {
 
-        // CONNECT 1 LẦN DUY NHẤT
-        NetworkClient.connectAndKeepAlive();
+        NavigationService.init(stage);// save stage
+
+        NetworkClient.connectAndKeepAlive();// new thread
 
         FXMLLoader loader =
                 new FXMLLoader(
@@ -31,7 +33,7 @@ public class AuctionClient extends Application {
         stage.setScene(scene);
 
         stage.setTitle("Auction App");
-        stage.setMaximized(true);
+
 
         stage.show();
     }

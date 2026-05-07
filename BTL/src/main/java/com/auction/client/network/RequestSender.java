@@ -1,5 +1,6 @@
 package com.auction.client.network;
 
+// Nơi nhận tin nhắn gửi đến -> đóng gói -> và gửi
 public class RequestSender {
 
     private RequestSender() {

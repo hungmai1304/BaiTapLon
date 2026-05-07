@@ -1,162 +1,52 @@
 package com.auction.client.controller;
 
-import com.auction.client.network.ClientMessageDispatcher;
-import com.auction.client.network.MessageListener;
 import com.auction.client.network.NetworkClient;
-
+import com.auction.client.utils.ControllerRegistry;
 import com.auction.common.model.product.Product;
-import com.auction.protocol.Response;
-
-import com.google.gson.Gson;
-
 import javafx.application.Platform;
-
 import javafx.event.ActionEvent;
-
 import javafx.fxml.FXML;
-
 import javafx.scene.control.Label;
 
 public class TikTokAuctionController {
 
-    @FXML
-    private Label name;
+    @FXML private Label name;
+    @FXML private Label price;
+    @FXML private Label step;
 
-    @FXML
-    private Label price;
-
-    @FXML
-    private Label step;
-
-    private final Gson gson = new Gson();
-
-    // =========================================================
-    // INIT
-    // =========================================================
     @FXML
     public void initialize() {
+        // Đăng ký controller vào Registry để Handler tìm thấy
+        ControllerRegistry.register("TikTokAuctionController", this);
 
-        MessageListener auctionListener =
-                new MessageListener() {
-
-                    @Override
-                    public void onMessageReceived(
-                            String message
-                    ) {
-
-                        Platform.runLater(() -> {
-
-                            try {
-
-                                Response response =
-                                        gson.fromJson(
-                                                message,
-                                                Response.class
-                                        );
-
-                                // =====================================
-                                // ERROR
-                                // =====================================
-                                if ("FAILED".equals(
-                                        response.getStatus()
-                                )) {
-
-                                    System.out.println(
-                                            "❌ Lỗi: "
-                                                    + response.getMessage()
-                                    );
-
-                                    return;
-                                }
-
-                                // =====================================
-                                // PRODUCT UPDATE
-                                // =====================================
-                                Product product =
-                                        gson.fromJson(
-                                                gson.toJson(
-                                                        response.getData()
-                                                ),
-                                                Product.class
-                                        );
-
-                                setCurrentAuction(product);
-
-                                System.out.println(
-                                        "✅ Đã cập nhật UI:"
-                                                + product.getName()
-                                );
-
-                            } catch (Exception e) {
-
-                                System.err.println(
-                                        "❌ Lỗi parse JSON"
-                                );
-
-                                e.printStackTrace();
-                            }
-                        });
-                    }
-                };
-
-        ClientMessageDispatcher.register(
-                "PRODUCT_RESPONSE",
-                auctionListener
-        );
+        // Gửi lệnh lấy sản phẩm đầu tiên khi vừa vào màn hình
+        NetworkClient.sendCommand("GET_NEXT");
     }
 
-    // =========================================================
-    // UPDATE UI
-    // =========================================================
-    public void setCurrentAuction(Product product) {
-
-        if (product != null) {
-
-            name.setText(
-                    product.getName()
-            );
-
-            price.setText(
-                    String.valueOf(
-                            product.getCurrentPrice()
-                    )
-            );
-
-            step.setText(
-                    String.valueOf(
-                            product.getStepPrice()
-                    )
-            );
-        }
+    public void updateUI(Product product) {
+        Platform.runLater(() -> {
+            if (product != null) {
+                name.setText(product.getName());
+                price.setText(String.format("%,.0f VNĐ", product.getCurrentPrice()));
+                step.setText(String.format("Bước giá: %,.0f VNĐ", product.getStepPrice()));
+            }
+        });
     }
 
-    // =========================================================
-    // PREVIOUS PRODUCT
-    // =========================================================
     @FXML
     public void handleUp(ActionEvent event) {
-
-        System.out.println(
-                "⬆ Đang chuyển sản phẩm trước..."
-        );
-
-        NetworkClient.sendCommand(
-                "GET_BACK"
-        );
+        System.out.println("⏳ Đang chuyển sản phẩm trước...");
+        NetworkClient.sendCommand("GET_BACK");
     }
 
-    // =========================================================
-    // NEXT PRODUCT
-    // =========================================================
     @FXML
     public void handleDown(ActionEvent event) {
+        System.out.println("⏳ Đang chuyển sản phẩm tiếp...");
+        NetworkClient.sendCommand("GET_NEXT");
+    }
 
-        System.out.println(
-                "⬇ Đang chuyển sản phẩm tiếp..."
-        );
-
-        NetworkClient.sendCommand(
-                "GET_NEXT"
-        );
+    // Gọi khi thoát màn hình đấu giá
+    public void cleanup() {
+        ControllerRegistry.unregister("TikTokAuctionController");
     }
 }
