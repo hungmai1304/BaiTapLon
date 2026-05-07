@@ -1,38 +1,43 @@
 package com.auction.client;
 
+import com.auction.client.network.NetworkClient;
+
 import javafx.application.Application;
+
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
+
 import javafx.scene.Scene;
+
 import javafx.stage.Stage;
-import java.io.IOException;
 
 public class AuctionClient extends Application {
+
     @Override
-    public void start(Stage stage) throws IOException {
-        // 1. Load file loginfxml
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/auction/client/view/login.fxml"));
-        Parent root = fxmlLoader.load();
+    public void start(Stage stage) throws Exception {
 
+        // CONNECT 1 LẦN DUY NHẤT
+        NetworkClient.connectAndKeepAlive();
 
-        Scene scene = new Scene(root);
+        FXMLLoader loader =
+                new FXMLLoader(
+                        getClass().getResource(
+                                "/com/auction/client/view/login.fxml"
+                        )
+                );
 
-        stage.setTitle("Auction System");
+        Scene scene =
+                new Scene(loader.load());
+
         stage.setScene(scene);
 
-
-        // Mở to toàn màn hình ngay từ đầu để đảm bảo không bị mất góc
+        stage.setTitle("Auction App");
         stage.setMaximized(true);
-
-        // Hoặc nếu bạn vẫn muốn kích thước cố định nhưng an toàn hơn:
-        // stage.setWidth(1200);
-        // stage.setHeight(700);
-        // stage.setResizable(true); // Cho phép bạn bè kéo dãn nếu màn hình họ quá bé
 
         stage.show();
     }
 
     public static void main(String[] args) {
-        launch();
+
+        launch(args);
     }
 }

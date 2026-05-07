@@ -55,7 +55,7 @@ public class LoginHandler implements IMessageHandler {
                 Response response = new Response(
                         MessageType.LOGIN_RESPONSE,
                         "ERROR",
-                        "Sai tài khoản hoặc mật khẩu rồi anh trai ơi!"
+                        "Sai tài khoản hoặc mật khẩu!"
                 );
 
                 conn.send(gson.toJson(response));

@@ -4,25 +4,79 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Response {
-    private String type;      // Loại tin nhắn
-    private String status;    // Trạng thái
-    private String message;   // Lời nhắn
-    private Map<String, Object> data; // Cái túi để nhét thêm dữ liệu (tên, tuổi, số dư...)
 
-    public Response(String type, String status, String message) {
-        this.type = type;
-        this.status = status;
-        this.message = message;
-        this.data = new HashMap<>(); // Khởi tạo luôn cái túi rỗng để không bị lỗi Null
+    private String type;
+
+    private String status;
+
+    private String message;
+
+    private Map<String, Object> data;
+
+    // Constructor rỗng cho Gson
+    public Response() {
+
+        this.data = new HashMap<>();
     }
 
-    // Cái cổng (Getter) để moi cái túi data ra nhét đồ vào
+    public Response(String type,
+                    String status,
+                    String message) {
+
+        this.type = type;
+
+        this.status = status;
+
+        this.message = message;
+
+        this.data = new HashMap<>();
+    }
+
+    // =========================
+    // GETTER
+    // =========================
+
+    public String getType() {
+
+        return type;
+    }
+
+    public String getStatus() {
+
+        return status;
+    }
+
+    public String getMessage() {
+
+        return message;
+    }
+
     public Map<String, Object> getData() {
+
         return data;
     }
 
-    // Các hàm Get/Set cơ bản khác nếu cần
-    public String getType() { return type; }
-    public String getStatus() { return status; }
-    public String getMessage() { return message; }
+    // =========================
+    // SETTER
+    // =========================
+
+    public void setType(String type) {
+
+        this.type = type;
+    }
+
+    public void setStatus(String status) {
+
+        this.status = status;
+    }
+
+    public void setMessage(String message) {
+
+        this.message = message;
+    }
+
+    public void setData(Map<String, Object> data) {
+
+        this.data = data;
+    }
 }

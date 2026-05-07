@@ -1,73 +1,88 @@
 package com.auction.server;
 
-import com.auction.server.model.ServerContext;
-import org.java_websocket.server.WebSocketServer;
-import org.java_websocket.handshake.ClientHandshake;
-import org.java_websocket.WebSocket;
-import java.net.InetSocketAddress;
-import com.google.gson.Gson;
 import com.auction.common.model.product.Product;
+import com.auction.server.model.ServerContext;
+import com.google.gson.Gson;
 
+import org.java_websocket.WebSocket;
+import org.java_websocket.handshake.ClientHandshake;
+import org.java_websocket.server.WebSocketServer;
 
-// class cha có khả năng đẩy tin nhắn về cho nhiều nguoi khác
-// có khả năng nhận tin nhắn
-// có khả năng gửi dữ liệu realtime
-// nhận client kết nối
+import java.net.InetSocketAddress;
+
 public class AuctionWebSocketServer extends WebSocketServer {
 
-    private Gson gson = new Gson();
+    private final Gson gson = new Gson();
+
     private final MessageDispatcher dispatcher;
+
     private Product currentProduct;
-//-----------------------------------------------------------------------------------
+
     public AuctionWebSocketServer(int port) {
+
         super(new InetSocketAddress(port));
-        // Tạo túi đồ Context
-
-        // Sửa đổi: Chuyển ServerContext sang Singleton để đảm bảo duy nhất 1 bộ nhớ dùng chung,
-        // tránh việc khởi tạo nhiều instance gây sai lệch dữ liệu online/đấu giá.
-        ServerContext context = ServerContext.getInstance();
-        context.initData(this, currentProduct);
-
-        // Khởi tạo Dispatcher (nó sẽ tự động đi quét toàn bộ dự án)
-        this.dispatcher = new MessageDispatcher(gson, context);
 
         currentProduct = new Product();
 
         currentProduct.setId("P001");
         currentProduct.setName("Laptop Gaming Siêu Cấp");
-        currentProduct.setCurrentPrice(100000); // Giá khởi điểm: 100k
+        currentProduct.setCurrentPrice(100000);
+
+        ServerContext context = ServerContext.getInstance();
+
+        context.initData(this, currentProduct);
+
+        dispatcher = new MessageDispatcher(gson, context);
     }
-    //-----------------------------------------------------------------------------------
-    // chạy khi có ai đó kết nối
-    // in ra có người vào phòng
+
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        System.out.println("🟢 Có người vào phòng: " + conn.getRemoteSocketAddress());
+
+        System.out.println("✅ Client vào phòng: "
+                + conn.getRemoteSocketAddress());
     }
 
-//-----------------------------------------------------------------------------------
-    // nhận tin nhắn
     @Override
     public void onMessage(WebSocket conn, String message) {
-        dispatcher.dispatch(conn, message);
-    }
 
-//-----------------------------------------------------------------------------------
-    // client out: print client out
+        System.out.println("📩 Nhận: " + message);
+
+        try {
+
+            dispatcher.dispatch(conn, message);
+
+        } catch (Exception e) {
+
+            System.err.println("❌ Lỗi xử lý message:");
+            e.printStackTrace();
+        }
+    }
 
     @Override
-    public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        System.out.println("🔴 Client đã thoát: " + conn.getRemoteSocketAddress());
+    public void onClose(WebSocket conn, int code,
+                        String reason, boolean remote) {
+
+        System.out.println("❌ Client thoát");
+
+        if (conn != null) {
+            System.out.println(conn.getRemoteSocketAddress());
+        }
+
+        System.out.println("Code: " + code);
+        System.out.println("Reason: " + reason);
     }
-//-----------------------------------------------------------------------------------
+
     @Override
     public void onError(WebSocket conn, Exception ex) {
-        System.err.println("❌ Lỗi WebSocket: " + ex.getMessage());
+
+        System.err.println("❌ WebSocket Error:");
+
+        ex.printStackTrace();
     }
-//-----------------------------------------------------------------------------------
-    // when server done deploy
+
     @Override
     public void onStart() {
-        System.out.println("🚀 WebSocket Server Real-time đã sẵn sàng!");
+
+        System.out.println("🚀 WebSocket Server đã sẵn sàng!");
     }
 }

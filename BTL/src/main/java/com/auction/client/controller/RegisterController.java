@@ -1,102 +1,312 @@
 package com.auction.client.controller;
+
+import com.auction.client.network.ClientMessageDispatcher;
+import com.auction.client.network.MessageListener;
+import com.auction.client.network.RequestSender;
+
+import com.auction.protocol.Response;
+
+import com.google.gson.Gson;
+
+import javafx.application.Platform;
+
 import javafx.fxml.FXML;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+
+import javafx.event.ActionEvent;
+
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
-import javafx.fxml.Initializable;
 
-public class RegisterController implements Initializable {
+public class RegisterController
+        implements Initializable {
 
-    // Phải có @FXML để JavaFX hiểu và ánh xạ với file fxml
-    @FXML
-    public void handleBackToLoginButton(ActionEvent event) throws  IOException{
-        Parent loader= FXMLLoader.load(getClass().getResource("/com/auction/client/view/login.fxml"));
-        Scene scene_login=new Scene(loader);
-
-        Stage prStage=(Stage) ((Node) event.getSource()).getScene().getWindow();
-        prStage.setScene(scene_login);
-        prStage.show();
-    }
-
-    //---------------------------------------------------------------------------------------------
+    // =========================================================
+    // UI
+    // =========================================================
     @FXML
     private TextField boxfield_register_name;
+
     @FXML
     private TextField textfield_register_email;
+
     @FXML
     private PasswordField password_register_pass;
+
     @FXML
     private PasswordField password_register_reconfirm;
+
     @FXML
     private Label announcement;
 
     @FXML
-    public void handleConfirm(ActionEvent event)throws IOException{
-        // nếu mà bấm vào nút này thì sẽ check :
-        //1. email tồn tại
-        //2. Tên chưa từng bị trùng trong database
-        //3. mật khẩu trên 6 số
-        //4. reconfirm trùng khớp với mật khẩu
-        String registerName=boxfield_register_name.getText();
-        String registerEmail=textfield_register_email.getText();
-        String password=password_register_pass.getText();
-        String reconfirm=password_register_reconfirm.getText();
+    private ChoiceBox<String>
+            choices_register_openashop;
 
-        // Phần thử nghiệm và cần được viết lại theo cách gọi hàm từ server để lấy key
-        if (!password.equals(reconfirm)){
-            announcement.setText("Mật khẩu không trùng khớp!");
-        }
-        else if(!registerEmail.contains("@")){
-            announcement.setText("Email Không Hợp Lệ!");
-        }
-        else{
-            announcement.setText("Đăng kí thành công, mời quay lại trang đăng nhập!");
-        }
-
-    }
-    @FXML
-    private ChoiceBox<String> choices_register_openashop;
-
-    private String[] box={"open a shop","not open a shop"};
     @FXML
     private Label resultLabel;
 
+    // =========================================================
+    // DATA
+    // =========================================================
+    private final Gson gson = new Gson();
 
-    @Override
-    public void initialize(URL arg0, ResourceBundle arg1) {
-        // 1. Thêm dữ liệu vào ChoiceBox
-        choices_register_openashop.getItems().addAll(box);
+    private final String[] box = {
+            "open a shop",
+            "not open a shop"
+    };
 
-        // 2. Tạo hoạt động (Sự kiện khi chọn item)
-        choices_register_openashop.setOnAction(this::getChoice);
+    // =========================================================
+    // BACK TO LOGIN
+    // =========================================================
+    @FXML
+    public void handleBackToLoginButton(
+            ActionEvent event
+    ) throws IOException {
+
+        Parent root =
+                FXMLLoader.load(
+                        getClass().getResource(
+                                "/com/auction/client/view/login.fxml"
+                        )
+                );
+
+        Scene scene =
+                new Scene(root);
+
+        Stage stage =
+                (Stage)
+                        ((Node) event.getSource())
+                                .getScene()
+                                .getWindow();
+
+        stage.setScene(scene);
+
+        stage.show();
     }
 
-    // Phương thức xử lý khi người dùng chọn một mục
-    public void getChoice(javafx.event.ActionEvent event) {
-        String selected = choices_register_openashop.getValue();
-        resultLabel.setText("Bạn đã chọn: " + selected);
-        String selectedValue = choices_register_openashop.getValue();
+    // =========================================================
+    // REGISTER
+    // =========================================================
+    @FXML
+    public void handleConfirm(
+            ActionEvent event
+    ) {
 
-        // 2. Kiểm tra nếu người dùng chưa chọn gì (tránh lỗi NullPointerException)
-        if (selectedValue != null) {
-            // ABC.storage(selectedValue,name,..)
-            // Bạn có thể lưu biến này vào database hoặc gửi sang màn hình khác
-        } else {
-            resultLabel.setText("vui lòng chọn trạng thái");
+        String registerName =
+                boxfield_register_name
+                        .getText()
+                        .trim();
+
+        String registerEmail =
+                textfield_register_email
+                        .getText()
+                        .trim();
+
+        String password =
+                password_register_pass
+                        .getText();
+
+        String reconfirm =
+                password_register_reconfirm
+                        .getText();
+
+        String shopChoice =
+                choices_register_openashop
+                        .getValue();
+
+        // =====================================================
+        // VALIDATE
+        // =====================================================
+        if (registerName.isEmpty()
+                || registerEmail.isEmpty()
+                || password.isEmpty()) {
+
+            announcement.setText(
+                    "Vui lòng nhập đầy đủ thông tin!"
+            );
+
+            return;
         }
+
+        if (!password.equals(reconfirm)) {
+
+            announcement.setText(
+                    "Mật khẩu không trùng khớp!"
+            );
+
+            return;
+        }
+
+        if (!registerEmail.contains("@")) {
+
+            announcement.setText(
+                    "Email không hợp lệ!"
+            );
+
+            return;
+        }
+
+        if (shopChoice == null) {
+
+            announcement.setText(
+                    "Vui lòng chọn trạng thái mở shop!"
+            );
+
+            return;
+        }
+
+        // =====================================================
+        // ROLE
+        // =====================================================
+        String role =
+                shopChoice.equals(
+                        "open a shop"
+                )
+                        ? "SELLER"
+                        : "BUYER";
+
+        // =====================================================
+        // REGISTER LISTENER
+        // =====================================================
+        MessageListener registerListener =
+                new MessageListener() {
+
+                    @Override
+                    public void onMessageReceived(
+                            String message
+                    ) {
+
+                        Platform.runLater(() -> {
+
+                            try {
+
+                                Response response =
+                                        gson.fromJson(
+                                                message,
+                                                Response.class
+                                        );
+
+                                // =============================
+                                // SUCCESS
+                                // =============================
+                                if ("SUCCESS".equals(
+                                        response.getStatus()
+                                )) {
+
+                                    announcement.setStyle(
+                                            "-fx-text-fill: green;"
+                                    );
+
+                                    announcement.setText(
+                                            response.getMessage()
+                                    );
+                                }
+
+                                // =============================
+                                // FAILED
+                                // =============================
+                                else {
+
+                                    announcement.setStyle(
+                                            "-fx-text-fill: red;"
+                                    );
+
+                                    announcement.setText(
+                                            response.getMessage()
+                                    );
+                                }
+
+                                // remove listener
+                                ClientMessageDispatcher
+                                        .unregister(
+                                                "REGISTER_RESPONSE",
+                                                this
+                                        );
+
+                            } catch (Exception e) {
+
+                                e.printStackTrace();
+
+                                announcement.setText(
+                                        "Lỗi xử lý phản hồi server!"
+                                );
+                            }
+                        });
+                    }
+                };
+
+        // =====================================================
+        // REGISTER DISPATCHER
+        // =====================================================
+        ClientMessageDispatcher.register(
+                "REGISTER_RESPONSE",
+                registerListener
+        );
+
+        // =====================================================
+        // SEND REQUEST
+        // =====================================================
+        announcement.setStyle(
+                "-fx-text-fill: white;"
+        );
+
+        announcement.setText(
+                "Đang gửi yêu cầu đăng ký..."
+        );
+
+        RequestSender.sendRegisterRequest(
+                registerName,
+                registerEmail,
+                password,
+                role
+        );
     }
 
+    // =========================================================
+    // INIT
+    // =========================================================
+    @Override
+    public void initialize(
+            URL location,
+            ResourceBundle resources
+    ) {
 
+        choices_register_openashop
+                .getItems()
+                .addAll(box);
+
+        choices_register_openashop
+                .setOnAction(this::getChoice);
+    }
+
+    // =========================================================
+    // CHOICE EVENT
+    // =========================================================
+    public void getChoice(
+            ActionEvent event
+    ) {
+
+        String selected =
+                choices_register_openashop
+                        .getValue();
+
+        resultLabel.setText(
+                "Bạn đã chọn: "
+                        + selected
+        );
+    }
 }
