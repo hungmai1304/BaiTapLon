@@ -20,8 +20,8 @@ public class LoginHandler implements IMessageHandler {
         System.out.println("[LoginHandler] Đang xử lý đăng nhập...");
 
         try {
-            // 1. Lấy dữ liệu từ Client gửi lên (Client gửi 'username' nhưng trong DB mình lưu là 'email')
-            String email = (String) data.get("username");
+
+            String email = (String) data.get("email");
             String password = (String) data.get("password");
 
             // 2. LOGIC KIỂM TRA TÀI KHOẢN TỪ DATABASE
@@ -41,7 +41,7 @@ public class LoginHandler implements IMessageHandler {
 
                 // Nhét dữ liệu TỪ DATABASE vào Map data để gửi về cho Client
                 response.getData().put("id", loginUser.getId());
-                response.getData().put("username", loginUser.getEmail());
+                response.getData().put("email", loginUser.getEmail());
                 response.getData().put("name", loginUser.getName());
                 response.getData().put("role", loginUser.getRole());
 
