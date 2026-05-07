@@ -1,24 +1,66 @@
 package com.auction.server.db;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import io.github.cdimascio.dotenv.Dotenv;
-
 public class Db {
 	private static Connection connection;
 
-	public static Connection getConnection() throws SQLException {
-		if (Db.connection != null) {
-			return Db.connection;
-		}
-		Dotenv dotenv = Dotenv.load();
-		String DB_URL = dotenv.get("DB_URL");
-		String DB_USER = dotenv.get("DB_USER");
-		String DB_PASSWORD = dotenv.get("DB_PASSWORD");
+	public static Connection getConnection() {
+		try {
+			// Chỉ tạo kết nối mới nếu chưa có hoặc đã bị đóng
+			if (connection == null || connection.isClosed()) {
+				// Tải các biến từ file .env
+				Dotenv dotenv = Dotenv.load();
+				String DB_URL = dotenv.get("DB_URL");
+				String DB_USER = dotenv.get("DB_USER");
+				String DB_PASSWORD = dotenv.get("DB_PASSWORD");
 
-		Db.connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-		return Db.connection;
+				// Đăng ký Driver PostgreSQL
+				Class.forName("org.postgresql.Driver");
+
+				// Mở kết nối
+				connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+				System.out.println("Kết nối Database Render thành công!");
+			}
+		} catch (ClassNotFoundException e) {
+			System.err.println("Không tìm thấy Driver PostgreSQL. Kiểm tra lại pom.xml!");
+		} catch (SQLException e) {
+			System.err.println("Lỗi kết nối Database: " + e.getMessage());
+		} catch (Exception e) {
+			System.err.println("Lỗi không xác định hoặc không tìm thấy file .env: " + e.getMessage());
+		}
+
+		return connection;
+	}
+
+	// Test chạy kết nối
+//	public static void main(String[] args) {
+//		Connection testConn = Db.getConnection();
+//		if (testConn != null) {
+//			System.out.println("Đã kết nối được Database!");
+//		} else {
+//			System.out.println("Chưa kết nối được, hãy check lại lỗi.");
+//		}
+//	}
+
+
+    //	test nhập dữ liệu data base
+	public static void main(String[] args) {
+		boolean success = com.auction.server.dao.UserDao.getInstance().insertBidder(
+				"vyngo@uet.vnu.vn",
+				"matkhau123",
+				"Vy Ngố",
+				"25020436",
+				new java.sql.Timestamp(System.currentTimeMillis())
+		);
+
+		if (success) {
+			System.out.println("Quá xịn! Đã lưu thành công Vy Ngố vào Database trên Render!");
+		} else {
+			System.out.println("Oops, có lỗi gì đó rồi, check lại xem sao.");
+		}
 	}
 }
