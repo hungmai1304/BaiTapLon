@@ -84,12 +84,15 @@ public class UserDao {
 
     public User findById(String id) {
         String sql = "SELECT * FROM users WHERE id = ?";
-        try (Connection conn = Db.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try {Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
 
             pstmt.setString(1, id);
-            try (ResultSet rs = pstmt.executeQuery()) {
+            try {
+                ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) return mapResultSetToUser(rs);
+            } finally {
+
             }
         } catch (SQLException e) {
             System.err.println("Lỗi findById: " + e.getMessage());
@@ -104,10 +107,13 @@ public class UserDao {
              PreparedStatement pstmt = conn.prepareStatement(sql);
 
             pstmt.setTimestamp(1, timeCreated);
-            try (ResultSet rs = pstmt.executeQuery()) {
+            ResultSet rs = pstmt.executeQuery();
+            try {
                 while (rs.next()) {
                     users.add(mapResultSetToUser(rs));
                 }
+            } finally {
+                rs.close();
             }
         } catch (SQLException e) {
             System.err.println("Lỗi findByTimeCreated: " + e.getMessage());
@@ -119,14 +125,17 @@ public class UserDao {
     public List<User> findByName(String name) {
         List<User> users = new ArrayList<>();
         String sql = "SELECT * FROM users WHERE name ILIKE ?";
-        try (Connection conn = Db.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try {Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
 
             pstmt.setString(1, "%" + name + "%");
-            try (ResultSet rs = pstmt.executeQuery()) {
+            try {
+                ResultSet rs = pstmt.executeQuery();
                 while (rs.next()) {
                     users.add(mapResultSetToUser(rs));
                 }
+            } finally {
+
             }
         } catch (SQLException e) {
             System.err.println("Lỗi findByName: " + e.getMessage());
