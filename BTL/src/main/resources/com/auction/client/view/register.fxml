@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="635.0" prefWidth="1009.0" styleClass="main-container" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.RegisterController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="635.0" prefWidth="1009.0" styleClass="main-container" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.RegisterController">
    <stylesheets>
       <URL value="@style.css" />
    </stylesheets>
@@ -57,6 +57,7 @@
 
                   <Label fx:id="resultLabel" styleClass="small-text-dim" />
                   <Label fx:id="announcement" styleClass="msg-label" wrapText="true" />
+                  <TextField fx:id="textfield_shop_name" promptText="enter your shop name" styleClass="h3" visible="false" managed="false" />
 
                   <Button onAction="#handleConfirm" prefHeight="45.0" prefWidth="320.0" styleClass="btn-login" text="Create Account" />
                </children>
