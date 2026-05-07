@@ -1,27 +1,41 @@
 package com.auction.server;
 
 public class ServerLauncher {
+
     public static void main(String[] args) {
-        // Render cấp cổng qua biến môi trường PORT, nếu chạy local thì dùng 10000
-        String portStr = System.getenv("PORT");
-        int port = (portStr != null) ? Integer.parseInt(portStr) : 10000;
 
-        System.out.println("=== SERVER ĐẤU GIÁ (WEBSOCKET) ĐANG KHỞI ĐỘNG ===");
-        System.out.println("Port: " + port);
+        try {
 
-        // Khởi tạo và chạy WebSocket Server
-        AuctionWebSocketServer server = new AuctionWebSocketServer(port);
-        server.start();
+            // Render cấp port qua biến môi trường
+            String portStr = System.getenv("PORT");
 
-        // .start() sẽ chạy một luồng riêng, nên ServerLauncher sẽ không bị block ở đây
-        System.out.println("Đang chờ Client kết nối...");
+            int port;
 
+            if (portStr != null) {
+                port = Integer.parseInt(portStr);
+            } else {
+                port = 10000;
+            }
+
+            System.out.println("================================");
+            System.out.println("🚀 SERVER ĐẤU GIÁ ĐANG KHỞI ĐỘNG");
+            System.out.println("PORT: " + port);
+            System.out.println("================================");
+
+            AuctionWebSocketServer server =
+                    new AuctionWebSocketServer(port);
+
+            server.start();
+
+            System.out.println("✅ Server đã start.");
+            System.out.println("⏳ Đang chờ client kết nối...");
+
+            // GIỮ SERVER SỐNG TRÊN RENDER
+            Thread.currentThread().join();
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
     }
-
 }
-//-----------------------------------------------------------------------------------
-//1. Đọc PORT
-//2. Chọn cổng
-//3. Tạo WebSocket server
-//4. Start server
-//5. Chờ client vào
