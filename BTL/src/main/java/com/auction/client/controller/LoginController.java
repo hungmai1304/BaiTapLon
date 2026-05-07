@@ -104,12 +104,11 @@ public class LoginController {
         // =====================================================
         // CONNECT SERVER
         // =====================================================
+
         announcement.setText(
                 "Đang kết nối tới Server..."
         );
-
-
-
+        NetworkClient.connectAndKeepAlive();
         if (!NetworkClient.isConnected()) {
 
             announcement.setText(

@@ -1,5 +1,10 @@
 package com.auction.client.network;
 
+import com.google.gson.Gson;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class RequestSender {
 
     private RequestSender() {
@@ -8,20 +13,18 @@ public class RequestSender {
     // =====================================================
     // LOGIN
     // =====================================================
-    public static void sendLoginRequest(
-            String email,
-            String password
-    ) {
+    private static final Gson gson = new Gson();
 
-        String json = "{"
-                + "\"type\":\"LOGIN_REQUEST\","
-                + "\"data\":{"
-                + "\"email\":\"" + email + "\","
-                + "\"password\":\"" + password + "\""
-                + "}"
-                + "}";
+    public static void sendLoginRequest(String email, String password) {
+        Map<String, Object> request = new HashMap<>();
+        request.put("type", "LOGIN_REQUEST");
 
-        NetworkClient.sendCommand(json);
+        Map<String, String> data = new HashMap<>();
+        data.put("email", email);
+        data.put("password", password);
+        request.put("data", data);
+
+        NetworkClient.sendCommand(gson.toJson(request)); // An toàn hơn nhiều
     }
 
     // =====================================================
