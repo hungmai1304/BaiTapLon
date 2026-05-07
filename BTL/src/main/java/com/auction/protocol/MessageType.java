@@ -6,7 +6,8 @@ public class MessageType {
     public static final String LOGIN_RESPONSE = "LOGIN_RESPONSE";
 
 
-     public static final String REGISTER_REQUEST = "REGISTER_REQUEST";
+    public static final String REGISTER_REQUEST = "REGISTER_REQUEST";
+    public static final String REGISTER_RESPONSE = "REGISTER_RESPONSE";
 
     // (Sau này làm tính năng gì thì cứ khai báo thêm vào đây)
 }

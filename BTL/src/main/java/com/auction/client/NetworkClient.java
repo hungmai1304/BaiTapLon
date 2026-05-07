@@ -11,7 +11,7 @@ public class NetworkClient {
     private static final String SERVER_URL = "wss://baitaplon-qegw.onrender.com";
 
     // Local test
-    // private static final String SERVER_URL = "ws://localhost:10000";
+    //private static final String SERVER_URL = "ws://localhost:10000";
 
     private static WebSocketClient webSocketClient;
 

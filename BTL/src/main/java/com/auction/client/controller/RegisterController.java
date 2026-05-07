@@ -1,4 +1,7 @@
 package com.auction.client.controller;
+
+import com.auction.client.NetworkClient;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
@@ -15,11 +18,10 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
-import javafx.fxml.Initializable;
 
 public class RegisterController implements Initializable {
 
-    // Phải có @FXML để JavaFX hiểu và ánh xạ với file fxml
+    // Nút quay lại đăng nhập
     @FXML
     public void handleBackToLoginButton(ActionEvent event) throws  IOException{
         Parent loader= FXMLLoader.load(getClass().getResource("/com/auction/client/view/login.fxml"));
@@ -41,45 +43,86 @@ public class RegisterController implements Initializable {
     private PasswordField password_register_reconfirm;
     @FXML
     private Label announcement;
-
-    @FXML
-    public void handleConfirm(ActionEvent event)throws IOException{
-        // nếu mà bấm vào nút này thì sẽ check :
-        //1. email tồn tại
-        //2. Tên chưa từng bị trùng trong database
-        //3. mật khẩu trên 6 số
-        //4. reconfirm trùng khớp với mật khẩu
-        String registerName=boxfield_register_name.getText();
-        String registerEmail=textfield_register_email.getText();
-        String password=password_register_pass.getText();
-        String reconfirm=password_register_reconfirm.getText();
-
-        // Phần thử nghiệm và cần được viết lại theo cách gọi hàm từ server để lấy key
-        if (!password.equals(reconfirm)){
-            announcement.setText("Mật khẩu không trùng khớp!");
-        }
-        else if(!registerEmail.contains("@")){
-            announcement.setText("Email Không Hợp Lệ!");
-        }
-        else{
-            announcement.setText("Đăng kí thành công, mời quay lại trang đăng nhập!");
-        }
-
-    }
     @FXML
     private ChoiceBox<String> choices_register_openashop;
-
-    private String[] box={"open a shop","not open a shop"};
     @FXML
     private Label resultLabel;
 
+    private String[] box = {"open a shop", "not open a shop"};
 
+    // NÚT XÁC NHẬN ĐĂNG KÝ (ĐÃ ĐƯỢC "ĐỘ" LẠI KẾT NỐI SERVER)
+    @FXML
+    public void handleConfirm(ActionEvent event) throws IOException {
+        String registerName = boxfield_register_name.getText().trim();
+        String registerEmail = textfield_register_email.getText().trim();
+        String password = password_register_pass.getText();
+        String reconfirm = password_register_reconfirm.getText();
+        String shopChoice = choices_register_openashop.getValue();
+
+        // 1. Giữ nguyên logic kiểm tra lỗi của UI cũ
+        if (registerName.isEmpty() || registerEmail.isEmpty() || password.isEmpty()) {
+            announcement.setText("Vui lòng nhập đầy đủ thông tin!");
+            return; // Bắt buộc phải có return để nó dừng lại, không chạy xuống dưới
+        }
+        else if (!password.equals(reconfirm)){
+            announcement.setText("Mật khẩu không trùng khớp!");
+            return;
+        }
+        else if(!registerEmail.contains("@")){
+            announcement.setText("Email Không Hợp Lệ!");
+            return;
+        }
+        else if (shopChoice == null) {
+            announcement.setText("Vui lòng chọn trạng thái mở Shop!");
+            return;
+        }
+
+        // 2. Chuyển đổi lựa chọn Shop thành Role để gửi Server
+        String role = shopChoice.equals("open a shop") ? "SELLER" : "BUYER";
+
+        // 3. TIÊM LOGIC MẠNG VÀO ĐÂY
+        announcement.setText("Đang gửi yêu cầu đăng ký lên Server...");
+
+        NetworkClient.connectAndKeepAlive();
+        NetworkClient.setListener(new NetworkClient.MessageListener() {
+            @Override
+            public void onMessageReceived(String message) {
+                // Đưa UI về luồng chính để không bị treo App
+                Platform.runLater(() -> {
+                    System.out.println("[Client] Server trả lời: " + message);
+
+                    if (message.contains("\"SUCCESS\"")) {
+                        // Thành công -> Báo xanh
+                        announcement.setStyle("-fx-text-fill: green;");
+                        announcement.setText("Đăng kí thành công! Mời quay lại trang đăng nhập.");
+                    } else {
+                        // Thất bại -> Báo đỏ
+                        announcement.setStyle("-fx-text-fill: red;");
+                        announcement.setText("Lỗi: Tài khoản đã tồn tại hoặc lỗi Server!");
+                    }
+                });
+            }
+        });
+
+        // 4. Đóng gói 4 thông tin thành chuỗi JSON
+        String jsonRequest = "{"
+                + "\"type\":\"REGISTER_REQUEST\","
+                + "\"data\":{"
+                + "\"name\":\"" + registerName + "\","
+                + "\"email\":\"" + registerEmail + "\","
+                + "\"password\":\"" + password + "\","
+                + "\"role\":\"" + role + "\""
+                + "}"
+                + "}";
+
+        // 5. Gửi lên Server
+        NetworkClient.sendCommand(jsonRequest);
+    }
+
+    // Khởi tạo ChoiceBox
     @Override
     public void initialize(URL arg0, ResourceBundle arg1) {
-        // 1. Thêm dữ liệu vào ChoiceBox
         choices_register_openashop.getItems().addAll(box);
-
-        // 2. Tạo hoạt động (Sự kiện khi chọn item)
         choices_register_openashop.setOnAction(this::getChoice);
     }
 
@@ -87,16 +130,5 @@ public class RegisterController implements Initializable {
     public void getChoice(javafx.event.ActionEvent event) {
         String selected = choices_register_openashop.getValue();
         resultLabel.setText("Bạn đã chọn: " + selected);
-        String selectedValue = choices_register_openashop.getValue();
-
-        // 2. Kiểm tra nếu người dùng chưa chọn gì (tránh lỗi NullPointerException)
-        if (selectedValue != null) {
-            // ABC.storage(selectedValue,name,..)
-            // Bạn có thể lưu biến này vào database hoặc gửi sang màn hình khác
-        } else {
-            resultLabel.setText("vui lòng chọn trạng thái");
-        }
     }
-
-
 }
