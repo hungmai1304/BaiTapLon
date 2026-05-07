@@ -5,8 +5,6 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
@@ -16,7 +14,7 @@
    <children>
       <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="637.0" prefWidth="1054.0">
          <children>
-            <VBox fx:id="vbox_login" alignment="CENTER" layoutX="232.0" layoutY="86.0" maxHeight="466.0" maxWidth="591.0" prefHeight="466.0" prefWidth="591.0" spacing="15.0" style=" -fx-padding: 20;">
+            <VBox alignment="CENTER" layoutX="232.0" layoutY="86.0" maxHeight="637.0" maxWidth="591.0" prefHeight="466.0" prefWidth="591.0" spacing="15.0" style=" -fx-padding: 20;">
                <children>
                   <Label alignment="CENTER" graphicTextGap="5.0" prefHeight="58.0" prefWidth="296.0" style="-fx-font-weight: bold;" styleClass="h1" text="AUTIONX" textFill="#c1e6f5">
                      <font>
@@ -59,27 +57,11 @@
                   </VBox>
                   <Button mnemonicParsing="false" onAction="#handleButtonClick" prefHeight="70.0" prefWidth="185.0" styleClass="btn3" text="New To AutionX ?" />
                </children>
+               <styleClass>
+                  <String fx:value="Scene-back-2" />
+                  <String fx:value="bogoc" />
+               </styleClass>
             </VBox>
-            <ImageView fitHeight="70.0" fitWidth="78.0" layoutX="71.0" layoutY="59.0" opacity="0.47" pickOnBounds="true" preserveRatio="true" rotate="59.7">
-               <image>
-                  <Image url="@add.png" />
-               </image>
-            </ImageView>
-            <ImageView fitHeight="48.0" fitWidth="24.0" layoutX="171.0" layoutY="374.0" opacity="0.45" pickOnBounds="true" preserveRatio="true" rotate="135.0">
-               <image>
-                  <Image url="@add.png" />
-               </image>
-            </ImageView>
-            <ImageView fitHeight="70.0" fitWidth="78.0" layoutX="941.0" layoutY="27.0" opacity="0.47" pickOnBounds="true" preserveRatio="true" rotate="122.0">
-               <image>
-                  <Image url="@add.png" />
-               </image>
-            </ImageView>
-            <ImageView fitHeight="46.0" fitWidth="42.0" layoutX="830.0" layoutY="541.0" opacity="0.47" pickOnBounds="true" preserveRatio="true" rotate="128.7">
-               <image>
-                  <Image url="@add.png" />
-               </image>
-            </ImageView>
          </children>
          <styleClass>
             <String fx:value="Scene1" />
