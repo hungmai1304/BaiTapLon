@@ -1,3 +1,11 @@
+target/
+
+.project
+.classpath
+.settings/
+
+.env*
+!.env.example
 # --- JetBrains (Nội dung bạn đã có) ---
 .idea/
 *.iws
