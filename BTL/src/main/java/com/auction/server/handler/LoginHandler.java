@@ -23,7 +23,7 @@ public class LoginHandler implements IMessageHandler {
 
             String email = (String) data.get("email");
             String password = (String) data.get("password");
-
+            System.out.println("Đang check Login cho: Email=" + email + " | Pass=" + password);
             // 2. LOGIC KIỂM TRA TÀI KHOẢN TỪ DATABASE
             // Gọi UserDao để check thông tin, nếu đúng sẽ trả về đối tượng User
             User loginUser = UserDao.getInstance().authenticate(email, password);
