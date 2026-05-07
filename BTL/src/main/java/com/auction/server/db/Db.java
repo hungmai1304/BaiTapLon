@@ -36,31 +36,4 @@ public class Db {
 		return connection;
 	}
 
-	// Test chạy kết nối
-//	public static void main(String[] args) {
-//		Connection testConn = Db.getConnection();
-//		if (testConn != null) {
-//			System.out.println("Đã kết nối được Database!");
-//		} else {
-//			System.out.println("Chưa kết nối được, hãy check lại lỗi.");
-//		}
-//	}
-
-
-    //	test nhập dữ liệu data base
-	public static void main(String[] args) {
-		boolean success = com.auction.server.dao.UserDao.getInstance().insertBidder(
-				"vyngo@uet.vnu.vn",
-				"matkhau123",
-				"Vy Ngố",
-				"25020436",
-				new java.sql.Timestamp(System.currentTimeMillis())
-		);
-
-		if (success) {
-			System.out.println("Quá xịn! Đã lưu thành công Vy Ngố vào Database trên Render!");
-		} else {
-			System.out.println("Oops, có lỗi gì đó rồi, check lại xem sao.");
-		}
-	}
 }

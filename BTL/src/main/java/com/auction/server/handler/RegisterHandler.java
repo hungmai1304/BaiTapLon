@@ -4,10 +4,13 @@ import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.model.ServerContext;
+import com.auction.server.dao.UserDao; // Khai báo vũ khí UserDao
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
+import java.sql.Timestamp;
 import java.util.Map;
+import java.util.UUID; // Thư viện tạo ID ngẫu nhiên
 
 @CommandMap(value = MessageType.REGISTER_REQUEST)
 public class RegisterHandler implements IMessageHandler {
@@ -17,27 +20,50 @@ public class RegisterHandler implements IMessageHandler {
         System.out.println("[RegisterHandler] Đang xử lý yêu cầu Đăng ký...");
 
         try {
-            // 1. Nhặt 4 món đồ từ Client gửi lên (Khớp 100% với giao diện)
             String name = (String) data.get("name");
             String email = (String) data.get("email");
             String password = (String) data.get("password");
             String role = (String) data.get("role"); // Sẽ là "SELLER" hoặc "BUYER"
 
-            // In ra để Terminal để test bằng mắt
+            // Sinh ID ngẫu nhiên và lấy thời gian đăng ký hiện tại
+            String id = UUID.randomUUID().toString();
+            Timestamp timeCreated = new Timestamp(System.currentTimeMillis());
+
             System.out.println("=> Khách mới: " + name + " | Email: " + email + " | Role: " + role);
 
-            // 2. LOGIC ĐĂNG KÝ (Tạm thời cho thành công luôn
-            // Mai làm DB xong thì nhét lệnh INSERT INTO vào đây)
+            //  LOGIC ĐĂNG KÝ VỚI DATABASE
+            boolean isSuccess = false;
 
-            // --- ĐĂNG KÝ THÀNH CÔNG ---
-            Response response = new Response(
-                    MessageType.REGISTER_RESPONSE,
-                    "SUCCESS",
-                    "Đăng ký thành công! Chào mừng " + name + " gia nhập hệ thống."
-            );
+            // Kiểm tra vai trò để phân luồng gọi đúng hàm
+            if ("SELLER".equalsIgnoreCase(role)) {
+                // Nếu là người bán, lấy thêm tên shop
+                String shopName = (String) data.get("shopName");
+                isSuccess = UserDao.getInstance().insertSeller(email, password, name, id, timeCreated, shopName);
+            } else {
+                // Nếu là người mua (BUYER), gọi hàm Bidder
+                isSuccess = UserDao.getInstance().insertBidder(email, password, name, id, timeCreated);
+            }
 
-            conn.send(gson.toJson(response));
-            System.out.println("[RegisterHandler] Đã báo Đăng ký thành công cho Client.");
+            // TRẢ KẾT QUẢ CHO CLIENT
+            if (isSuccess) {
+                // --- ĐĂNG KÝ THÀNH CÔNG ---
+                Response response = new Response(
+                        MessageType.REGISTER_RESPONSE,
+                        "SUCCESS",
+                        "Đăng ký thành công! Chào mừng " + name + " gia nhập hệ thống."
+                );
+                conn.send(gson.toJson(response));
+                System.out.println("[RegisterHandler] Đã lưu vào DB và báo thành công cho Client.");
+            } else {
+                // --- ĐĂNG KÝ THẤT BẠI (Do trùng email hoặc rớt mạng) ---
+                Response response = new Response(
+                        MessageType.REGISTER_RESPONSE,
+                        "ERROR",
+                        "Đăng ký thất bại! Email này có thể đã tồn tại."
+                );
+                conn.send(gson.toJson(response));
+                System.out.println("[RegisterHandler] Lỗi lưu vào DB (có thể do trùng email).");
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
