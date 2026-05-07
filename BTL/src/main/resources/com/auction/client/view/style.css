@@ -894,3 +894,120 @@
     -fx-background-color: #f44747;
     -fx-text-fill: white;
 }
+/* Container chính với hiệu ứng phát sáng viền */
+.main-container {
+    -fx-background-color: #080808;
+    -fx-border-color: #7a22ff;
+    -fx-border-width: 1.5;
+    -fx-effect: dropshadow(three-pass-box, rgba(122, 34, 255, 0.4), 20, 0, 0, 0);
+}
+
+/* Tạo mảng màu tím chéo dùng -fx-clip hoặc hình học */
+.purple-side-bg {
+    -fx-background-color: linear-gradient(to bottom right, #5e11ff, #1a004d);
+    /* Đây là thủ thuật tạo hình chéo mà không dùng Polygon trong FXML */
+    -fx-shape: "M 150 0 L 500 0 L 500 500 L 0 500 Z";
+}
+
+.title-login {
+    -fx-text-fill: white;
+    -fx-font-size: 36px;
+    -fx-font-weight: bold;
+}
+
+.label-input {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 13px;
+}
+
+.flat-field {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #555555 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-text-fill: white;
+    -fx-padding: 5 0 5 0;
+}
+
+.flat-field:focused {
+    -fx-border-color: transparent transparent #7a22ff transparent;
+}
+
+.btn-login {
+    -fx-background-color: linear-gradient(to right, #6a11cb, #2575fc);
+    -fx-background-radius: 20;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.btn-login:hover {
+    -fx-effect: dropshadow(three-pass-box, #2575fc, 10, 0, 0, 0);
+}
+
+.welcome-main {
+    -fx-text-fill: white;
+    -fx-font-size: 45px;
+    -fx-font-weight: 900;
+}
+
+.welcome-sub {
+    -fx-text-fill: white;
+    -fx-font-size: 38px;
+    -fx-font-weight: bold;
+}
+
+.welcome-desc {
+    -fx-text-fill: #e0e0e0;
+    -fx-font-size: 14px;
+}
+
+.small-text { -fx-text-fill: #888888; }
+.link-text { -fx-text-fill: #7a22ff; -fx-font-weight: bold; }
+.msg-label { -fx-text-fill: #ff4444; -fx-font-size: 11px; }
+/* Trang trí bên trái cho Register (Đảo ngược so với Login) */
+.purple-side-register {
+    -fx-background-color: linear-gradient(to bottom left, #5e11ff, #1a004d);
+    -fx-shape: "M 0 0 L 400 0 L 300 600 L 0 600 Z";
+}
+
+/* Nút quay lại dạng viền (Outline) */
+.btn-outline {
+    -fx-background-color: transparent;
+    -fx-border-color: white;
+    -fx-border-radius: 20;
+    -fx-text-fill: white;
+    -fx-padding: 8 25 8 25;
+    -fx-cursor: hand;
+}
+
+.btn-outline:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Custom cho ChoiceBox */
+.custom-choice-box {
+    -fx-background-color: #1a1a1a;
+    -fx-mark-color: #7a22ff;
+    -fx-border-color: #444444;
+    -fx-border-radius: 5;
+    -fx-text-fill: white;
+}
+
+.custom-choice-box .label {
+    -fx-text-fill: white;
+}
+
+.custom-choice-box .context-menu {
+    -fx-background-color: #1a1a1a;
+}
+
+.custom-choice-box .menu-item:focused {
+    -fx-background-color: #7a22ff;
+}
+
+.small-text-dim {
+    -fx-text-fill: #666666;
+    -fx-font-size: 11px;
+}
+
+/* Tận dụng lại các class Title, Flat-field, Btn-login từ file Login cũ */

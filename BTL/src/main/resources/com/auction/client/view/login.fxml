@@ -1,76 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.String?>
+<?import java.net.URL?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
 
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="878.0" prefWidth="1251.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.LoginController">
-   <children>
-      <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="637.0" prefWidth="1054.0">
+<AnchorPane prefHeight="635.0" prefWidth="1009.0" styleClass="main-container" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.LoginController">
+    <stylesheets>
+        <URL value="@style.css" />
+    </stylesheets>
+    <children>
+        <AnchorPane fx:id="sideDecoration" layoutX="350.0" prefHeight="500.0" prefWidth="500.0" styleClass="purple-side-bg">
          <children>
-            <VBox alignment="CENTER" layoutX="232.0" layoutY="86.0" maxHeight="637.0" maxWidth="591.0" prefHeight="466.0" prefWidth="591.0" spacing="15.0" style=" -fx-padding: 20;">
-               <children>
-                  <Label alignment="CENTER" graphicTextGap="5.0" prefHeight="58.0" prefWidth="296.0" style="-fx-font-weight: bold;" styleClass="h1" text="AUTIONX" textFill="#c1e6f5">
-                     <font>
-                        <Font size="26.0" />
-                     </font>
-                  </Label>
-                  <VBox spacing="5.0" style="-fx-padding: 10;">
-                     <children>
-                        <Label styleClass="h3" text="Email" textFill="#c3c3c3">
-                           <font>
-                              <Font size="48.0" />
-                           </font>
-                        </Label>
-                        <TextField fx:id="mail" promptText="Enter your email" styleClass="h3">
-                           <font>
-                              <Font size="16.0" />
-                           </font>
-                        </TextField>
-                        <Label styleClass="h3" text="Password" textFill="#d3d3d3">
-                           <font>
-                              <Font size="16.0" />
-                           </font>
-                        </Label>
-                        <PasswordField fx:id="passwordtext" promptText="Enter your password" styleClass="h3">
-                           <font>
-                              <Font size="16.0" />
-                           </font>
-                        </PasswordField>
-                        <VBox alignment="CENTER" prefHeight="0.0" prefWidth="531.0">
-                           <children>
-                              <Button alignment="CENTER" contentDisplay="CENTER" onAction="#handleGetText" prefWidth="100.0" styleClass="btn1" text="OK" />
-                              <Label fx:id="announcement" alignment="CENTER" contentDisplay="CENTER" prefHeight="19.0" prefWidth="424.0" text="Hãy nhập thông tin" textFill="WHITE" />
-                           </children>
-                        </VBox>
-                     </children>
-                     <styleClass>
-                        <String fx:value="Scene-Black" />
-                        <String fx:value="bogoc" />
-                     </styleClass>
+      
+                          <AnchorPane layoutX="-53.0" layoutY="6.0" prefHeight="625.0" prefWidth="708.0" style="-fx-background-color: transparent;">
+                  <children>
+      
+                                  <VBox alignment="CENTER" layoutX="366.0" layoutY="151.0" prefWidth="300.0" spacing="10.0">
+                          <children>
+                              <Label styleClass="welcome-main" text="AUCTIONX" />
+                              <Label styleClass="welcome-sub" text="Welcome Back !" />
+                        <Label text="Bid Fast, Win Smart !" textFill="WHITE" />
+                              <Label alignment="CENTER" prefWidth="240.0" styleClass="welcome-desc" text="Realtime Auction Experience" textAlignment="CENTER" wrapText="true" />
+                          </children>
+                      </VBox>
+                  </children>
+              </AnchorPane>
+         </children></AnchorPane>
+          <VBox alignment="CENTER" layoutX="61.0" layoutY="148.0" prefWidth="280.0" spacing="20.0">
+              <children>
+                  <Label styleClass="title-login" text="Login" />
+                  <VBox spacing="5.0">
+                      <Label styleClass="label-input" text="Username" />
+                      <TextField fx:id="mail" styleClass="flat-field" />
                   </VBox>
-                  <Button mnemonicParsing="false" onAction="#handleButtonClick" prefHeight="70.0" prefWidth="185.0" styleClass="btn3" text="New To AutionX ?" />
-               </children>
-               <styleClass>
-                  <String fx:value="Scene-back-2" />
-                  <String fx:value="bogoc" />
-               </styleClass>
-            </VBox>
-         </children>
-         <styleClass>
-            <String fx:value="Scene1" />
-            <String fx:value="Scene-Black" />
-         </styleClass>
-      </AnchorPane>
-   </children>
-   <styleClass>
-      <String fx:value="Scene1" />
-      <String fx:value="Scene-Black" />
-   </styleClass>
-</StackPane>
+                  <VBox spacing="5.0">
+                      <Label styleClass="label-input" text="Password" />
+                      <PasswordField fx:id="passwordtext" styleClass="flat-field" />
+                  </VBox>
+            <Label textFill="WHITE" />
+                  <Label fx:id="announcement" styleClass="msg-label" />
+                  <Button onAction="#handleGetText" prefHeight="40.0" prefWidth="280.0" styleClass="btn-login" text="Login" />
+                  <HBox alignment="CENTER" spacing="5.0">
+                      <Label styleClass="small-text" text="Don't have an account?" />
+                      <Hyperlink onAction="#handleButtonClick" styleClass="link-text" text="Sign Up" />
+                  </HBox>
+              </children>
+          </VBox>
+    </children>
+</AnchorPane>

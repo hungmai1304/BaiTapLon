@@ -1,127 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.String?>
-<?import javafx.geometry.Insets?>
+<?import java.net.URL?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
 
-<StackPane prefHeight="878.0" prefWidth="1251.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.RegisterController">
-   <styleClass>
-      <String fx:value="small_window" />
-      <String fx:value="Scene1" />
-   </styleClass>
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="635.0" prefWidth="1009.0" styleClass="main-container" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.RegisterController">
+   <stylesheets>
+      <URL value="@style.css" />
+   </stylesheets>
    <children>
-      <AnchorPane prefHeight="878.0" prefWidth="1251.0" styleClass="Scene-Black">
+      <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="635.0" prefWidth="527.0" styleClass="purple-side-register" />
+
+      <AnchorPane prefHeight="635.0" prefWidth="1009.0" style="-fx-background-color: transparent;">
          <children>
-            <ImageView fitHeight="77.0" fitWidth="111.0" layoutX="848.0" layoutY="573.0" opacity="0.52" pickOnBounds="true" preserveRatio="true">
-               <image>
-                  <Image url="@add.png" />
-               </image>
-            </ImageView>
-            <ImageView fitHeight="70.0" fitWidth="77.0" layoutX="153.0" layoutY="567.0" opacity="0.52" pickOnBounds="true" preserveRatio="true" rotate="65.8">
-               <image>
-                  <Image url="@add.png" />
-               </image>
-            </ImageView>
-            <ImageView fitHeight="29.0" fitWidth="51.0" layoutX="951.0" layoutY="131.0" opacity="0.52" pickOnBounds="true" preserveRatio="true" rotate="54.5">
-               <image>
-                  <Image url="@add.png" />
-               </image>
-            </ImageView>
-            <ImageView fitHeight="58.0" fitWidth="66.0" layoutX="1025.0" layoutY="443.0" opacity="0.52" pickOnBounds="true" preserveRatio="true" rotate="60.3">
-               <image>
-                  <Image url="@add.png" />
-               </image>
-            </ImageView>
-            <ImageView fitHeight="22.0" fitWidth="20.0" layoutX="36.0" layoutY="270.0" opacity="0.52" pickOnBounds="true" preserveRatio="true" rotate="105.3">
-               <image>
-                  <Image url="@add.png" />
-               </image>
-            </ImageView>
-            <ImageView fitHeight="77.0" fitWidth="111.0" layoutX="214.0" layoutY="69.0" opacity="0.52" pickOnBounds="true" preserveRatio="true" rotate="74.7">
-               <image>
-                  <Image url="@add.png" />
-               </image>
-            </ImageView>
-         </children>
-      </AnchorPane>
-      <VBox alignment="TOP_CENTER" maxHeight="659.0" maxWidth="480.0" prefHeight="659.0" prefWidth="480.0" spacing="15.0" style="-fx-padding: 20;">
-         <children>
-            <HBox prefHeight="43.0" prefWidth="440.0">
+            <VBox alignment="CENTER" layoutX="45.0" layoutY="191.0" prefWidth="350.0" spacing="15.0">
                <children>
-                  <Button fx:id="button_register_backtologin" mnemonicParsing="false" onAction="#handleBackToLoginButton" prefHeight="42.0" prefWidth="144.0" style="-fx-background-color: #ff8e8e;" styleClass="btn-back" text="back to login" />
+                  <Label styleClass="welcome-main" text="JOIN US!" />
+                  <Label alignment="CENTER" prefWidth="280.0" styleClass="welcome-desc" text="Create an account to start bidding and selling your items today." textAlignment="CENTER" wrapText="true" />
+                  <Button onAction="#handleBackToLoginButton" styleClass="btn-outline" text="Back to Login" />
                </children>
-            </HBox>
-            <Label alignment="TOP_CENTER" prefHeight="26.0" prefWidth="262.0" text="AUTIONX" textFill="WHITE">
-               <styleClass>
-                  <String fx:value="title" />
-                  <String fx:value="h1" />
-               </styleClass>
-            </Label>
-            <VBox prefHeight="495.0" prefWidth="440.0" spacing="5.0" style="-fx-padding: 10;">
+            </VBox>
+
+            <VBox layoutX="613.0" layoutY="60.0" prefWidth="320.0" spacing="15.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="220.0" styleClass="h3" text="Name:" textFill="WHITE">
-                     <font>
-                        <Font size="22.0" />
-                     </font>
-                  </Label>
-                  <TextField fx:id="boxfield_register_name" promptText="enter your name" styleClass="text-field" />
-                  <Label prefHeight="18.0" prefWidth="220.0" styleClass="h3" text="Email:" textFill="WHITE">
-                     <font>
-                        <Font size="22.0" />
-                     </font>
-                  </Label>
-                  <TextField fx:id="textfield_register_email" layoutX="20.0" layoutY="57.0" promptText="enter your email" styleClass="text-field" />
-                  <Label layoutX="20.0" layoutY="88.0" prefHeight="18.0" prefWidth="220.0" styleClass="h3" text="Password:" textFill="WHITE">
-                     <font>
-                        <Font size="22.0" />
-                     </font>
-                  </Label>
-                  <PasswordField fx:id="password_register_pass" promptText="password" styleClass="text-field" />
-                  <Label layoutX="20.0" layoutY="156.0" prefHeight="18.0" prefWidth="220.0" styleClass="h3" text="Reconfirm:" textFill="WHITE">
-                     <font>
-                        <Font size="22.0" />
-                     </font>
-                  </Label>
-                  <PasswordField fx:id="password_register_reconfirm" layoutX="20.0" layoutY="193.0" promptText="your password" styleClass="text-field" />
-                  <Label layoutX="20.0" layoutY="224.0" prefHeight="18.0" prefWidth="220.0" styleClass="h3" text="Open A Shop?:" textFill="WHITE">
-                     <font>
-                        <Font size="22.0" />
-                     </font>
-                  </Label>
-                  <ChoiceBox fx:id="choices_register_openashop" prefHeight="32.0" prefWidth="146.0" />
-                  <Label fx:id="resultLabel" prefHeight="18.0" prefWidth="429.0" textFill="WHITE" />
-                  <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="100.0">
-                     <children>
-                        <Button fx:id="button_register_confirm" mnemonicParsing="false" onAction="#handleConfirm" prefHeight="53.0" prefWidth="129.0" styleClass="btn2" text="Confirm " />
-                        <Label fx:id="announcement" prefHeight="18.0" prefWidth="393.0">
-                           <VBox.margin>
-                              <Insets top="20.0" />
-                           </VBox.margin>
-                        </Label>
-                     </children>
+                  <Label styleClass="title-login" text="Register" />
+
+                  <VBox spacing="2.0">
+                     <Label styleClass="label-input" text="Full Name" />
+                     <TextField fx:id="boxfield_register_name" styleClass="flat-field" />
                   </VBox>
+
+                  <VBox spacing="2.0">
+                     <Label styleClass="label-input" text="Email Address" />
+                     <TextField fx:id="textfield_register_email" styleClass="flat-field" />
+                  </VBox>
+
+                  <VBox spacing="2.0">
+                     <Label styleClass="label-input" text="Password" />
+                     <PasswordField fx:id="password_register_pass" styleClass="flat-field" />
+                  </VBox>
+
+                  <VBox spacing="2.0">
+                     <Label styleClass="label-input" text="Confirm Password" />
+                     <PasswordField fx:id="password_register_reconfirm" styleClass="flat-field" />
+                  </VBox>
+
+                  <VBox spacing="2.0">
+                     <Label styleClass="label-input" text="Account Type" />
+                     <ChoiceBox fx:id="choices_register_openashop" prefWidth="320.0" styleClass="custom-choice-box" />
+                  </VBox>
+
+                  <Label fx:id="resultLabel" styleClass="small-text-dim" />
+                  <Label fx:id="announcement" styleClass="msg-label" wrapText="true" />
+
+                  <Button onAction="#handleConfirm" prefHeight="45.0" prefWidth="320.0" styleClass="btn-login" text="Create Account" />
                </children>
-               <styleClass>
-                  <String fx:value="Scene-Black" />
-                  <String fx:value="bogoc" />
-               </styleClass>
             </VBox>
          </children>
-         <styleClass>
-            <String fx:value="Scene2" />
-            <String fx:value="bogoc" />
-         </styleClass>
-      </VBox>
+      </AnchorPane>
    </children>
-</StackPane>
+</AnchorPane>
