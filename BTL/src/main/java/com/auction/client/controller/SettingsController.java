@@ -10,6 +10,8 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
+import static com.auction.client.utils.NavigationService.navigate;
+
 public class SettingsController {
     @FXML
     public void handleLogoutClicked(ActionEvent event) throws IOException {
@@ -20,5 +22,13 @@ public class SettingsController {
         //đặt scene mới lên cửa sổ gốc
         prStage.setScene(scene_login);
         prStage.show();
+    }
+    @FXML
+    public void handleTerms(ActionEvent event) throws IOException {
+        navigate(
+                "/com/auction/client/view/terms.fxml",
+                "Quy chế đấu giá",
+                true
+        );
     }
 }

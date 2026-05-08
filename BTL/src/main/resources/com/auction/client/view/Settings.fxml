@@ -42,7 +42,7 @@
                         <Label styleClass="section-header" text="HỆ THỐNG ĐẤU GIÁ &amp; PHÁP LÝ" />
                         <VBox spacing="10.0" styleClass="legal-box">
                             <children>
-                                <Button alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="action-button" text="📜  Điều khoản sử dụng &amp; Quy chế đấu giá" />
+                                <Button alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleTerms" styleClass="action-button" text="📜  Điều khoản sử dụng &amp; Quy chế đấu giá" />
                                 <Button alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="action-button" text="🛡  Chính sách bảo mật dữ liệu" />
                                 <Button alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="action-button" text="🐞  Báo cáo lỗi / Phản hồi dịch vụ" />
                             </children>
