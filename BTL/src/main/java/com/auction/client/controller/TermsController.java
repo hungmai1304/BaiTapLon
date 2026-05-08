@@ -1,6 +1,8 @@
 package com.auction.client.controller;
 
 import static com.auction.client.utils.NavigationService.navigate;
+
+import com.auction.client.utils.NavigationService;
 import javafx.fxml.Initializable;
 import javafx.fxml.FXML;
 import javafx.event.ActionEvent;
@@ -16,10 +18,6 @@ public class TermsController implements Initializable {
 
     @FXML
     public void handleBack(ActionEvent event) throws IOException {
-        navigate(
-                "/com/auction/client/view/settings.fxml",
-                "Settings",
-                true
-        );
+        NavigationService.setCenterView("/com/auction/client/view/Settings.fxml");
     }
 }
