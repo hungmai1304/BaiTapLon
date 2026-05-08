@@ -39,6 +39,8 @@ public class HomeController implements Initializable {
             SomeGlobal.setHomeController(this);
             // Tự động load main.fxml khi vừa mở Home
             loadMainView();
+            String requestParams = "{\"type\":\"GET_PRODUCTS_REQUEST\", \"data\":{}}";
+            com.auction.client.network.NetworkClient.sendCommand(requestParams);
         } catch (IOException e) {
             e.printStackTrace();
         }

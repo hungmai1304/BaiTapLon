@@ -16,6 +16,7 @@ public class NetworkClient {
     //        "ws://localhost:10000";
 
     private static WebSocketClient webSocketClient;
+    private static MessageListener currentListener;
 
     private NetworkClient() {
     }
@@ -125,5 +126,10 @@ public class NetworkClient {
 
         return webSocketClient != null
                 && webSocketClient.isOpen();
+    }
+
+    // Hàm để các màn hình khác gắn tai nghe vào
+    public static void setListener(MessageListener listener) {
+        currentListener = listener;
     }
 }
