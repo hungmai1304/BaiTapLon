@@ -3,7 +3,7 @@ package com.auction.client.controller;
 public class SomeGlobal {
     private static HomeController homeController;
 
-    public static void storeHomeController(HomeController controller) {
+    public static void setHomeController(HomeController controller) {
         homeController = controller;
     }
 

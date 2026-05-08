@@ -9,6 +9,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 
+import javafx.fxml.Initializable;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
@@ -16,7 +17,7 @@ import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 
-public class HomeController {
+public class HomeController implements Initializable {
 
     @FXML
     private BorderPane borderpane_home;
@@ -25,22 +26,31 @@ public class HomeController {
 
         return borderpane_home;
     }
+    //-----------------------------------------------------------------------------------
+    private void loadMainView() throws IOException  {
+        StackPane main = FXMLLoader.load(
+                getClass().getResource("/com/auction/client/view/main.fxml")
+        );
+        borderpane_home.setCenter(main);
+    }
+    @Override
+    public void initialize(java.net.URL location, java.util.ResourceBundle resources) {
+        try {
+            SomeGlobal.setHomeController(this);
+            // Tự động load main.fxml khi vừa mở Home
+            loadMainView();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    //-----------------------------------------------------------------------------------
 
     // =========================================================
     // HOME
     // =========================================================
     @FXML
-    public void handleHomeClicked(ActionEvent event)
-            throws IOException {
-
-        StackPane main =
-                FXMLLoader.load(
-                        getClass().getResource(
-                                "/com/auction/client/view/main.fxml"
-                        )
-                );
-
-        borderpane_home.setCenter(main);
+    public void handleHomeClicked(ActionEvent event) throws IOException {
+        loadMainView();
     }
 
     // =========================================================

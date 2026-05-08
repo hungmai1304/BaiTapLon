@@ -19,7 +19,7 @@ public class LoginHandler implements IClientHandler {
 
         if ("SUCCESS".equalsIgnoreCase(response.getStatus())) {
             // 2. Chuyển màn hình Home (NavigationService đã có Platform.runLater)
-            navigate("/com/auction/client/view/home.fxml", "Auction - Trang chủ", false);
+            navigate("/com/auction/client/view/home.fxml", "Auction - Trang chủ", true);
 
             // 3. Hủy đăng ký vì màn hình Login đã đóng, không cần giữ lại trong Registry
             ControllerRegistry.unregister("LoginController");

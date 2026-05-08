@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1"
+            xmlns="http://javafx.com/javafx/17"
+            fx:controller="com.auction.client.controller.TermsController"
+            style="-fx-background-color: #1a1a2e;">
+
+    <!-- Nút Back cố định trên cùng -->
+    <HBox AnchorPane.topAnchor="0"
+          AnchorPane.leftAnchor="0"
+          AnchorPane.rightAnchor="0"
+          style="-fx-background-color: #12122a; -fx-padding: 12 20;"
+          alignment="CENTER_LEFT">
+        <Button text="← Quay lại" onAction="#handleBack"
+                style="-fx-background-color: transparent; -fx-text-fill: #6c63ff;
+                       -fx-font-size: 13px; -fx-cursor: hand;"/>
+    </HBox>
+
+    <!-- Đường kẻ tím -->
+    <Separator AnchorPane.topAnchor="44"
+               AnchorPane.leftAnchor="0"
+               AnchorPane.rightAnchor="0"
+               style="-fx-background-color: #6c63ff;"/>
+
+    <!-- ScrollPane fill hết màn hình -->
+    <ScrollPane fitToWidth="true"
+                AnchorPane.topAnchor="48"
+                AnchorPane.bottomAnchor="0"
+                AnchorPane.leftAnchor="0"
+                AnchorPane.rightAnchor="0"
+                style="-fx-background-color: transparent; -fx-background: transparent;">
+
+        <VBox spacing="20" style="-fx-padding: 30 40;">
+
+            <!-- Tiêu đề -->
+            <Label text="QUY CHẾ ĐẤU GIÁ"
+                   style="-fx-text-fill: #6c63ff; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+            <Label text="Điều khoản sử dụng &amp; Quy chế đấu giá"
+                   style="-fx-text-fill: #888; -fx-font-size: 13px;"/>
+
+            <Separator style="-fx-background-color: #333;"/>
+
+            <!-- Điều 1 -->
+            <VBox spacing="6">
+                <Label text="Điều 1: Quy định chung"
+                       style="-fx-text-fill: #6c63ff; -fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <Label wrapText="true"
+                       text="Hệ thống đấu giá trực tuyến này được xây dựng nhằm tạo ra môi trường mua bán minh bạch, công bằng cho tất cả người dùng. Mọi người dùng tham gia đều phải tuân thủ các quy định được nêu dưới đây."
+                       style="-fx-text-fill: #ccc; -fx-font-size: 13px;"/>
+            </VBox>
+
+            <!-- Điều 2 -->
+            <VBox spacing="6">
+                <Label text="Điều 2: Điều kiện tham gia đấu giá"
+                       style="-fx-text-fill: #6c63ff; -fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <Label wrapText="true"
+                       text="- Người dùng phải đăng ký tài khoản hợp lệ&#10;- Phải từ 18 tuổi trở lên&#10;- Không vi phạm các quy định pháp luật hiện hành&#10;- Chịu trách nhiệm về thông tin cá nhân đã cung cấp"
+                       style="-fx-text-fill: #ccc; -fx-font-size: 13px;"/>
+            </VBox>
+
+            <!-- Điều 3 -->
+            <VBox spacing="6">
+                <Label text="Điều 3: Quy trình đấu giá"
+                       style="-fx-text-fill: #6c63ff; -fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <Label wrapText="true"
+                       text="- Mỗi phiên đấu giá có thời gian quy định rõ ràng&#10;- Giá đặt sau phải cao hơn giá đặt trước&#10;- Người thắng là người đặt giá cao nhất khi phiên kết thúc&#10;- Kết quả đấu giá có giá trị ràng buộc"
+                       style="-fx-text-fill: #ccc; -fx-font-size: 13px;"/>
+            </VBox>
+
+            <!-- Điều 4 -->
+            <VBox spacing="6">
+                <Label text="Điều 4: Thanh toán và giao hàng"
+                       style="-fx-text-fill: #6c63ff; -fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <Label wrapText="true"
+                       text="- Người thắng đấu giá có nghĩa vụ thanh toán trong vòng 48 giờ&#10;- Không thanh toán đúng hạn sẽ bị hủy kết quả và khóa tài khoản&#10;- Thời gian giao hàng thỏa thuận giữa người mua và người bán"
+                       style="-fx-text-fill: #ccc; -fx-font-size: 13px;"/>
+            </VBox>
+
+            <!-- Điều 5 -->
+            <VBox spacing="6">
+                <Label text="Điều 5: Vi phạm và xử lý"
+                       style="-fx-text-fill: #6c63ff; -fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <Label wrapText="true"
+                       text="- Mọi hành vi gian lận sẽ bị khóa tài khoản vĩnh viễn&#10;- Hệ thống có quyền hủy bất kỳ phiên đấu giá nào có dấu hiệu bất thường&#10;- Tranh chấp sẽ được giải quyết theo quy định của hệ thống"
+                       style="-fx-text-fill: #ccc; -fx-font-size: 13px;"/>
+            </VBox>
+
+        </VBox>
+    </ScrollPane>
+
+</AnchorPane>

@@ -55,8 +55,8 @@
                      <ChoiceBox fx:id="choices_register_openashop" prefWidth="320.0" styleClass="custom-choice-box" />
                   </VBox>
 
-                  <Label fx:id="resultLabel" styleClass="small-text-dim" />
-                  <Label fx:id="announcement" styleClass="msg-label" wrapText="true" />
+                  <Label fx:id="resultLabel" styleClass="small-text-dim" visible="false" managed="false" />
+                  <Label fx:id="announcement" styleClass="msg-label" wrapText="true" visible="false" managed="false" />
                   <TextField fx:id="textfield_shop_name" promptText="enter your shop name" styleClass="h3" visible="false" managed="false" />
 
                   <Button onAction="#handleConfirm" prefHeight="45.0" prefWidth="320.0" styleClass="btn-login" text="Create Account" />
