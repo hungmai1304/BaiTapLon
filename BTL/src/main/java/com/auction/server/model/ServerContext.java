@@ -15,7 +15,7 @@ public class ServerContext {
     private AuctionWebSocketServer server;
     private Product currentProduct;
 
-    // 3. THÊM BỘ NHỚ AN TOÀN LUỒNG (Theo đúng sơ đồ thiết kế)
+    // 3. THÊM BỘ NHỚ AN TOÀN LUỒNG 
     private final Map<String, WebSocket> onlineUsers = new ConcurrentHashMap<>();
 
     // Khóa cửa, không cho ai dùng lệnh "new" bừa bãi
@@ -51,5 +51,25 @@ public class ServerContext {
 
     public boolean isUserOnline(String username) {
         return onlineUsers.containsKey(username);
+    }
+
+    public void removeUser(WebSocket conn) {
+        if (conn == null) return;
+
+        String disconnectedUser = null;
+
+        // Tim trong kho client
+        for (Map.Entry<String, WebSocket> entry : onlineUsers.entrySet()) {
+            if (entry.getValue().equals(conn)) {
+                disconnectedUser = entry.getKey();
+                break; // Tìm thấy rồi thì dừng lại cho đỡ tốn CPU
+            }
+        }
+
+        // Xoa khoi danh sach neu thoat
+        if (disconnectedUser != null) {
+            onlineUsers.remove(disconnectedUser);
+            System.out.println("[ServerContext] 🧹 Đã dọn dẹp Session của user vừa thoát: " + disconnectedUser);
+        }
     }
 }
