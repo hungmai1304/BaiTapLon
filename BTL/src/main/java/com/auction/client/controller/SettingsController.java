@@ -1,5 +1,6 @@
 package com.auction.client.controller;
 
+import com.auction.client.utils.NavigationService;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -20,15 +21,12 @@ public class SettingsController {
         //Lấy cửa số gốc
         Stage prStage=(Stage) ((Node) event.getSource()).getScene().getWindow();
         //đặt scene mới lên cửa sổ gốc
+        prStage.setMaximized(false);
         prStage.setScene(scene_login);
         prStage.show();
     }
     @FXML
     public void handleTerms(ActionEvent event) throws IOException {
-        navigate(
-                "/com/auction/client/view/terms.fxml",
-                "Quy chế đấu giá",
-                true
-        );
+        NavigationService.setCenterView("/com/auction/client/view/terms.fxml");
     }
 }
