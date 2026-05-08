@@ -37,9 +37,13 @@ public class AuctionWebSocketServer extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
+        System.out.println("✅ Client vào phòng: " + conn.getRemoteSocketAddress());
 
-        System.out.println("✅ Client vào phòng: "
-                + conn.getRemoteSocketAddress());
+        // Gửi lời chào riêng cho người mới vào (tùy chọn)
+        conn.send("{\"type\":\"SYSTEM_NOTIFICATION\", \"message\":\"Chào mừng bạn đến với sàn đấu giá!\"}");
+
+        // Thông báo cho tất cả những người đang online khác
+        broadcast("{\"type\":\"USER_COUNT_UPDATE\", \"count\":" + getConnections().size() + "}");
     }
 
     @Override
@@ -59,17 +63,16 @@ public class AuctionWebSocketServer extends WebSocketServer {
     }
 
     @Override
-    public void onClose(WebSocket conn, int code,
-                        String reason, boolean remote) {
+    public void onClose(WebSocket conn, int code, String reason, boolean remote) {
+        System.out.println("❌ Client thoát: " + (conn != null ? conn.getRemoteSocketAddress() : "Unknown"));
 
-        System.out.println("❌ Client thoát");
+        // 1. Cập nhật số lượng người xem cho các client còn lại
+        // Trừ đi chính nó vừa thoát
+        int remainingUsers = getConnections().size();
+        broadcast("{\"type\":\"USER_COUNT_UPDATE\", \"count\":" + remainingUsers + "}");
 
-        if (conn != null) {
-            System.out.println(conn.getRemoteSocketAddress());
-        }
-
-        System.out.println("Code: " + code);
-        System.out.println("Reason: " + reason);
+        // 2. Logic dọn dẹp trong ServerContext
+        // ServerContext.getInstance().removeUser(conn);
     }
 
     @Override
