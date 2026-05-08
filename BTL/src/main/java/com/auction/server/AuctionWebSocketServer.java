@@ -62,6 +62,7 @@ public class AuctionWebSocketServer extends WebSocketServer {
         }
     }
 
+    // khi một người rớt mạng hoac thoat chuong trinh
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         System.out.println("❌ Client thoát: " + (conn != null ? conn.getRemoteSocketAddress() : "Unknown"));
@@ -72,7 +73,7 @@ public class AuctionWebSocketServer extends WebSocketServer {
         broadcast("{\"type\":\"USER_COUNT_UPDATE\", \"count\":" + remainingUsers + "}");
 
         // 2. Logic dọn dẹp trong ServerContext
-        // ServerContext.getInstance().removeUser(conn);
+        ServerContext.getInstance().removeUser(conn);
     }
 
     @Override
