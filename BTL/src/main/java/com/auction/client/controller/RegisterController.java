@@ -101,6 +101,8 @@ public class RegisterController implements Initializable {
         Platform.runLater(() -> {
             announcement.setStyle("-fx-text-fill: " + color + ";");
             announcement.setText(message);
+            announcement.setVisible(true);
+            announcement.setManaged(true);
         });
     }
 
