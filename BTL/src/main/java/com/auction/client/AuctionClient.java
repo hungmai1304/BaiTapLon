@@ -5,6 +5,7 @@ import com.auction.client.network.NetworkClient;
 import com.auction.client.utils.NavigationService;
 import javafx.application.Application;
 
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 
 import javafx.scene.Scene;
@@ -33,8 +34,18 @@ public class AuctionClient extends Application {
         stage.setScene(scene);
 
         stage.setTitle("Auction App");
+        //-----------------------------------------------------------------------------------
+        stage.setOnCloseRequest(event -> {
+            System.out.println("Đang đóng ứng dụng...");
 
+            // 1. Thực hiện dọn dẹp, ví dụ: ngắt kết nối server nếu cần
+            // NetworkClient.disconnect();
 
+            // 2. Đảm bảo toàn bộ luồng (thread) chạy ngầm bị dừng lại
+            Platform.exit(); // Dừng JavaFX Runtime
+            System.exit(0);  // Khai tử hoàn toàn Process (Dùng khi có thread ngầm cứng đầu)
+        });
+        //-----------------------------------------------------------------------------------
         stage.show();
     }
 
