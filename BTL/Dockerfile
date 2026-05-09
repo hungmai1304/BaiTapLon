@@ -17,4 +17,5 @@ COPY --from=build /app/target/*.jar app.jar
 EXPOSE 10000
 
 # Chạy trực tiếp bằng Java, cởi bỏ hoàn toàn gánh nặng của Maven
-CMD ["java","--add-opens", "-jar", "app.jar"]
+# Chạy trực tiếp bằng Java, mở quyền truy cập java.time cho Gson
+CMD ["java", "--add-opens", "java.base/java.time=ALL-UNNAMED", "-jar", "app.jar"]
