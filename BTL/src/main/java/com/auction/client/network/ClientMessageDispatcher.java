@@ -10,7 +10,7 @@ import java.util.Set;
 
 public class ClientMessageDispatcher {
     private static final Map<String, IClientHandler> handlerMap = new HashMap<>();
-    private static final Gson gson = new Gson();
+    public static final Gson gson = new Gson();
 
     // Khối static chạy ngay khi Class được nạp vào bộ nhớ (khởi động chương trình)
     static {

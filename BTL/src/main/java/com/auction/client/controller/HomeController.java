@@ -5,7 +5,10 @@ import com.auction.client.network.MessageListener;
 import com.auction.client.network.NetworkClient;
 
 import javafx.event.ActionEvent;
-
+import com.auction.common.model.product.ProductStatus;
+import com.auction.protocol.MessageType;
+import com.auction.protocol.Request;
+import com.google.gson.Gson;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 
@@ -16,6 +19,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import java.io.IOException;
+
+import static com.auction.client.network.ClientMessageDispatcher.gson;
 
 public class HomeController implements Initializable {
 
@@ -39,8 +44,8 @@ public class HomeController implements Initializable {
             SomeGlobal.setHomeController(this);
             // Tự động load main.fxml khi vừa mở Home
             loadMainView();
-            String requestParams = "{\"type\":\"GET_PRODUCTS_REQUEST\", \"data\":{}}";
-            com.auction.client.network.NetworkClient.sendCommand(requestParams);
+            Request auctionRequest = new Request(MessageType.GET_AUCTION_PRODUCT_REQUEST);
+            com.auction.client.network.NetworkClient.sendCommand(gson.toJson(auctionRequest));
         } catch (IOException e) {
             e.printStackTrace();
         }

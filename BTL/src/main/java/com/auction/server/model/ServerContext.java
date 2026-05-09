@@ -2,26 +2,27 @@ package com.auction.server.model;
 
 import com.auction.server.AuctionWebSocketServer;
 import com.auction.common.model.product.Product;
-import org.java_websocket.WebSocket; // Thêm thư viện này vào để quản lý kết nối
+import org.java_websocket.WebSocket;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
 
 public class ServerContext {
 
-    // 1. CHUẨN SINGLETON: Đảm bảo chỉ có 1 bộ nhớ RAM duy nhất
     private static ServerContext instance;
 
     private AuctionWebSocketServer server;
     private Product currentProduct;
 
-    // 3. THÊM BỘ NHỚ AN TOÀN LUỒNG 
     private final Map<String, WebSocket> onlineUsers = new ConcurrentHashMap<>();
 
-    // Khóa cửa, không cho ai dùng lệnh "new" bừa bãi
+    //  THÊM MỚI - Danh sách toàn bộ sản phẩm trong hệ thống
+    private final List<Product> productList = new ArrayList<>();
+
     private ServerContext() {}
 
-    // Cổng duy nhất để lấy bộ nhớ RAM ra dùng
     public static synchronized ServerContext getInstance() {
         if (instance == null) {
             instance = new ServerContext();
@@ -29,7 +30,6 @@ public class ServerContext {
         return instance;
     }
 
-    // Hàm khởi tạo dữ liệu ban đầu
     public void initData(AuctionWebSocketServer server, Product currentProduct) {
         this.server = server;
         this.currentProduct = currentProduct;
@@ -37,8 +37,34 @@ public class ServerContext {
 
     public AuctionWebSocketServer getServer() { return server; }
     public Product getCurrentProduct() { return currentProduct; }
+    public void setCurrentProduct(Product product) { this.currentProduct = product; }
 
-    // --- Các hàm quản lý User (chuẩn bị cho LoginHandler) ---
+    //  THÊM MỚI - Quản lý danh sách sản phẩm
+    public List<Product> getProductList() {
+        return productList;
+    }
+
+    // Thêm 1 sản phẩm vào hệ thống
+    public void addProduct(Product product) {
+        productList.add(product);
+        System.out.println("[ServerContext] ✅ Đã thêm sản phẩm: " + product.getName());
+    }
+
+    // Xóa 1 sản phẩm khỏi hệ thống
+    public void removeProduct(String productId) {
+        productList.removeIf(p -> p.getId().equals(productId));
+        System.out.println("[ServerContext] ❌ Đã xóa sản phẩm: " + productId);
+    }
+
+    // Lấy 1 sản phẩm theo ID
+    public Product getProductById(String productId) {
+        return productList.stream()
+                .filter(p -> p.getId().equals(productId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    // --- Quản lý User
     public void addOnlineUser(String username, WebSocket conn) {
         onlineUsers.put(username, conn);
         System.out.println("[ServerContext] Khách hàng [" + username + "] đã đăng nhập!");
@@ -58,15 +84,13 @@ public class ServerContext {
 
         String disconnectedUser = null;
 
-        // Tim trong kho client
         for (Map.Entry<String, WebSocket> entry : onlineUsers.entrySet()) {
             if (entry.getValue().equals(conn)) {
                 disconnectedUser = entry.getKey();
-                break; // Tìm thấy rồi thì dừng lại cho đỡ tốn CPU
+                break;
             }
         }
 
-        // Xoa khoi danh sach neu thoat
         if (disconnectedUser != null) {
             onlineUsers.remove(disconnectedUser);
             System.out.println("[ServerContext] 🧹 Đã dọn dẹp Session của user vừa thoát: " + disconnectedUser);
