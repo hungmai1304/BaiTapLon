@@ -37,7 +37,7 @@ public class AuctionWebSocketServer extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        System.out.println("✅ Client vào phòng: " + conn.getRemoteSocketAddress());
+        System.err.println("✅ Client vào phòng: " + conn.getRemoteSocketAddress());
 
         // Gửi lời chào riêng cho người mới vào (tùy chọn)
         conn.send("{\"type\":\"SYSTEM_NOTIFICATION\", \"message\":\"Chào mừng bạn đến với sàn đấu giá!\"}");
@@ -49,7 +49,7 @@ public class AuctionWebSocketServer extends WebSocketServer {
     @Override
     public void onMessage(WebSocket conn, String message) {
 
-        System.out.println("📩 Nhận: " + message);
+        System.err.println("📩 Nhận: " + message);
 
         try {
 
@@ -65,7 +65,7 @@ public class AuctionWebSocketServer extends WebSocketServer {
     // khi một người rớt mạng hoac thoat chuong trinh
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        System.out.println("❌ Client thoát: " + (conn != null ? conn.getRemoteSocketAddress() : "Unknown"));
+        System.err.println("❌ Client thoát: " + (conn != null ? conn.getRemoteSocketAddress() : "Unknown"));
 
         // 1. Cập nhật số lượng người xem cho các client còn lại
         // Trừ đi chính nó vừa thoát
@@ -87,6 +87,6 @@ public class AuctionWebSocketServer extends WebSocketServer {
     @Override
     public void onStart() {
 
-        System.out.println("🚀 WebSocket Server đã sẵn sàng!");
+        System.err.println("🚀 WebSocket Server đã sẵn sàng!");
     }
 }

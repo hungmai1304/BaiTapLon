@@ -21,7 +21,7 @@ public class RegisterHandler implements IMessageHandler {
             String name = (String) data.get("name");
             String email = (String) data.get("email");
             String password = (String) data.get("password");
-            String role = (String) data.get("role"); // Sẽ là "SELLER" hoặc "BUYER"
+            String role = (String) data.get("role");
 
             // In ra để Terminal để test bằng mắt
             System.out.println("=> Khách mới: " + name + " | Email: " + email + " | Role: " + role);
