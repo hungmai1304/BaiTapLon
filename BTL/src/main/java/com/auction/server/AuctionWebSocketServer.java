@@ -116,20 +116,6 @@ public class AuctionWebSocketServer extends WebSocketServer {
     public void onStart() {
         System.out.println("🚀 WebSocket Server đã sẵn sàng!");
 
-        // 1. Chọn sản phẩm đầu tiên lên đấu giá
-        AuctionManager manager = AuctionManager.getInstance();
-        manager.pickNextProduct();
-
-        // 2. Tạo Timer kiểm tra hết giờ mỗi 1 giây
-        auctionTimer = new Timer("AuctionTimer", true); // daemon thread
-        auctionTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                manager.checkAndEndExpiredAuctions();
-            }
-        }, 0, 1000); // Chạy ngay lập tức, lặp lại mỗi 1 giây
-
-        System.out.println("⏰ [Server] Timer đấu giá đã khởi động - kiểm tra mỗi giây!");
     }
 
     // ========== ✅ THÊM MỚI - Dọn dẹp khi server tắt ==========

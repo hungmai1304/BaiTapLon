@@ -1,5 +1,6 @@
 package com.auction.client.controller;
 
+import com.auction.client.utils.ClientContext;
 import com.auction.client.network.NetworkClient;
 import com.auction.client.utils.ControllerRegistry;
 import com.auction.common.model.product.Product;
@@ -16,11 +17,16 @@ public class TikTokAuctionController {
 
     @FXML
     public void initialize() {
-        // Đăng ký controller vào Registry để Handler tìm thấy
         ControllerRegistry.register("TikTokAuctionController", this);
+        // Hiển thị sản phẩm đầu tiên nếu đã có dữ liệu
+        renderCurrentProduct();
+    }
 
-        // Gửi lệnh lấy sản phẩm đầu tiên khi vừa vào màn hình
-        NetworkClient.sendCommand("GET_NEXT");
+    private void renderCurrentProduct() {
+        Product current = ClientContext.getInstance().getCurrentProduct();
+        if (current != null) {
+            updateUI(current);
+        }
     }
 
     public void updateUI(Product product) {
@@ -35,17 +41,30 @@ public class TikTokAuctionController {
 
     @FXML
     public void handleUp(ActionEvent event) {
-        System.out.println("⏳ Đang chuyển sản phẩm trước...");
-        NetworkClient.sendCommand("GET_BACK");
+        boolean hasPrev = ClientContext.getInstance().previous();
+        if (hasPrev) {
+            renderCurrentProduct();
+        } else {
+            System.out.println("⚠️ Đã ở đầu danh sách!");
+            // Nếu muốn lướt vòng tròn hoặc lấy cũ hơn thì gửi command ở đây
+            // NetworkClient.sendCommand("GET_PREVIOUS_PAGE");
+        }
     }
 
     @FXML
     public void handleDown(ActionEvent event) {
-        System.out.println("⏳ Đang chuyển sản phẩm tiếp...");
-        NetworkClient.sendCommand("GET_NEXT");
+        boolean hasNext = ClientContext.getInstance().next();
+        if (hasNext) {
+            renderCurrentProduct();
+        } else {
+            System.out.println("🚀 Chạm biên! Yêu cầu lấy thêm sản phẩm mới...");
+            // Gửi yêu cầu lấy list sản phẩm tiếp theo
+            NetworkClient.sendCommand("GET_AUCTION_PRODUCT");
+            // Khi Server trả về GET_AUCTION_PRODUCT_RESPONSE,
+            // ClientContext sẽ setAll lại và currentIndex tự về 0 như bạn muốn.
+        }
     }
 
-    // Gọi khi thoát màn hình đấu giá
     public void cleanup() {
         ControllerRegistry.unregister("TikTokAuctionController");
     }

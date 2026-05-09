@@ -38,11 +38,12 @@ public class HomeController implements Initializable {
         );
         borderpane_home.setCenter(main);
     }
+    // set main
+    // gửi lấy lô product
     @Override
     public void initialize(java.net.URL location, java.util.ResourceBundle resources) {
         try {
             SomeGlobal.setHomeController(this);
-            // Tự động load main.fxml khi vừa mở Home
             loadMainView();
             Request auctionRequest = new Request(MessageType.GET_AUCTION_PRODUCT_REQUEST);
             com.auction.client.network.NetworkClient.sendCommand(gson.toJson(auctionRequest));
