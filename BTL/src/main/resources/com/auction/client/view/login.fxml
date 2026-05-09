@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="635.0" prefWidth="1009.0" styleClass="main-container" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.LoginController">
+<AnchorPane prefHeight="635.0" prefWidth="1009.0" styleClass="main-container" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.LoginController">
     <stylesheets>
         <URL value="@style.css" />
     </stylesheets>
@@ -36,7 +36,7 @@
               <children>
                   <Label styleClass="title-login" text="Login" />
                   <VBox spacing="5.0">
-                      <Label styleClass="label-input" text="Username" />
+                      <Label styleClass="label-input" text="Email" />
                       <TextField fx:id="mail" styleClass="flat-field" />
                   </VBox>
                   <VBox spacing="5.0">
