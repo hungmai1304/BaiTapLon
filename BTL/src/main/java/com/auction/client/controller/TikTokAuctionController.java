@@ -4,10 +4,14 @@ import com.auction.client.utils.ClientContext;
 import com.auction.client.network.NetworkClient;
 import com.auction.client.utils.ControllerRegistry;
 import com.auction.common.model.product.Product;
+import com.auction.protocol.MessageType;
+import com.auction.protocol.Request;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+
+import static com.auction.client.network.ClientMessageDispatcher.gson;
 
 public class TikTokAuctionController {
 
@@ -57,11 +61,15 @@ public class TikTokAuctionController {
         if (hasNext) {
             renderCurrentProduct();
         } else {
-            System.out.println("🚀 Chạm biên! Yêu cầu lấy thêm sản phẩm mới...");
-            // Gửi yêu cầu lấy list sản phẩm tiếp theo
-            NetworkClient.sendCommand("GET_AUCTION_PRODUCT_REQUEST");
-            // Khi Server trả về GET_AUCTION_PRODUCT_RESPONSE,
-            // ClientContext sẽ setAll lại và currentIndex tự về 0 như bạn muốn.
+            System.out.println("? Chạm biên! Yêu cầu lấy thêm sản phẩm mới...");
+
+            // --- SỬA TẠI ĐÂY ---
+            // Tạo object Request thay vì gửi String thuần
+            Request auctionRequest = new Request(MessageType.GET_AUCTION_PRODUCT_REQUEST);
+
+            // Chuyển sang JSON rồi mới gửi
+            NetworkClient.sendCommand(gson.toJson(auctionRequest));
+            // -------------------
         }
     }
 

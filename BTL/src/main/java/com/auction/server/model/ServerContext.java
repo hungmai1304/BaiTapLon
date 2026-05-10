@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class ServerContext {
 
@@ -18,8 +19,9 @@ public class ServerContext {
 
     private final Map<String, WebSocket> onlineUsers = new ConcurrentHashMap<>();
 
-    //  THÊM MỚI - Danh sách toàn bộ sản phẩm trong hệ thống
-    private static List<Product> productList = new ArrayList<>();
+    // BỎ static ở đây: Singleton instance sẽ sở hữu danh sách này
+    // Khởi tạo ngay lập tức để không bao giờ bị null
+    private final List<Product> productList = Collections.synchronizedList(new ArrayList<>());
 
     private ServerContext() {}
 
@@ -39,24 +41,23 @@ public class ServerContext {
     public Product getCurrentProduct() { return currentProduct; }
     public void setCurrentProduct(Product product) { this.currentProduct = product; }
 
-    //  THÊM MỚI - Quản lý danh sách sản phẩm
+    // Quản lý danh sách sản phẩm
     public List<Product> getProductList() {
         return productList;
     }
 
-    // Thêm 1 sản phẩm vào hệ thống
     public void addProduct(Product product) {
-        productList.add(product);
-        System.out.println("[ServerContext] ✅ Đã thêm sản phẩm: " + product.getName());
+        if (product != null) {
+            productList.add(product);
+            System.out.println("[ServerContext] Đã thêm sản phẩm: " + product.getName());
+        }
     }
 
-    // Xóa 1 sản phẩm khỏi hệ thống
     public void removeProduct(String productId) {
         productList.removeIf(p -> p.getId().equals(productId));
-        System.out.println("[ServerContext] ❌ Đã xóa sản phẩm: " + productId);
+        System.out.println("[ServerContext] Đã xóa sản phẩm: " + productId);
     }
 
-    // Lấy 1 sản phẩm theo ID
     public Product getProductById(String productId) {
         return productList.stream()
                 .filter(p -> p.getId().equals(productId))
@@ -64,7 +65,7 @@ public class ServerContext {
                 .orElse(null);
     }
 
-    // --- Quản lý User
+    // --- Quản lý User ---
     public void addOnlineUser(String username, WebSocket conn) {
         onlineUsers.put(username, conn);
         System.out.println("[ServerContext] Khách hàng [" + username + "] đã đăng nhập!");
@@ -72,7 +73,6 @@ public class ServerContext {
 
     public void removeOnlineUser(String username) {
         onlineUsers.remove(username);
-        System.out.println("[ServerContext] Khách hàng [" + username + "] đã thoát!");
     }
 
     public boolean isUserOnline(String username) {
@@ -81,19 +81,6 @@ public class ServerContext {
 
     public void removeUser(WebSocket conn) {
         if (conn == null) return;
-
-        String disconnectedUser = null;
-
-        for (Map.Entry<String, WebSocket> entry : onlineUsers.entrySet()) {
-            if (entry.getValue().equals(conn)) {
-                disconnectedUser = entry.getKey();
-                break;
-            }
-        }
-
-        if (disconnectedUser != null) {
-            onlineUsers.remove(disconnectedUser);
-            System.out.println("[ServerContext] 🧹 Đã dọn dẹp Session của user vừa thoát: " + disconnectedUser);
-        }
+        onlineUsers.values().remove(conn); // Cách xóa nhanh hơn theo value
     }
 }
