@@ -45,7 +45,7 @@ public class AuctionWebSocketServer extends WebSocketServer {
         p1.setStartPrice(20000000);
         p1.setCurrentPrice(20000000);
         p1.setStepPrice(500000);
-        p1.setStatus(ProductStatus.AVAILABLE); //  Chờ được chọn
+        p1.setStatus(ProductStatus.ON_AUCTION); //  Chờ được chọn
 
         // Sản phẩm 2
         Product p2 = new Product();
@@ -55,7 +55,7 @@ public class AuctionWebSocketServer extends WebSocketServer {
         p2.setStartPrice(5000000);
         p2.setCurrentPrice(5000000);
         p2.setStepPrice(100000);
-        p2.setStatus(ProductStatus.AVAILABLE);
+        p2.setStatus(ProductStatus.ON_AUCTION);
 
         // Sản phẩm 3
         Product p3 = new Product();
@@ -65,7 +65,7 @@ public class AuctionWebSocketServer extends WebSocketServer {
         p3.setStartPrice(30000000);
         p3.setCurrentPrice(30000000);
         p3.setStepPrice(1000000);
-        p3.setStatus(ProductStatus.AVAILABLE);
+        p3.setStatus(ProductStatus.ON_AUCTION);
 
         // Thêm vào ServerContext
         context.addProduct(p1);
@@ -81,6 +81,7 @@ public class AuctionWebSocketServer extends WebSocketServer {
 
         conn.send("{\"type\":\"SYSTEM_NOTIFICATION\", \"message\":\"Chào mừng bạn đến với sàn đấu giá!\"}");
         broadcast("{\"type\":\"USER_COUNT_UPDATE\", \"count\":" + getConnections().size() + "}");
+
     }
 
     @Override

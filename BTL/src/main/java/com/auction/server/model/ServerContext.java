@@ -19,7 +19,7 @@ public class ServerContext {
     private final Map<String, WebSocket> onlineUsers = new ConcurrentHashMap<>();
 
     //  THÊM MỚI - Danh sách toàn bộ sản phẩm trong hệ thống
-    private final List<Product> productList = new ArrayList<>();
+    private static List<Product> productList = new ArrayList<>();
 
     private ServerContext() {}
 
