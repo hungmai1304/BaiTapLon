@@ -3,59 +3,75 @@ package com.auction.client.network;
 import com.auction.client.annotation.ResponseHandler;
 import com.auction.protocol.Response;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonSerializer;
 import org.reflections.Reflections;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 public class ClientMessageDispatcher {
-    private static final Map<String, IClientHandler> handlerMap = new HashMap<>();
-    public static final Gson gson = new Gson();
+    // 1. Gia cố Gson: Thêm cả Serializer và Deserializer cho chắc chắn
+    public static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
+                    new com.google.gson.JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
+            .registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, typeOfT, context) ->
+                    LocalDateTime.parse(json.getAsString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+            .setLenient() // Cho phép parse JSON lỏng lẻo hơn để tránh lỗi vặt
+            .create();
 
-    // Khối static chạy ngay khi Class được nạp vào bộ nhớ (khởi động chương trình)
+    private static final Map<String, IClientHandler> handlerMap = new HashMap<>();
+
     static {
         init();
     }
 
     private static void init() {
         try {
-            // 1. Dùng Reflections quét toàn bộ package chứa các Handler
             Reflections reflections = new Reflections("com.auction.client.handler");
-
-            // 2. Tìm các class có gắn nhãn @ResponseHandler
             Set<Class<?>> annotatedClasses = reflections.getTypesAnnotatedWith(ResponseHandler.class);
 
             for (Class<?> clazz : annotatedClasses) {
-                // 3. Khởi tạo thực thể (instance) của Handler đó
                 IClientHandler handlerInstance = (IClientHandler) clazz.getDeclaredConstructor().newInstance();
-
-                // 4. Lấy cái "type" từ nhãn dán ra để làm Key trong Map
                 String type = clazz.getAnnotation(ResponseHandler.class).type();
 
-                // 5. Cất vào Map
-                handlerMap.put(type.toUpperCase(), handlerInstance);
-                System.out.println("🚀 [Client] Đã gom Handler cho loại: " + type);
+                // Lưu Key luôn luôn là chữ HOA để tìm kiếm chính xác
+                handlerMap.put(type.trim().toUpperCase(), handlerInstance);
+                System.out.println("✔ [Client] Registered Handler: " + type);
             }
         } catch (Exception e) {
-            System.err.println("❌ Lỗi khi khởi tạo Dispatcher: " + e.getMessage());
+            System.err.println("❌ Lỗi khởi tạo Dispatcher: " + e.getMessage());
         }
     }
 
-    public static void dispatch(String jsonMessage) {
+    public static void dispatch(String message) {
+        if (message == null || message.trim().isEmpty()) return;
+
         try {
-            Response response = gson.fromJson(jsonMessage, Response.class);
-            String type = response.getType().toUpperCase();
+            // Parse JSON thành Object Response
+            Response response = gson.fromJson(message, Response.class);
 
-            // So sánh type và gọi đúng Handler trong Map
-            IClientHandler handler = handlerMap.get(type);
+            if (response != null && response.getType() != null) {
+                String type = response.getType().trim().toUpperCase();
+                IClientHandler handler = handlerMap.get(type);
 
-            if (handler != null) {
-                handler.handle(response);
-            } else {
-                System.out.println("⚠️ Không tìm thấy xử lý cho loại tin nhắn: " + type);
+                if (handler != null) {
+                    // SỬA TẠI ĐÂY: Truyền đúng tham số mà Interface IClientHandler yêu cầu
+                    // Thường là handler.handle(response) hoặc handler.onResponse(response)
+                    handler.handle(response);
+
+                    System.out.println("✅ [Client] Đã xử lý: " + type);
+                } else {
+                    System.err.println("⚠ [Client] Chưa đăng ký Handler cho: " + type);
+                }
             }
         } catch (Exception e) {
-            System.err.println("❌ Lỗi phân tích tin nhắn từ Server");
+            System.err.println("❌ Lỗi Parse: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

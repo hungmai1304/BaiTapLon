@@ -46,7 +46,7 @@ public class HomeController implements Initializable {
             SomeGlobal.setHomeController(this);
             loadMainView();
             Request auctionRequest = new Request(MessageType.GET_AUCTION_PRODUCT_REQUEST);
-            com.auction.client.network.NetworkClient.sendCommand(gson.toJson(auctionRequest));
+            com.auction.client.network.NetworkClient.sendCommand(ClientMessageDispatcher.gson.toJson(auctionRequest));
         } catch (IOException e) {
             e.printStackTrace();
         }
