@@ -20,52 +20,46 @@ public class MessageDispatcher {
     public MessageDispatcher(Gson gson, ServerContext context) {
         this.gson = gson;
         this.context = context;
-        autoRegisterHandlers(); // Gọi hàm tự động quét
+        autoRegisterHandlers();
     }
 
     private void autoRegisterHandlers() {
-        // Trỏ vào thư mục chứa các Handler của bạn
         Reflections reflections = new Reflections("com.auction.server.handler");
-
-        // Quét tất cả các class có gắn nhãn @CommandMap
         Set<Class<?>> annotatedClasses = reflections.getTypesAnnotatedWith(CommandMap.class);
 
         for (Class<?> clazz : annotatedClasses) {
             try {
-                // Lấy tên lệnh từ nhãn
                 String commandName = clazz.getAnnotation(CommandMap.class).value();
-
-                // Khởi tạo thực thể tự động
                 IMessageHandler handlerInstance = (IMessageHandler) clazz.getDeclaredConstructor().newInstance();
 
-                // Tự động bỏ vào Map
-                handlers.put(commandName.toUpperCase(), handlerInstance);
-
-                System.out.println("✅ Tự động load Handler: " + commandName);
+                // Key chuẩn hóa: Trim và Uppercase
+                handlers.put(commandName.trim().toUpperCase(), handlerInstance);
+                System.out.println("[Dispatcher] Registered: " + commandName);
             } catch (Exception e) {
-                System.err.println("❌ Lỗi khi khởi tạo Handler: " + clazz.getSimpleName());
+                System.err.println("[Dispatcher] Error loading " + clazz.getSimpleName());
             }
         }
     }
 
     public void dispatch(WebSocket conn, String message) {
         try {
-            // 1. SỬ DỤNG CLASS Request CỦA BẠN (Đã import com.auction.protocol.Request)
             Request request = gson.fromJson(message, Request.class);
 
-            // 2. Dùng getType() thay vì getCommand()
             if (request != null && request.getType() != null) {
-                IMessageHandler handler = handlers.get(request.getType().toUpperCase());
+                // Lấy handler bằng Type chuẩn hóa
+                String type = request.getType().trim().toUpperCase();
+                IMessageHandler handler = handlers.get(type);
 
                 if (handler != null) {
-                    // 3. Truyền data (Map<String, Object>), gson và context vào cho Handler
                     handler.handle(conn, request.getData(), gson, context);
                 } else {
-                    conn.send("{\"error\": \"COMMAND_NOT_FOUND\"}");
+                    System.err.println("[Dispatcher] No handler for: " + type);
+                    conn.send("{\"type\":\"ERROR\",\"message\":\"COMMAND_NOT_FOUND\"}");
                 }
             }
         } catch (Exception e) {
-            conn.send("{\"error\": \"INVALID_JSON\"}");
+            System.err.println("[Dispatcher] JSON Error: " + e.getMessage());
+            conn.send("{\"type\":\"ERROR\",\"message\":\"INVALID_JSON\"}");
         }
     }
 }

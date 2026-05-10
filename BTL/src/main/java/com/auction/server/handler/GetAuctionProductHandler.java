@@ -9,6 +9,7 @@ import com.auction.server.model.ServerContext;
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -18,34 +19,37 @@ public class GetAuctionProductHandler implements IMessageHandler {
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
-        System.out.println("[GetAuctionProductHandler] Client " + conn.getRemoteSocketAddress() + " hỏi sản phẩm đang đấu giá...");
-
         try {
-            // 1. Lấy danh sách sản phẩm từ context (sau này thay bằng DAO)
-            // sau thêm databaseở dây 
-            // ServerContext là nơi lưu trạng thái chung của server
             List<Product> allProducts = context.getProductList();
 
-            // 2. Lọc chỉ lấy sản phẩm ON_AUCTION
-            // Đây là lý do bước 1 thêm ProductStatus — để filter được
+            // Khởi tạo list trống nếu context null để tránh crash
+            if (allProducts == null) {
+                allProducts = new ArrayList<>();
+            }
+
             List<Product> auctionProducts = allProducts.stream()
-                    .filter(p -> p.getStatus() == ProductStatus.ON_AUCTION)
+                    .filter(p -> p != null && p.getStatus() == ProductStatus.ON_AUCTION)
                     .collect(Collectors.toList());
 
-            // 3. Đóng gói đúng cách — data chứa dữ liệu, message chứa thông báo
+            // Đảm bảo truyền MessageType kiểu String
             Response response = new Response(
                     MessageType.GET_AUCTION_PRODUCT_RESPONSE,
                     "SUCCESS",
-                    "Lấy sản phẩm đấu giá thành công"
+                    "Lấy sản phẩm thành công"
             );
+
+            // Response đã khởi tạo Map data trong constructor
             response.getData().put("products", auctionProducts);
 
-            conn.send(gson.toJson(response));
-            System.out.println("[GetAuctionProductHandler] Đã gửi " + auctionProducts.size() + " sản phẩm đang đấu giá!");
+            String jsonResponse = gson.toJson(response);
+            conn.send(jsonResponse);
+
+            System.out.println("[Handler] Sent " + auctionProducts.size() + " products to client.");
 
         } catch (Exception e) {
-            System.err.println("[GetAuctionProductHandler] Lỗi: " + e.getMessage());
+            System.err.println("[Handler Error] GET_AUCTION_PRODUCT: " + e.getMessage());
             e.printStackTrace();
+            conn.send("{\"type\":\"" + MessageType.GET_AUCTION_PRODUCT_RESPONSE + "\", \"status\":\"ERROR\"}");
         }
     }
 }
