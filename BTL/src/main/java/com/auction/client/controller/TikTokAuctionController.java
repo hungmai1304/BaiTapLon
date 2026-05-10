@@ -59,7 +59,7 @@ public class TikTokAuctionController {
         } else {
             System.out.println("🚀 Chạm biên! Yêu cầu lấy thêm sản phẩm mới...");
             // Gửi yêu cầu lấy list sản phẩm tiếp theo
-            NetworkClient.sendCommand("GET_AUCTION_PRODUCT");
+            NetworkClient.sendCommand("GET_AUCTION_PRODUCT_REQUEST");
             // Khi Server trả về GET_AUCTION_PRODUCT_RESPONSE,
             // ClientContext sẽ setAll lại và currentIndex tự về 0 như bạn muốn.
         }
