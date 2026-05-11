@@ -4,11 +4,8 @@ import com.auction.server.AuctionWebSocketServer;
 import com.auction.common.model.product.Product;
 import org.java_websocket.WebSocket;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.ArrayList;
-import java.util.Collections;
 
 public class ServerContext {
 
@@ -97,5 +94,10 @@ public class ServerContext {
     // Lấy WebSocket của một User dựa trên Username (đã có map onlineUsers)
     public WebSocket getConnByUser(String username) {
         return onlineUsers.get(username);
+    }
+    // --- Tính năng hỗ trợ Broadcast ---
+    public Collection<WebSocket> getConnectedClients() {
+        // Lấy toàn bộ phần value (chính là các WebSocket) từ trong map onlineUsers
+        return this.onlineUsers.values();
     }
 }
