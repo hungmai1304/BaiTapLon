@@ -1,4 +1,4 @@
-package com.auction.client.utils;
+package com.auction.common.utils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

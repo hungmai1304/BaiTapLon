@@ -1,7 +1,7 @@
 package com.auction.client.controller;
 
 import com.auction.client.network.RequestSender;
-import com.auction.client.utils.Generate_id_and_timecreated;
+import com.auction.common.utils.Generate_id_and_timecreated;
 import com.auction.client.utils.NavigationService;
 import com.auction.common.model.product.Product;
 import javafx.collections.FXCollections;

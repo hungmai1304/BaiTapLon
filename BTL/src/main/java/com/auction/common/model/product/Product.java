@@ -11,8 +11,8 @@ public class Product extends Item {
     private String description;
     private User owner;
 
-//    private LocalDateTime startTime;
-//    private LocalDateTime endTime;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
 
     // ✅ THÊM MỚI
     private ProductStatus status = ProductStatus.AVAILABLE;
@@ -44,11 +44,11 @@ public class Product extends Item {
     public User getOwner() { return owner; }
     public void setOwner(User owner) { this.owner = owner; }
 
-//    public LocalDateTime getStartTime() { return startTime; }
-//    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
-//
-//    public LocalDateTime getEndTime() { return endTime; }
-//    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
+    public LocalDateTime getStartTime() { return startTime; }
+    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
+
+    public LocalDateTime getEndTime() { return endTime; }
+    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
 
     // ✅ THÊM MỚI - getter/setter cho status và auctionId
     public ProductStatus getStatus() { return status; }

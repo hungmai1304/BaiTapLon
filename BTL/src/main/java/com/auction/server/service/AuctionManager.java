@@ -55,7 +55,7 @@ public class AuctionManager {
         selectedProduct.setStatus(ProductStatus.ON_AUCTION);
         selectedProduct.setStartTime(LocalDateTime.now());
         // Giả sử mỗi phiên kéo dài 5 phút
-        selectedProduct.setEndTime(LocalDateTime.now().plusMinutes(5));
+        selectedProduct.setEndTime(LocalDateTime.now().plusMinutes(30));
 
         // 4. Lưu vào ServerContext
         context.setCurrentProduct(selectedProduct);

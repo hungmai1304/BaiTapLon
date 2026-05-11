@@ -1,16 +1,17 @@
 package com.auction.server.handler;
 
+import com.auction.common.model.user.Bidder;
+import com.auction.common.model.user.Seller;
 import com.auction.common.model.user.User;
 import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.model.ServerContext;
-import com.auction.server.dao.UserDao; // Import UserDao
+import com.auction.server.dao.UserDao;
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
 import java.util.Map;
-
 
 @CommandMap(value = MessageType.LOGIN_REQUEST)
 public class LoginHandler implements IMessageHandler {
@@ -20,55 +21,51 @@ public class LoginHandler implements IMessageHandler {
         System.out.println("[LoginHandler] Đang xử lý đăng nhập...");
 
         try {
-
             String email = (String) data.get("email");
             String password = (String) data.get("password");
-            System.out.println("Đang check Login cho: Email=" + email + " | Pass=" + password);
-            // 2. LOGIC KIỂM TRA TÀI KHOẢN TỪ DATABASE
-            // Gọi UserDao để check thông tin, nếu đúng sẽ trả về đối tượng User
+
+            // 1. Kiểm tra đăng nhập từ Database
             User loginUser = UserDao.getInstance().authenticate(email, password);
 
             if (loginUser != null) {
                 // --- ĐĂNG NHẬP THÀNH CÔNG ---
                 context.addOnlineUser(email, conn);
 
-                // Khởi tạo Response
                 Response response = new Response(
                         MessageType.LOGIN_RESPONSE,
                         "SUCCESS",
                         "Đăng nhập thành công!"
                 );
 
-                // Nhét dữ liệu TỪ DATABASE vào Map data để gửi về cho Client
+                // 2. Nhét dữ liệu chung
                 response.getData().put("id", loginUser.getId());
                 response.getData().put("email", loginUser.getEmail());
-                response.getData().put("name", loginUser.getName());
-                response.getData().put("role", loginUser.getRole());
+                response.getData().put("name", loginUser.getUsername());
 
-                // Nếu User là Seller, có thể gửi thêm shopName về
-                if (loginUser.getShopName() != null) {
-                    response.getData().put("shopName", loginUser.getShopName());
+                // 3. Kiểm tra Role bằng instanceof (Thay vì dùng loginUser.getRole())
+                if (loginUser instanceof Seller) {
+                    response.getData().put("role", "SELLER");
+                    // Lấy shopName từ đối tượng Seller
+                    response.getData().put("shopName", ((Seller) loginUser).getShopName());
+                } else if (loginUser instanceof Bidder) {
+                    response.getData().put("role", "BIDDER");
                 }
 
-                // Gửi về cho Client
                 conn.send(gson.toJson(response));
-                System.out.println("[LoginHandler] Người dùng [" + loginUser.getName() + "] đã vào hệ thống.");
+                System.out.println("[LoginHandler] User [" + loginUser.getUsername() + "] đã vào hệ thống.");
 
             } else {
                 // --- ĐĂNG NHẬP THẤT BẠI ---
                 Response response = new Response(
                         MessageType.LOGIN_RESPONSE,
                         "ERROR",
-                        "Sai tài khoản hoặc mật khẩu rồi!"
+                        "Sai tài khoản hoặc mật khẩu!"
                 );
-
                 conn.send(gson.toJson(response));
-                System.out.println("[LoginHandler] Khách hàng nhập sai thông tin!");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            // Trả về lỗi hệ thống nếu có biến cố
             Response response = new Response(
                     MessageType.LOGIN_RESPONSE,
                     "ERROR",

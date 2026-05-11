@@ -180,4 +180,22 @@ public class UserDao {
 
         return user;
     }
+    // Thêm hàm này vào UserDao.java
+    public User getUserByEmail(String email) {
+        String sql = "SELECT * FROM users WHERE email = ?";
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, email);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getUserByEmail: " + e.getMessage());
+        }
+        return null;
+    }
 }

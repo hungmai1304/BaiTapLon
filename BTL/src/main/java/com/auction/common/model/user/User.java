@@ -1,18 +1,20 @@
 package com.auction.common.model.user;
 
 import com.auction.common.model.base.BaseEntity;
+import java.time.LocalDateTime;
 
-// Đã bỏ abstract để có thể khởi tạo: new User()
 public class User extends BaseEntity {
     private String username;
     private String password;
     private String email;
-    private String role;
-    // Thêm trường email
+
+    // Các thông tin thời gian chung
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
 
     public User() {}
 
-    // --- Getter và Setter cho Email ---
+    // --- Getter và Setter cho các trường cơ bản ---
     public String getEmail() {
         return email;
     }
@@ -21,7 +23,6 @@ public class User extends BaseEntity {
         this.email = email;
     }
 
-    // --- Getter và Setter cũ ---
     public String getUsername() {
         return username;
     }
@@ -36,5 +37,21 @@ public class User extends BaseEntity {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 }
