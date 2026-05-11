@@ -1,13 +1,17 @@
 package com.auction.server.dao;
 
+import com.auction.common.model.user.Bidder;
+import com.auction.common.model.user.Seller;
+import com.auction.common.model.user.User;
 import com.auction.server.db.Db;
-import com.auction.server.model.User;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -146,14 +150,34 @@ public class UserDao {
     // Hàm phụ trợ(làm sạch code, tránh lặp)
 
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
-        User user = new User();
+        User user;
+        String role = rs.getString("role");
+
+        // 1. Khởi tạo đối tượng dựa trên vai trò (Role)
+        if ("SELLER".equalsIgnoreCase(role)) {
+            Seller seller = new Seller();
+            seller.setShopName(rs.getString("shop_name"));
+            user = seller; // Gán vào biến cha
+        } else if ("BIDDER".equalsIgnoreCase(role)) {
+            user = new Bidder();
+        } else {
+            user = new User(); // Trường hợp dự phòng
+        }
+
+        // 2. Map các thông tin chung
         user.setId(rs.getString("id"));
         user.setEmail(rs.getString("email"));
         user.setPassword(rs.getString("password"));
-        user.setName(rs.getString("name"));
-        user.setTimeCreated(rs.getTimestamp("time_created"));
-        user.setRole(rs.getString("role"));
-        user.setShopName(rs.getString("shop_name"));
+        user.setUsername(rs.getString("name"));
+
+
+        String timeStr = rs.getString("time_created"); // Lấy chuỗi từ DB
+        if (timeStr != null) {
+            // Định dạng phải khớp với chuỗi "yyyy-MM-dd HH:mm:ss" bạn đã tạo ở utils
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            user.setTimeCreated(LocalDateTime.parse(timeStr, formatter));
+        }
+
         return user;
     }
 }

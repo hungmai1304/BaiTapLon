@@ -1,11 +1,11 @@
 package com.auction.server.handler;
 
+import com.auction.common.model.user.User;
 import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.model.ServerContext;
 import com.auction.server.dao.UserDao; // Import UserDao
-import com.auction.server.model.User;   // Import model User
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 

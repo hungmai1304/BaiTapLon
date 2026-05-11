@@ -83,4 +83,19 @@ public class ServerContext {
         if (conn == null) return;
         onlineUsers.values().remove(conn); // Cách xóa nhanh hơn theo value
     }
+    // Lấy Username (hoặc Email) dựa trên kết nối WebSocket hiện tại
+    public String getUserByConn(WebSocket conn) {
+        if (conn == null) return null;
+
+        return onlineUsers.entrySet().stream()
+                .filter(entry -> entry.getValue().equals(conn))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
+    }
+
+    // Lấy WebSocket của một User dựa trên Username (đã có map onlineUsers)
+    public WebSocket getConnByUser(String username) {
+        return onlineUsers.get(username);
+    }
 }

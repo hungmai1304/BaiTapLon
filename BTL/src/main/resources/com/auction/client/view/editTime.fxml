@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefHeight="1080.0" prefWidth="1831.0" styleClass="main-root" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.ShopImportController">
+<VBox prefHeight="1080.0" prefWidth="1831.0" styleClass="main-root" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.editTimeController">
     <children>
         <HBox alignment="CENTER_LEFT" prefHeight="100.0" spacing="20.0" styleClass="header">
             <children>
@@ -48,7 +48,7 @@
                                         <VBox spacing="8.0">
                                             <children>
                                                 <Label styleClass="label-title" text="Tên sản phẩm" />
-                                                <TextField fx:id="name" promptText="VD: MacBook Pro M3..." styleClass="custom-text-field" />
+                                                <TextField promptText="VD: MacBook Pro M3..." styleClass="custom-text-field" />
                                             </children>
                                         </VBox>
                                         <HBox spacing="20.0">
@@ -56,22 +56,27 @@
                                                 <VBox spacing="8.0" HBox.hgrow="ALWAYS">
                                                     <children>
                                                         <Label styleClass="label-title" text="Giá nhập (đ)" />
-                                                        <TextField fx:id="price" promptText="0" styleClass="custom-text-field" />
+                                                        <TextField promptText="0" styleClass="custom-text-field" />
                                                     </children>
                                                 </VBox>
-                                                <VBox spacing="8.0" HBox.hgrow="ALWAYS" />
+                                                <VBox spacing="8.0" HBox.hgrow="ALWAYS">
+                                                    <children>
+                                                        <Label styleClass="label-title" text="Số lượng" />
+                                                        <TextField promptText="1" styleClass="custom-text-field" />
+                                                    </children>
+                                                </VBox>
                                             </children>
                                         </HBox>
                                         <VBox spacing="8.0">
                                             <children>
                                                 <Label styleClass="label-title" text="Danh mục" />
-                                                <ComboBox maxWidth="Infinity" onAction="#categoryClicked" promptText="Chọn danh mục" styleClass="custom-combo-box" />
+                                                <ComboBox maxWidth="Infinity" promptText="Chọn danh mục" styleClass="custom-combo-box" />
                                             </children>
                                         </VBox>
                                         <VBox spacing="8.0" VBox.vgrow="ALWAYS">
                                             <children>
                                                 <Label styleClass="label-title" text="Mô tả sản phẩm" />
-                                                <TextArea fx:id="moreInfo" promptText="Thông tin chi tiết..." style="-fx-text-fill: black;" styleClass="custom-text-area" VBox.vgrow="ALWAYS" />
+                                                <TextArea promptText="Thông tin chi tiết..." style="-fx-text-fill: black;" styleClass="custom-text-area" VBox.vgrow="ALWAYS" />
                                             </children>
                                         </VBox>
                                     </children>
@@ -81,11 +86,11 @@
 
                         <HBox alignment="CENTER_RIGHT" spacing="20.0">
                             <children>
-                                <Button onAction="#deleteAllClicked" styleClass="btn-cancel" text="Hủy bỏ">
-                           <font>
-                              <Font size="21.0" />
-                           </font></Button>
-                                <Button onAction="#addProductClicked" styleClass="btn-submit" text="Lưu vào kho" />
+                                <Button styleClass="btn-cancel" text="Hủy bỏ">
+                                    <font>
+                                        <Font size="21.0" />
+                                    </font></Button>
+                                <Button styleClass="btn-submit" text="Lưu vào kho" />
                             </children>
                         </HBox>
                     </children>

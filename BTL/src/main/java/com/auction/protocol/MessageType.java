@@ -17,5 +17,9 @@ public class MessageType {
     public static final String GET_SHOP_PRODUCTS_REQUEST  = "GET_SHOP_PRODUCTS_REQUEST";
     public static final String GET_SHOP_PRODUCTS_RESPONSE = "GET_SHOP_PRODUCTS_RESPONSE";
 
+    public static final String IMPORT_PRODUCT_REQUEST ="IMPORT_PRODUCT_REQUEST";
+    public static final String IMPORT_PRODUCT_RESPONSE ="IMPORT_PRODUCT_RESPONSE";
+
+
     // (Sau này làm tính năng gì thì cứ khai báo thêm vào đây)
 }

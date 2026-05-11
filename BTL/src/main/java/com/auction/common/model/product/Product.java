@@ -8,20 +8,27 @@ public class Product extends Item {
     private double startPrice;
     private double currentPrice;
     private double stepPrice;
-
+    private String description;
     private User owner;
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+//    private LocalDateTime startTime;
+//    private LocalDateTime endTime;
 
     // ✅ THÊM MỚI
     private ProductStatus status = ProductStatus.AVAILABLE;
     // mặc định đầu tiên là chờ sản phẩm
-    private String currentAuctionId = null; // khoi tao chua dau gia lan nao
+//    private String currentAuctionId = null; // khoi tao chua dau gia lan nao
 
     public Product() {}
 
-    // --- getter/setter cũ giữ nguyên ---
+    // --- getter/setter
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
 
@@ -37,16 +44,16 @@ public class Product extends Item {
     public User getOwner() { return owner; }
     public void setOwner(User owner) { this.owner = owner; }
 
-    public LocalDateTime getStartTime() { return startTime; }
-    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
-
-    public LocalDateTime getEndTime() { return endTime; }
-    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
+//    public LocalDateTime getStartTime() { return startTime; }
+//    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
+//
+//    public LocalDateTime getEndTime() { return endTime; }
+//    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
 
     // ✅ THÊM MỚI - getter/setter cho status và auctionId
     public ProductStatus getStatus() { return status; }
     public void setStatus(ProductStatus status) { this.status = status; }
 
-    public String getCurrentAuctionId() { return currentAuctionId; }
-    public void setCurrentAuctionId(String id) { this.currentAuctionId = id; }
+//    public String getCurrentAuctionId() { return currentAuctionId; }
+//    public void setCurrentAuctionId(String id) { this.currentAuctionId = id; }
 }

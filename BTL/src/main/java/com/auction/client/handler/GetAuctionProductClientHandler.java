@@ -29,7 +29,7 @@ public class GetAuctionProductClientHandler implements IClientHandler {
             );
 
             if (products != null && !products.isEmpty()) {
-                // 2. Cập nhật vào Context (Hàm setAuctionProducts bạn vừa viết)
+                // 2. Cập nhật vào Context
                 ClientContext.getInstance().setAuctionProducts(products);
 
                 // 3. Quan trọng: Ra lệnh cho UI hiển thị ngay lập tức
