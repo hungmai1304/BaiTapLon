@@ -20,6 +20,17 @@ public class MessageType {
     public static final String IMPORT_PRODUCT_REQUEST ="IMPORT_PRODUCT_REQUEST";
     public static final String IMPORT_PRODUCT_RESPONSE ="IMPORT_PRODUCT_RESPONSE";
 
+    // Shop bấm nút đăng bán món hàng mới lên sàn
+    public static final String SELL_PRODUCT_REQUEST = "SELL_PRODUCT_REQUEST";
+    public static final String SELL_PRODUCT_RESPONSE = "SELL_PRODUCT_RESPONSE";
+
+    // Shop ấn lưu thay đổi thông tin món hàng (giá cả, tên, mô tả...)
+    public static final String EDIT_PRODUCT_REQUEST = "EDIT_PRODUCT_REQUEST";
+    public static final String EDIT_PRODUCT_RESPONSE = "EDIT_PRODUCT_RESPONSE";
+
+    // Server thông báo với client(Dùng sau khi có người vừa đăng bán thành công)
+    public static final String UPDATE_AUCTION_LIST_RESPONSE = "UPDATE_AUCTION_LIST_RESPONSE";
+
 
     // (Sau này làm tính năng gì thì cứ khai báo thêm vào đây)
 }
