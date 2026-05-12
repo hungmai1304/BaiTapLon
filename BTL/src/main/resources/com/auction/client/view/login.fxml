@@ -2,6 +2,7 @@
 
 <?import java.net.URL?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
@@ -10,7 +11,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="635.0" prefWidth="1009.0" styleClass="main-container" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.LoginController">
+<AnchorPane prefHeight="635.0" prefWidth="1009.0" styleClass="main-container" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.LoginController">
     <stylesheets>
         <URL value="@style.css" />
     </stylesheets>
@@ -43,6 +44,7 @@
                       <Label styleClass="label-input" text="Password" />
                       <PasswordField fx:id="passwordtext" styleClass="flat-field" />
                   </VBox>
+            <CheckBox fx:id="rememberMe" mnemonicParsing="false" text="Remember Me" textFill="#a88bff" />
             <Label textFill="WHITE" />
                   <Label fx:id="announcement" styleClass="msg-label" />
                   <Button onAction="#handleGetText" prefHeight="40.0" prefWidth="280.0" styleClass="btn-login" text="Login" />

@@ -36,7 +36,7 @@ public class NavigationService {
                 primaryStage.setScene(scene);
                 primaryStage.setTitle(title);
                 primaryStage.setMaximized(maximized);
-                primaryStage.setResizable(false);
+                primaryStage.setResizable(true);
                 primaryStage.show();
             } catch (IOException e) {
                 System.err.println("❌ Lỗi khi chuyển màn hình: " + fxmlPath);

@@ -56,35 +56,26 @@ public class RequestSender {
     // IMPORT PRODUCT
     //=======================================================
     public static void sendImportProductRequest(Product product) {
-        /*
-         * Cấu trúc JSON dựa trên sơ đồ:
-         * entity: id, timeCreate
-         * item: name (kế thừa entity)
-         * product: category, startPrice, currentPrice, stepPrice, owner, status (kế thừa item)
-         */
-
         String json = "{"
                 + "\"type\":\"IMPORT_PRODUCT_REQUEST\","
                 + "\"data\":{"
-                // Dữ liệu từ Entity
                 + "\"id\":\"" + product.getId() + "\","
                 + "\"timeCreate\":\"" + product.getTimeCreated() + "\","
-
-                // Dữ liệu từ Item
                 + "\"name\":\"" + product.getName() + "\","
-
-                // Dữ liệu từ Product
                 + "\"category\":\"" + product.getCategory() + "\","
                 + "\"startPrice\":" + product.getStartPrice() + ","
                 + "\"currentPrice\":" + product.getCurrentPrice() + ","
                 + "\"stepPrice\":" + product.getStepPrice() + ","
                 + "\"owner\":\"" + product.getOwner() + "\","
-                + "\"status\":\"" + product.getStatus() + "\""
+                + "\"status\":\"" + product.getStatus() + "\"," // Nhớ dấu phẩy ở đây
+                + "\"description\":\"" + (product.getDescription() != null ? product.getDescription() : "") + "\"" // Thêm dòng này
                 + "}"
                 + "}";
 
         NetworkClient.sendCommand(json);
     }
+
+    // load sản phẩm của user
     public static void sendGetShopProductsRequest(String ownerId) {
         String json = "{"
                 + "\"type\":\"GET_SHOP_PRODUCTS_REQUEST\","
@@ -92,6 +83,39 @@ public class RequestSender {
                 + "\"sellerId\":\"" + ownerId + "\""
                 + "}"
                 + "}";
+        NetworkClient.sendCommand(json);
+    }
+    public static void sendEditProductRequest(Product product) {
+        /*
+         * Cấu trúc JSON gửi đi bao gồm đầy đủ các thông tin của Product:
+         * id, timeCreate, name, category, startPrice, currentPrice, stepPrice, owner, status và description.
+         */
+
+        String json = "{"
+                + "\"type\":\"EDIT_PRODUCT_REQUEST\","
+                + "\"data\":{"
+                // Dữ liệu định danh và thời gian
+                + "\"id\":\"" + product.getId() + "\","
+                + "\"timeCreate\":\"" + product.getTimeCreated() + "\","
+
+                // Thông tin cơ bản
+                + "\"name\":\"" + product.getName() + "\","
+                + "\"category\":\"" + product.getCategory() + "\","
+
+                // Thông tin giá cả (Dạng số không cần dấu ngoặc kép)
+                + "\"startPrice\":" + product.getStartPrice() + ","
+                + "\"currentPrice\":" + product.getCurrentPrice() + ","
+                + "\"stepPrice\":" + product.getStepPrice() + ","
+
+                // Thông tin sở hữu và trạng thái
+                + "\"owner\":\"" + product.getOwner() + "\","
+                + "\"status\":\"" + product.getStatus() + "\","
+
+                // Mô tả sản phẩm (Xử lý null để tránh lỗi chuỗi "null")
+                + "\"description\":\"" + (product.getDescription() != null ? product.getDescription() : "") + "\""
+                + "}"
+                + "}";
+
         NetworkClient.sendCommand(json);
     }
 }

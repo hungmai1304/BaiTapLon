@@ -1,6 +1,7 @@
 package com.auction.client.controller;
 
 import com.auction.client.network.RequestSender;
+import com.auction.client.utils.NavigationService;
 import com.auction.common.model.product.Product;
 import com.auction.common.model.product.ProductStatus;
 import javafx.application.Platform;
@@ -103,11 +104,6 @@ public class ShopSellController {
         productTable.setItems(productList);
 
         // 8. Gửi request lấy danh sách từ server
-        // Đổi từ:
-        String email = SomeGlobal.getCurrentUser().getEmail();
-        RequestSender.sendGetShopProductsRequest(email);
-
-// Thành:
         String ownerId = SomeGlobal.getCurrentUser().getId();
         RequestSender.sendGetShopProductsRequest(ownerId);
     }
@@ -123,10 +119,10 @@ public class ShopSellController {
     private void handleEdit(Product product) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(
-                    "/com/auction/client/view/ShopImport.fxml"));
+                    "/com/auction/client/view/editProduct.fxml"));
             VBox shopImportView = loader.load();
-            ShopImportController controller = loader.getController();
-            controller.fillProductData(product);
+            editProductController controller = loader.getController();
+            controller.fillProductData(product);// good
             HomeController homeController = SomeGlobal.getHomeController();
             if (homeController != null && homeController.getBorderpaneHome() != null) {
                 homeController.getBorderpaneHome().setCenter(shopImportView);

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefHeight="1080.0" prefWidth="1831.0" styleClass="main-root" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.editProductController">
+    <children>
+        <HBox alignment="CENTER_LEFT" prefHeight="100.0" spacing="20.0" styleClass="header">
+            <children>
+                <Label styleClass="logo-text" text="MY SHOP" />
+                <Label styleClass="header-sub-title" text="&gt; edit your Product" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button onAction="#handleBackClicked" prefHeight="45.0" prefWidth="103.0" styleClass="btn3" text="Quay lại" />
+            </children>
+            <padding>
+                <Insets left="60.0" right="60.0" />
+            </padding>
+        </HBox>
+
+        <HBox alignment="CENTER" VBox.vgrow="ALWAYS">
+            <children>
+                <VBox maxWidth="1000.0" spacing="30.0" styleClass="content-card" HBox.hgrow="ALWAYS">
+                    <children>
+                        <HBox spacing="40.0">
+                            <children>
+                                <VBox spacing="15.0">
+                                    <children>
+                                        <Label styleClass="label-title" text="Hình ảnh sản phẩm" />
+                                        <StackPane prefHeight="350.0" prefWidth="350.0" styleClass="image-upload-area">
+                                            <children>
+                                                <Label styleClass="upload-text" text="Thêm ảnh +" />
+                                            </children>
+                                        </StackPane>
+                                    </children>
+                                </VBox>
+
+                                <VBox spacing="20.0" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <VBox spacing="8.0">
+                                            <children>
+                                                <Label styleClass="label-title" text="Tên sản phẩm" />
+                                                <TextField fx:id="name" promptText="VD: MacBook Pro M3..." styleClass="custom-text-field" />
+                                            </children>
+                                        </VBox>
+                                        <HBox spacing="20.0">
+                                            <children>
+                                                <VBox spacing="8.0" HBox.hgrow="ALWAYS">
+                                                    <children>
+                                                        <Label styleClass="label-title" text="Giá nhập (đ)" />
+                                                        <TextField fx:id="price" promptText="0" styleClass="custom-text-field" />
+                                                    </children>
+                                                </VBox>
+                                                <VBox spacing="8.0" HBox.hgrow="ALWAYS" />
+                                            </children>
+                                        </HBox>
+                                        <VBox spacing="8.0">
+                                            <children>
+                                                <Label styleClass="label-title" text="Danh mục" />
+                                                <ComboBox fx:id="categoryComboBox" maxWidth="Infinity" onAction="#categoryClicked" promptText="Chọn danh mục" styleClass="custom-combo-box" />
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="8.0" VBox.vgrow="ALWAYS">
+                                            <children>
+                                                <Label styleClass="label-title" text="Mô tả sản phẩm" />
+                                                <TextArea fx:id="moreInfo" promptText="Thông tin chi tiết..." style="-fx-text-fill: black;" styleClass="custom-text-area" VBox.vgrow="ALWAYS" />
+                                            </children>
+                                        </VBox>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
+
+                        <HBox alignment="CENTER_RIGHT" spacing="20.0">
+                            <children>
+                                <Label fx:id="successLabel" managed="false" style="-fx-text-fill: #4caf50; -fx-font-size: 14px;" text="" visible="false" />
+                                <Button onAction="#deleteAllClicked" styleClass="btn-cancel" text="Hủy bỏ">
+                                    <font>
+                                        <Font size="21.0" />
+                                    </font>
+                                </Button>
+                                <Button onAction="#addProductClicked" styleClass="btn-submit" text="Lưu thay đổi" />
+                            </children>
+                        </HBox>
+                    </children>
+                    <padding>
+                        <Insets bottom="50.0" left="50.0" right="50.0" top="50.0" />
+                    </padding>
+                </VBox>
+            </children>
+        </HBox>
+    </children>
+</VBox>

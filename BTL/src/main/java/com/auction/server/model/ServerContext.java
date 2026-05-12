@@ -100,4 +100,19 @@ public class ServerContext {
         // Lấy toàn bộ phần value (chính là các WebSocket) từ trong map onlineUsers
         return this.onlineUsers.values();
     }
+    public void updateProduct(Product updatedProduct) {
+        if (updatedProduct == null || updatedProduct.getId() == null) return;
+
+        synchronized (productList) {
+            for (int i = 0; i < productList.size(); i++) {
+                if (productList.get(i).getId().equals(updatedProduct.getId())) {
+                    productList.set(i, updatedProduct); // Thay thế trực tiếp tại vị trí cũ
+                    System.out.println("[ServerContext] Da cap nhat RAM cho SP: " + updatedProduct.getName());
+                    return;
+                }
+            }
+        }
+        // Nếu không tìm thấy thì mới thêm mới (tùy logic của ông)
+        addProduct(updatedProduct);
+    }
 }
