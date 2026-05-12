@@ -34,16 +34,19 @@ public class RequestSender {
             String name,
             String email,
             String password,
-            String role
+            String role,
+            String shopName // 1. Thêm tham số shopName
     ) {
-
+        // 2. Bổ sung field "shopName" vào trong object "data"
+        // Lưu ý dấu phẩy sau trường "role"
         String json = "{"
                 + "\"type\":\"REGISTER_REQUEST\","
                 + "\"data\":{"
                 + "\"name\":\"" + name + "\","
                 + "\"email\":\"" + email + "\","
                 + "\"password\":\"" + password + "\","
-                + "\"role\":\"" + role + "\""
+                + "\"role\":\"" + role + "\","
+                + "\"shopName\":\"" + (shopName != null ? shopName : "") + "\""
                 + "}"
                 + "}";
 
