@@ -13,6 +13,7 @@ public class Product extends Item {
 
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private LocalDateTime timeCreated;
 
     // ✅ THÊM MỚI
     private ProductStatus status = ProductStatus.AVAILABLE;
@@ -50,6 +51,8 @@ public class Product extends Item {
     public LocalDateTime getEndTime() { return endTime; }
     public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
 
+    public LocalDateTime getTimeCreated() { return timeCreated; }
+    public void setTimeCreated(LocalDateTime timeCreated) { this.timeCreated = timeCreated; }
     // ✅ THÊM MỚI - getter/setter cho status và auctionId
     public ProductStatus getStatus() { return status; }
     public void setStatus(ProductStatus status) { this.status = status; }
