@@ -31,20 +31,23 @@
                 <Insets bottom="40.0" left="60.0" right="60.0" top="40.0" />
             </padding>
             <children>
-                <TableView styleClass="custom-table" VBox.vgrow="ALWAYS">
+                <TableView fx:id="productTable" styleClass="custom-table" VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn prefWidth="150.0" text="Hình ảnh" />
-                        <TableColumn prefWidth="400.0" text="Tên sản phẩm" />
-                        <TableColumn prefWidth="200.0" text="Giá vốn" />
-                        <TableColumn prefWidth="150.0" text="Số lượng tồn" />
-                        <TableColumn prefWidth="250.0" text="Ngày nhập" />
-                        <TableColumn prefWidth="300.0" text="Thao tác" />
+                        <TableColumn fx:id="colSTT" prefWidth="60.0" text="STT" style="-fx-alignment: CENTER;" />
+                        <TableColumn fx:id="colName" prefWidth="300.0" text="Tên sản phẩm" style="-fx-alignment: CENTER;" />
+                        <TableColumn fx:id="colPrice" prefWidth="150.0" text="Giá khởi điểm" style="-fx-alignment: CENTER;" />
+                        <TableColumn fx:id="colDesc" prefWidth="300.0" text="Mô tả" style="-fx-alignment: CENTER;" />
+                        <TableColumn fx:id="colStatus" prefWidth="150.0" text="Trạng thái" style="-fx-alignment: CENTER;" />
+                        <TableColumn fx:id="colAction" prefWidth="150.0" text="Thao tác" style="-fx-alignment: CENTER;" />
                     </columns>
+                    <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                    </columnResizePolicy>
                 </TableView>
 
                 <HBox alignment="CENTER_RIGHT" spacing="20.0">
                     <children>
-                        <Label styleClass="label-value" text="Tổng cộng: 15 sản phẩm đang chờ" />
+                        <Label fx:id="totalLabel" styleClass="label-value" text="Tổng cộng: 0 sản phẩm đang chờ" />
                         <Button styleClass="btn-submit" text="Đăng sản phẩm đã chọn lên Auction" />
                     </children>
                 </HBox>
