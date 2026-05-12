@@ -24,6 +24,7 @@ public class LoginHandler implements IClientHandler {
                 User user = new User();
                 user.setEmail((String) response.getData().get("email"));
                 user.setUsername((String) response.getData().get("name"));
+                user.setId((String) response.getData().get("id"));
                 SomeGlobal.setCurrentUser(user);
                 // 2. Chuyển màn hình Home (NavigationService đã có Platform.runLater)
                 navigate("/com/auction/client/view/home.fxml", "Auction - Trang chủ", true);

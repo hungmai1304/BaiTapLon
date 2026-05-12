@@ -103,8 +103,13 @@ public class ShopSellController {
         productTable.setItems(productList);
 
         // 8. Gửi request lấy danh sách từ server
+        // Đổi từ:
         String email = SomeGlobal.getCurrentUser().getEmail();
         RequestSender.sendGetShopProductsRequest(email);
+
+// Thành:
+        String ownerId = SomeGlobal.getCurrentUser().getId();
+        RequestSender.sendGetShopProductsRequest(ownerId);
     }
 
     // Được gọi từ GetShopProductsClientHandler khi server trả về

@@ -85,11 +85,11 @@ public class RequestSender {
 
         NetworkClient.sendCommand(json);
     }
-    public static void sendGetShopProductsRequest(String ownerEmail) {
+    public static void sendGetShopProductsRequest(String ownerId) {
         String json = "{"
                 + "\"type\":\"GET_SHOP_PRODUCTS_REQUEST\","
                 + "\"data\":{"
-                + "\"email\":\"" + ownerEmail + "\""
+                + "\"sellerId\":\"" + ownerId + "\""
                 + "}"
                 + "}";
         NetworkClient.sendCommand(json);
