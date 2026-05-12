@@ -12,6 +12,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import javafx.scene.control.Label;
 
 import static com.auction.common.model.product.ProductStatus.AVAILABLE;
 
@@ -21,6 +22,8 @@ public class ShopImportController {
     @FXML private TextField price;
     @FXML private ComboBox<String> categoryComboBox; // Đặt fx:id trong FXML là categoryComboBox
     @FXML private TextArea moreInfo;
+    @FXML private Label successLabel;
+
 
     @FXML
     public void initialize() {
@@ -66,8 +69,10 @@ public class ShopImportController {
             RequestSender.sendImportProductRequest(product);
 
             // 5. Thông báo hoặc chuyển trang
-            System.out.println("Đã gửi yêu cầu nhập hàng: " + productName);
-            handleBackClicked(null);
+            successLabel.setVisible(true);
+            successLabel.setManaged(true);
+            successLabel.setText(" Lưu sản phẩm thành công!");
+            deleteAllClicked(null); // xóa hết form
 
         } catch (NumberFormatException e) {
             System.err.println("Lỗi: Giá nhập vào phải là số!");
@@ -87,5 +92,16 @@ public class ShopImportController {
     @FXML
     public void categoryClicked(ActionEvent event) {
         // Xử lý khi chọn danh mục nếu cần
+    }
+
+    // Nằm ngoài tất cả các hàm, ngay trong class
+    private String editingProductId = null;
+
+    public void fillProductData(Product product) {
+        editingProductId = product.getId();
+        name.setText(product.getName());
+        price.setText(String.valueOf(product.getStartPrice()));
+        moreInfo.setText(product.getDescription());
+        categoryComboBox.setValue(product.getCategory());
     }
 }

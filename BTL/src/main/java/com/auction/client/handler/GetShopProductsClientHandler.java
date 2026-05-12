@@ -10,12 +10,22 @@ import com.google.gson.reflect.TypeToken;
 import javafx.application.Platform;
 
 import java.lang.reflect.Type;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import com.auction.client.controller.ShopSellController;
+import com.auction.client.controller.SomeGlobal;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
 
 @ResponseHandler(type = "GET_SHOP_PRODUCTS_RESPONSE")
 public class GetShopProductsClientHandler implements IClientHandler {
 
-    private final Gson gson = new Gson();
+    private final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class,
+                    (JsonDeserializer<LocalDateTime>) (json, type, context) ->
+                            LocalDateTime.parse(json.getAsString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+            .create();
 
     @Override
     public void handle(Response response) {
@@ -53,7 +63,10 @@ public class GetShopProductsClientHandler implements IClientHandler {
                                 " | Giá: " + p.getCurrentPrice());
                     }
 
-                    // 👉 TODO: Gọi UI để hiển thị
+                    ShopSellController controller = SomeGlobal.getShopSellController();
+                    if (controller != null) {
+                        controller.loadProducts(shopProducts);
+                    }
                     // Ví dụ: SomeGlobal.getShopController().displayShopProducts(shopProducts);
 
                 } catch (Exception e) {

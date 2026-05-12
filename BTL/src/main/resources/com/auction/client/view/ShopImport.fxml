@@ -65,7 +65,7 @@
                                         <VBox spacing="8.0">
                                             <children>
                                                 <Label styleClass="label-title" text="Danh mục" />
-                                                <ComboBox maxWidth="Infinity" onAction="#categoryClicked" promptText="Chọn danh mục" styleClass="custom-combo-box" />
+                                                <ComboBox fx:id="categoryComboBox" maxWidth="Infinity" onAction="#categoryClicked" promptText="Chọn danh mục" styleClass="custom-combo-box" />
                                             </children>
                                         </VBox>
                                         <VBox spacing="8.0" VBox.vgrow="ALWAYS">
@@ -81,10 +81,14 @@
 
                         <HBox alignment="CENTER_RIGHT" spacing="20.0">
                             <children>
+                                <Label fx:id="successLabel" text=""
+                                       style="-fx-text-fill: #4caf50; -fx-font-size: 14px;"
+                                       visible="false" managed="false" />
                                 <Button onAction="#deleteAllClicked" styleClass="btn-cancel" text="Hủy bỏ">
-                           <font>
-                              <Font size="21.0" />
-                           </font></Button>
+                                    <font>
+                                        <Font size="21.0" />
+                                    </font>
+                                </Button>
                                 <Button onAction="#addProductClicked" styleClass="btn-submit" text="Lưu vào kho" />
                             </children>
                         </HBox>
