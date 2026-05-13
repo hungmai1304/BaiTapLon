@@ -13,8 +13,15 @@ public class Product extends Item {
 
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private String imagePath;
+    private String imageBase64;
 
-    // ✅ THÊM MỚI
+    public String getImageBase64() { return imageBase64; }
+    public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64; }
+
+    public String getImagePath() { return imagePath; }
+    public void setImagePath(String imagePath) { this.imagePath = imagePath; }
+
     private ProductStatus status = ProductStatus.AVAILABLE;
     // mặc định đầu tiên là chờ sản phẩm
 //    private String currentAuctionId = null; // khoi tao chua dau gia lan nao

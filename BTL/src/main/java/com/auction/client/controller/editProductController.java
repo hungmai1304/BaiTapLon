@@ -8,11 +8,17 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.stage.FileChooser;
+
+import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import javafx.scene.control.Label;
 
 import static com.auction.common.model.product.ProductStatus.AVAILABLE;
 
@@ -20,17 +26,42 @@ public class editProductController {
 
     @FXML private TextField name;
     @FXML private TextField price;
-    @FXML private ComboBox<String> categoryComboBox; // Đặt fx:id trong FXML là categoryComboBox
+    @FXML private ComboBox<String> categoryComboBox;
     @FXML private TextArea moreInfo;
     @FXML private Label successLabel;
+    @FXML private ImageView productImageView;
+    @FXML private Label uploadLabel;
 
+    private String selectedImageBase64 = null;
+    private String editingProductId = null;
 
     @FXML
     public void initialize() {
-        // Khởi tạo danh sách danh mục (nếu cần)
         categoryComboBox.setItems(FXCollections.observableArrayList(
                 "Điện tử", "Thời trang", "Gia dụng", "Xe cộ", "Khác"
         ));
+    }
+
+    @FXML
+    public void handleImageClicked(MouseEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Chọn ảnh sản phẩm");
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg")
+        );
+        File file = fileChooser.showOpenDialog(null);
+        if (file != null) {
+            Image image = new Image(file.toURI().toString());
+            productImageView.setImage(image);
+            productImageView.setVisible(true);
+            uploadLabel.setVisible(false);
+            try {
+                byte[] fileContent = java.nio.file.Files.readAllBytes(file.toPath());
+                selectedImageBase64 = java.util.Base64.getEncoder().encodeToString(fileContent);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @FXML
@@ -41,24 +72,19 @@ public class editProductController {
     @FXML
     public void addProductClicked(ActionEvent event) {
         try {
-            //SỬA LỖI: Lấy cái ID gốc đã lưu lúc fillData ra xài, không tạo mới
             if (this.editingProductId == null) {
                 System.err.println("Lỗi: Không tìm thấy ID của sản phẩm cần sửa!");
                 return;
             }
             String id = this.editingProductId;
 
-            // 2. Lấy dữ liệu từ giao diện
             String productName = name.getText();
             double startPrice = Double.parseDouble(price.getText());
             String category = categoryComboBox.getValue();
             String description = moreInfo.getText();
 
-            // 3. Tạo đối tượng Product mang id c
             Product product = new Product();
-            product.setId(id); // Nhét ID cũ vào đây
-
-            // (Không cần set TimeCreated vì Server sẽ móc từ Database lên lấy cái thời gian gốc)
+            product.setId(id);
             product.setName(productName);
             product.setCategory(category);
             product.setStartPrice(startPrice);
@@ -66,16 +92,13 @@ public class editProductController {
             product.setStepPrice(startPrice * 0.1);
             product.setDescription(description);
             product.setStatus(AVAILABLE);
+            product.setImageBase64(selectedImageBase64);
 
-            // 4. Gửi yêu cầu qua Network
             RequestSender.sendEditProductRequest(product);
 
-            // 5. Thông báo (Sửa lại chữ cho chuẩn, vì gửi đi chưa chắc đã lưu thành công)
             successLabel.setVisible(true);
             successLabel.setManaged(true);
-            successLabel.setText("Đã gửi yêu cầu lưu thành công!");
-
-            // Xóa form
+            successLabel.setText("✅ Đã gửi yêu cầu lưu thành công!");
             deleteAllClicked(null);
 
         } catch (NumberFormatException e) {
@@ -91,21 +114,30 @@ public class editProductController {
         price.clear();
         moreInfo.clear();
         categoryComboBox.getSelectionModel().clearSelection();
+        productImageView.setImage(null);
+        productImageView.setVisible(false);
+        uploadLabel.setVisible(true);
+        selectedImageBase64 = null;
     }
 
     @FXML
     public void categoryClicked(ActionEvent event) {
-        // Xử lý khi chọn danh mục nếu cần
     }
-
-    // Nằm ngoài tất cả các hàm, ngay trong class
-    private String editingProductId = null;
 
     public void fillProductData(Product product) {
         editingProductId = product.getId();
         name.setText(product.getName());
-        price.setText(String.valueOf(product.getStartPrice()));
+        price.setText(String.format("%.0f", product.getStartPrice()));
         moreInfo.setText(product.getDescription());
         categoryComboBox.setValue(product.getCategory());
+
+        // Hiển thị ảnh cũ từ base64
+        if (product.getImageBase64() != null && !product.getImageBase64().isEmpty()) {
+            byte[] imageBytes = java.util.Base64.getDecoder().decode(product.getImageBase64());
+            Image image = new Image(new java.io.ByteArrayInputStream(imageBytes));
+            productImageView.setImage(image);
+            productImageView.setVisible(true);
+            uploadLabel.setVisible(false);
+        }
     }
 }
