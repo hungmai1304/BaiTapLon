@@ -41,10 +41,12 @@ public class editProductController {
     @FXML
     public void addProductClicked(ActionEvent event) {
         try {
-            // 1. Tạo ID và Thời gian tự động
-            String[] info = Generate_id_and_timecreated.generateFullInfo();
-            String id = info[0];
-            LocalDateTime timeCreated=Generate_id_and_timecreated.getCurrentTimestamp2();
+            //SỬA LỖI: Lấy cái ID gốc đã lưu lúc fillData ra xài, không tạo mới
+            if (this.editingProductId == null) {
+                System.err.println("Lỗi: Không tìm thấy ID của sản phẩm cần sửa!");
+                return;
+            }
+            String id = this.editingProductId;
 
             // 2. Lấy dữ liệu từ giao diện
             String productName = name.getText();
@@ -52,27 +54,29 @@ public class editProductController {
             String category = categoryComboBox.getValue();
             String description = moreInfo.getText();
 
-            // 3. Tạo đối tượng Product (Dựa theo sơ đồ thực thể của bạn)
+            // 3. Tạo đối tượng Product mang id c
             Product product = new Product();
-            product.setId(id);
-            product.setTimeCreated(timeCreated);
+            product.setId(id); // Nhét ID cũ vào đây
+
+            // (Không cần set TimeCreated vì Server sẽ móc từ Database lên lấy cái thời gian gốc)
             product.setName(productName);
             product.setCategory(category);
             product.setStartPrice(startPrice);
-            product.setCurrentPrice(startPrice); // Mặc định giá hiện tại = giá khởi điểm
-            product.setStepPrice(startPrice * 0.1); // Ví dụ bước giá mặc định 10%
+            product.setCurrentPrice(startPrice);
+            product.setStepPrice(startPrice * 0.1);
             product.setDescription(description);
             product.setStatus(AVAILABLE);
-            // product.setOwner("Tên User hiện tại"); // Thêm nếu bạn có lưu User session
 
             // 4. Gửi yêu cầu qua Network
             RequestSender.sendEditProductRequest(product);
 
-            // 5. Thông báo hoặc chuyển trang
+            // 5. Thông báo (Sửa lại chữ cho chuẩn, vì gửi đi chưa chắc đã lưu thành công)
             successLabel.setVisible(true);
             successLabel.setManaged(true);
-            successLabel.setText(" Lưu sản phẩm thành công!");
-            deleteAllClicked(null); // xóa hết form
+            successLabel.setText("Đã gửi yêu cầu lưu thành công!");
+
+            // Xóa form
+            deleteAllClicked(null);
 
         } catch (NumberFormatException e) {
             System.err.println("Lỗi: Giá nhập vào phải là số!");
