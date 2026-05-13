@@ -25,7 +25,7 @@ public class EditProductHandler implements IMessageHandler {
                 return;
             }
 
-            // Lấy sản phẩm hiện tại từ Database để có đủ thông tin gốc (như Owner, TimeCreated)
+            // tìm sản phẩm theo ID đã gửi lên
             Product productToEdit = ProductDao.getInstance().getProductById(productId);
 
             if (productToEdit == null) {
@@ -33,7 +33,7 @@ public class EditProductHandler implements IMessageHandler {
                 return;
             }
 
-            // 2. CẬP NHẬT THÔNG TIN MỚI (Ghi đè các trường từ JSON gửi lên)
+            // 2. ghi đè thông tin của sản phẩm trong database
             if (data.containsKey("name")) productToEdit.setName((String) data.get("name"));
             if (data.containsKey("category")) productToEdit.setCategory((String) data.get("category"));
             if (data.containsKey("description")) productToEdit.setDescription((String) data.get("description"));
@@ -50,21 +50,21 @@ public class EditProductHandler implements IMessageHandler {
             }
 
             // 3. LƯU XUỐNG DATABASE
-            boolean isUpdated = ProductDao.getInstance().updateProduct(productToEdit);
+            boolean isUpdated = ProductDao.getInstance().editProduct(productToEdit);
 
             if (isUpdated) {
-                // 4. ĐỒNG BỘ RAM (Thay vì xóa rồi thêm, ta dùng hàm update chuẩn)
-                // Ông hãy nhớ thêm hàm updateProduct này vào ServerContext như tôi hướng dẫn ở trên
-                context.updateProduct(productToEdit);
-
-                // 5. PHẢN HỒI CHO SHOP
+//                // 4. ĐỒNG BỘ RAM (Thay vì xóa rồi thêm, ta dùng hàm update chuẩn)
+//                // Ông hãy nhớ thêm hàm updateProduct này vào ServerContext như tôi hướng dẫn ở trên
+//                context.updateProduct(productToEdit);(đéo cần)
+//
+//                // 5. PHẢN HỒI CHO SHOP
                 Response response = new Response(MessageType.EDIT_PRODUCT_RESPONSE, "SUCCESS", "Cập nhật sản phẩm thành công!");
                 conn.send(gson.toJson(response));
 
                 System.out.println("-> [EditProduct] Thành công: ID " + productId);
 
-                // 6. BROADCAST (Hét lên cho cả Server cập nhật lại danh sách hiển thị)
-                broadcastNewList(context, gson);
+//                // 6. hàm này đéo cần
+//                broadcastNewList(context, gson);
 
             } else {
                 sendError(conn, gson, "Lỗi khi cập nhật dữ liệu vào Database!");
@@ -76,17 +76,17 @@ public class EditProductHandler implements IMessageHandler {
         }
     }
 
-    private void broadcastNewList(ServerContext context, Gson gson) {
-        Response updateRes = new Response(MessageType.UPDATE_AUCTION_LIST_RESPONSE, "SUCCESS", "Danh sách sản phẩm vừa được cập nhật.");
-        updateRes.getData().put("productList", context.getProductList());
-        String message = gson.toJson(updateRes);
-
-        for (WebSocket client : context.getConnectedClients()) {
-            if (client.isOpen()) {
-                client.send(message);
-            }
-        }
-    }
+//    private void broadcastNewList(ServerContext context, Gson gson) {
+//        Response updateRes = new Response(MessageType.UPDATE_AUCTION_LIST_RESPONSE, "SUCCESS", "Danh sách sản phẩm vừa được cập nhật.");
+//        updateRes.getData().put("productList", context.getProductList());
+//        String message = gson.toJson(updateRes);
+//
+//        for (WebSocket client : context.getConnectedClients()) {
+//            if (client.isOpen()) {
+//                client.send(message);
+//            }
+//        }
+//    }
 
     private void sendError(WebSocket conn, Gson gson, String msg) {
         Response response = new Response(MessageType.EDIT_PRODUCT_RESPONSE, "ERROR", msg);
