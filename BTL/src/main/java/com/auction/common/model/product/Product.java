@@ -1,5 +1,4 @@
 package com.auction.common.model.product;
-
 import com.auction.common.model.user.User;
 import java.time.LocalDateTime;
 import com.auction.common.model.product.ProductStatus;

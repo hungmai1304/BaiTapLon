@@ -13,6 +13,11 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+
+//thêm import test
+import java.io.File;
+import java.nio.file.Files;
+
 public class ProductDao {
 
     private static ProductDao instance;
@@ -169,4 +174,95 @@ public class ProductDao {
         }
     }
 
+
+    /**
+     * Hàm lưu hoặc cập nhật ảnh của sản phẩm
+     */
+    public static boolean saveProductImage(String productId, byte[] imageBytes) {
+        String sql = "UPDATE product SET image_data = ? WHERE id = ?";
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            if (imageBytes != null && imageBytes.length > 0) {
+                pstmt.setBytes(1, imageBytes);
+            } else {
+                pstmt.setNull(1, java.sql.Types.BINARY);
+            }
+            pstmt.setString(2, productId);
+
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi lưu ảnh vào database: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Hàm lấy dữ liệu ảnh từ DB để gửi về cho Client hiển thị.
+     */
+    public static byte[] getProductImage(String productId) {
+        String sql = "SELECT image_data FROM product WHERE id = ?";
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, productId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBytes("image_data");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi đọc ảnh từ database: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+//    //Test
+//    public static void main(String[] args) {
+//        // 1. Khởi tạo DAO
+//        ProductDao productDAO = new ProductDao();
+//
+//        // ID của sản phẩm CÓ SẴN trong database Render của bạn
+//        String testProductId = "4BFEE18296F8";
+//
+//        // Đường dẫn tới file ảnh test trên máy bạn (Nhớ đổi lại đường dẫn thực tế)
+//
+//        File sampleFile = new File("C:\\T1.png");
+//
+//        try {
+//            System.out.println("1. Đang đọc file ảnh từ máy tính...");
+//            byte[] imageBytes = Files.readAllBytes(sampleFile.toPath());
+//            System.out.println("-> Kích thước ảnh: " + imageBytes.length + " bytes");
+//
+//            System.out.println("\n2. Đang thử lưu vào Database Render...");
+//            boolean isSaved = productDAO.saveProductImage(testProductId, imageBytes);
+//
+//            if (isSaved) {
+//                System.out.println("-> [THÀNH CÔNG] Đã lưu ảnh vào DB cho sản phẩm ID: " + testProductId);
+//            } else {
+//                System.out.println("-> [THẤT BẠI] Không lưu được, hãy kiểm tra lại kết nối hoặc ID sản phẩm.");
+//                return; // Dừng test nếu lưu xịt
+//            }
+//
+//            System.out.println("\n3. Đang thử đọc ngược lại ảnh từ Database về...");
+//            byte[] retrievedBytes = productDAO.getProductImage(testProductId);
+//
+//            if (retrievedBytes != null) {
+//                System.out.println("-> [THÀNH CÔNG] Đọc ảnh về lấy được: " + retrievedBytes.length + " bytes");
+//                if (retrievedBytes.length == imageBytes.length) {
+//                    System.out.println("-> [HOÀN HẢO] Dữ liệu ảnh gửi lên và tải về khớp nhau 100%!");
+//                }
+//            } else {
+//                System.out.println("-> [THẤT BẠI] DB trả về null.");
+//            }
+//
+//        } catch (Exception e) {
+//            System.err.println("Lỗi trong quá trình test: " + e.getMessage());
+//            e.printStackTrace();
+//        }
+//    }
 }
