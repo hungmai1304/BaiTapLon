@@ -82,4 +82,16 @@ public class RequestSender {
 
         NetworkClient.sendCommand(json);
     }
+    public static void sendSellProductRequest(String productId) {
+        // Nối chuỗi JSON bằng tay giống y hệt các hàm ở trên
+        String json = "{"
+                + "\"type\":\"SELL_PRODUCT_REQUEST\","
+                + "\"data\":{"
+                + "\"id\":\"" + productId + "\""
+                + "}"
+                + "}";
+
+        // Gọi lệnh tĩnh giống hệ thống cũ
+        NetworkClient.sendCommand(json);
+    }
 }

@@ -2,7 +2,6 @@ package com.auction.server.handler;
 
 import com.auction.protocol.MessageType;
 import com.auction.common.model.product.Product;
-import com.auction.common.model.product.ProductStatus;
 import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.dao.ProductDao;
@@ -18,39 +17,32 @@ public class SellProductHandler implements IMessageHandler {
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
         try {
-            // 1. Nhận ID của món hàng mà Shop muốn đưa lên sàn
-            String productId = (String) data.get("productId");
+            // 1. Nhận ID chuẩn từ Client gửi lên (Đã sửa thành "id")
+            String productId = (String) data.get("id");
 
             if (productId == null || productId.isEmpty()) {
-                sendError(conn, gson, "Không tìm thấy mã sản phẩm!");
+                sendError(conn, gson, "Không tìm thấy mã sản phẩm để lên sàn!");
                 return;
             }
 
-            //  DATABASE : Gọi xuống DB để lấy thông tin món hàng trong "Kho"
-            Product productToSell = ProductDao.getInstance().getProductById(productId); // Cần đảm bảo DAO có hàm này
+            // 2. DATABASE: Chọc thẳng xuống DB để cập nhật trạng thái ON_AUCTION, start_time, end_time
+            boolean isSold = ProductDao.getInstance().sellProduct(productId);
 
-            if (productToSell == null) {
-                sendError(conn, gson, "Sản phẩm không tồn tại trong kho!");
-                return;
-            }
+            if (isSold) {
+                // 3. ĐỒNG BỘ RAM: Móc món hàng mới nhất từ DB lên để nhét vào RAM
+                // (Phải có bước này thì lúc Broadcast danh sách nó mới mang dữ liệu mới nhất đi)
+//                Product updatedProduct = ProductDao.getInstance().getProductById(productId);
+//                if (updatedProduct != null) {
+//                    // Update lại món hàng đó trong RAM
+//                    context.updateProduct(updatedProduct);
+//                }
 
-            // 2. Đổi trạng thái từ KHO (AVAILABLE) sang SÀN ĐẤU GIÁ (ON_AUCTION)
-            productToSell.setStatus(ProductStatus.ON_AUCTION);
-
-            //  DATABASE: Cập nhật trạng thái mới xuống Database
-            boolean isUpdated = ProductDao.getInstance().updateProduct(productToSell); // Cần đảm bảo DAO có hàm update
-
-            if (isUpdated) {
-                // 3. Cập nhật vào RAM Server
-                context.addProduct(productToSell); // Hoặc update nếu đã có trong list
-
-                // Báo cho người bán biết là lên sàn thành công
+                // 4. Phản hồi cho thằng Shop vừa bấm nút Sell
                 Response response = new Response(MessageType.SELL_PRODUCT_RESPONSE, "SUCCESS", "Đã đưa sản phẩm lên sàn đấu giá!");
                 conn.send(gson.toJson(response));
+                System.out.println("✅ [SellProduct] Đã đưa SP có ID " + productId + " lên sàn!");
 
-                System.out.println("✅ [SellProduct] Đã đưa SP lên sàn: " + productToSell.getName());
-
-                // 4. 📢 YÊU CẦU MIRO: BROADCAST CHO CẢ LÀNG
+                // 5. 📢 BẬT LOA PHÁT THANH: Báo cho toàn bộ người dùng đang online biết sàn có đồ mới!
                 broadcastNewList(context, gson);
 
             } else {
@@ -63,8 +55,10 @@ public class SellProductHandler implements IMessageHandler {
         }
     }
 
+    // Cái loa phát thanh
     private void broadcastNewList(ServerContext context, Gson gson) {
         Response updateRes = new Response(MessageType.UPDATE_AUCTION_LIST_RESPONSE, "SUCCESS", "Sàn vừa có món mới!");
+        // Lưu ý: Key "productList" phải khớp với bên Client
         updateRes.getData().put("productList", context.getProductList());
         String message = gson.toJson(updateRes);
 
