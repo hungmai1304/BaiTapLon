@@ -13,9 +13,15 @@ public class Product extends Item {
 
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    private LocalDateTime timeCreated;
+    private String imagePath;
+    private String imageBase64;
 
-    // ✅ THÊM MỚI
+    public String getImageBase64() { return imageBase64; }
+    public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64; }
+
+    public String getImagePath() { return imagePath; }
+    public void setImagePath(String imagePath) { this.imagePath = imagePath; }
+
     private ProductStatus status = ProductStatus.AVAILABLE;
     // mặc định đầu tiên là chờ sản phẩm
 //    private String currentAuctionId = null; // khoi tao chua dau gia lan nao
@@ -51,8 +57,6 @@ public class Product extends Item {
     public LocalDateTime getEndTime() { return endTime; }
     public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
 
-    public LocalDateTime getTimeCreated() { return timeCreated; }
-    public void setTimeCreated(LocalDateTime timeCreated) { this.timeCreated = timeCreated; }
     // ✅ THÊM MỚI - getter/setter cho status và auctionId
     public ProductStatus getStatus() { return status; }
     public void setStatus(ProductStatus status) { this.status = status; }

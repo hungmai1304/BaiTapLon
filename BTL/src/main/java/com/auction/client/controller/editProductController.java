@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 
 import static com.auction.common.model.product.ProductStatus.AVAILABLE;
 
-public class ShopImportController {
+public class editProductController {
 
     @FXML private TextField name;
     @FXML private TextField price;
@@ -51,13 +51,10 @@ public class ShopImportController {
         );
         File file = fileChooser.showOpenDialog(null);
         if (file != null) {
-            // Hiển thị ảnh
             Image image = new Image(file.toURI().toString());
             productImageView.setImage(image);
             productImageView.setVisible(true);
             uploadLabel.setVisible(false);
-
-            // Convert sang base64
             try {
                 byte[] fileContent = java.nio.file.Files.readAllBytes(file.toPath());
                 selectedImageBase64 = java.util.Base64.getEncoder().encodeToString(fileContent);
@@ -69,15 +66,17 @@ public class ShopImportController {
 
     @FXML
     public void handleBackClicked(ActionEvent event) throws IOException {
-        NavigationService.setCenterView("/com/auction/client/view/Shop.fxml");
+        NavigationService.setCenterView("/com/auction/client/view/ShopSell.fxml");
     }
 
     @FXML
     public void addProductClicked(ActionEvent event) {
         try {
-            String[] info = Generate_id_and_timecreated.generateFullInfo();
-            String id = info[0];
-            LocalDateTime timeCreated = Generate_id_and_timecreated.getCurrentTimestamp2();
+            if (this.editingProductId == null) {
+                System.err.println("Lỗi: Không tìm thấy ID của sản phẩm cần sửa!");
+                return;
+            }
+            String id = this.editingProductId;
 
             String productName = name.getText();
             double startPrice = Double.parseDouble(price.getText());
@@ -86,7 +85,6 @@ public class ShopImportController {
 
             Product product = new Product();
             product.setId(id);
-            product.setTimeCreated(timeCreated);
             product.setName(productName);
             product.setCategory(category);
             product.setStartPrice(startPrice);
@@ -96,11 +94,11 @@ public class ShopImportController {
             product.setStatus(AVAILABLE);
             product.setImageBase64(selectedImageBase64);
 
-            RequestSender.sendImportProductRequest(product);
+            RequestSender.sendEditProductRequest(product);
 
             successLabel.setVisible(true);
             successLabel.setManaged(true);
-            successLabel.setText("✅ Lưu sản phẩm thành công!");
+            successLabel.setText("✅ Đã gửi yêu cầu lưu thành công!");
             deleteAllClicked(null);
 
         } catch (NumberFormatException e) {
@@ -129,10 +127,11 @@ public class ShopImportController {
     public void fillProductData(Product product) {
         editingProductId = product.getId();
         name.setText(product.getName());
-        price.setText(String.valueOf(product.getStartPrice()));
+        price.setText(String.format("%.0f", product.getStartPrice()));
         moreInfo.setText(product.getDescription());
         categoryComboBox.setValue(product.getCategory());
 
+        // Hiển thị ảnh cũ từ base64
         if (product.getImageBase64() != null && !product.getImageBase64().isEmpty()) {
             byte[] imageBytes = java.util.Base64.getDecoder().decode(product.getImageBase64());
             Image image = new Image(new java.io.ByteArrayInputStream(imageBytes));

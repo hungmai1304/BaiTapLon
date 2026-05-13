@@ -4,11 +4,8 @@ import com.auction.server.AuctionWebSocketServer;
 import com.auction.common.model.product.Product;
 import org.java_websocket.WebSocket;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.ArrayList;
-import java.util.Collections;
 
 public class ServerContext {
 
@@ -97,5 +94,25 @@ public class ServerContext {
     // Lấy WebSocket của một User dựa trên Username (đã có map onlineUsers)
     public WebSocket getConnByUser(String username) {
         return onlineUsers.get(username);
+    }
+    // --- Tính năng hỗ trợ Broadcast ---
+    public Collection<WebSocket> getConnectedClients() {
+        // Lấy toàn bộ phần value (chính là các WebSocket) từ trong map onlineUsers
+        return this.onlineUsers.values();
+    }
+    public void updateProduct(Product updatedProduct) {
+        if (updatedProduct == null || updatedProduct.getId() == null) return;
+
+        synchronized (productList) {
+            for (int i = 0; i < productList.size(); i++) {
+                if (productList.get(i).getId().equals(updatedProduct.getId())) {
+                    productList.set(i, updatedProduct); // Thay thế trực tiếp tại vị trí cũ
+                    System.out.println("[ServerContext] Da cap nhat RAM cho SP: " + updatedProduct.getName());
+                    return;
+                }
+            }
+        }
+        // Nếu không tìm thấy thì mới thêm mới (tùy logic của ông)
+        addProduct(updatedProduct);
     }
 }

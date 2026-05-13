@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="1080.0" prefWidth="1831.0" styleClass="Scene-Black" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.MainController">
+<AnchorPane prefHeight="1080.0" prefWidth="1831.0" styleClass="Scene-Black" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.AboutYouController">
     <children>
         <VBox layoutX="396.0" layoutY="99.0" prefHeight="773.0" prefWidth="1352.0" spacing="20.0" style="-fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5); -fx-padding: 40;" styleClass="Scene-Back-1">
             <children>
@@ -33,25 +33,25 @@
                     </rowConstraints>
                     <children>
                         <Label style="-fx-font-size: 35; -fx-text-fill: #7f8c8d;" text="Tên đăng nhập:" />
-                        <Label fx:id="lblUsername" prefHeight="22.0" prefWidth="337.0" style="-fx-font-size: 35; -fx-font-weight: bold;" text="You" textFill="WHITE" GridPane.columnIndex="1">
+                        <Label fx:id="userName" prefHeight="22.0" prefWidth="337.0" style="-fx-font-size: 35; -fx-font-weight: bold;" text="You" textFill="WHITE" GridPane.columnIndex="1">
                      <font>
                         <Font size="35.0" />
                      </font></Label>
 
                         <Label style="-fx-font-size: 35; -fx-text-fill: #7f8c8d;" text="Email:" GridPane.rowIndex="1" />
-                        <Label fx:id="lblEmail" prefHeight="22.0" prefWidth="343.0" style="-fx-font-size: 35;" text="you" textFill="WHITE" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                        <Label fx:id="userEmail" prefHeight="22.0" prefWidth="343.0" style="-fx-font-size: 35;" text="you" textFill="WHITE" GridPane.columnIndex="1" GridPane.rowIndex="1">
                      <font>
                         <Font size="35.0" />
                      </font></Label>
 
                         <Label style="-fx-font-size: 35; -fx-text-fill: #7f8c8d;" text="Mật khẩu:" GridPane.rowIndex="2" />
-                        <Label fx:id="lblBalance" prefHeight="29.0" prefWidth="343.0" style="-fx-font-size: 35; -fx-font-weight: bold; -fx-text-fill: #27ae60;" text="abc" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                        <Label fx:id="userPassword" prefHeight="29.0" prefWidth="343.0" style="-fx-font-size: 35; -fx-font-weight: bold; -fx-text-fill: #27ae60;" text="abc" GridPane.columnIndex="1" GridPane.rowIndex="2">
                      <font>
                         <Font size="35.0" />
                      </font></Label>
 
                         <Label style="-fx-font-size: 35; -fx-text-fill: #7f8c8d;" text="Trạng thái:" GridPane.rowIndex="3" />
-                        <Label style="-fx-text-fill: #2980b9;" text="Đang hoạt động" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                        <Label fx:id="userState" style="-fx-text-fill: #2980b9;" text="Đang hoạt động" GridPane.columnIndex="1" GridPane.rowIndex="3">
                      <font>
                         <Font size="35.0" />
                      </font></Label>

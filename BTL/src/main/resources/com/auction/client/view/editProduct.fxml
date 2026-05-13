@@ -11,14 +11,14 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
-
 <?import javafx.scene.image.ImageView?>
-<VBox prefHeight="1080.0" prefWidth="1831.0" styleClass="main-root" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.ShopImportController">
+
+<VBox prefHeight="1080.0" prefWidth="1831.0" styleClass="main-root" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.editProductController">
     <children>
         <HBox alignment="CENTER_LEFT" prefHeight="100.0" spacing="20.0" styleClass="header">
             <children>
                 <Label styleClass="logo-text" text="MY SHOP" />
-                <Label styleClass="header-sub-title" text="&gt; import" />
+                <Label styleClass="header-sub-title" text="&gt; edit your Product" />
                 <Region HBox.hgrow="ALWAYS" />
                 <Button onAction="#handleBackClicked" prefHeight="45.0" prefWidth="103.0" styleClass="btn3" text="Quay lại" />
             </children>
@@ -85,15 +85,13 @@
 
                         <HBox alignment="CENTER_RIGHT" spacing="20.0">
                             <children>
-                                <Label fx:id="successLabel" text=""
-                                       style="-fx-text-fill: #4caf50; -fx-font-size: 14px;"
-                                       visible="false" managed="false" />
+                                <Label fx:id="successLabel" managed="false" style="-fx-text-fill: #4caf50; -fx-font-size: 14px;" text="" visible="false" />
                                 <Button onAction="#deleteAllClicked" styleClass="btn-cancel" text="Hủy bỏ">
                                     <font>
                                         <Font size="21.0" />
                                     </font>
                                 </Button>
-                                <Button onAction="#addProductClicked" styleClass="btn-submit" text="Lưu vào kho" />
+                                <Button onAction="#addProductClicked" styleClass="btn-submit" text="Lưu thay đổi" />
                             </children>
                         </HBox>
                     </children>

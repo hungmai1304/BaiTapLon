@@ -75,8 +75,13 @@ public class RegisterController implements Initializable {
         String password = password_register_pass.getText();
         String reconfirm = password_register_reconfirm.getText();
         String shopChoice = choices_register_openashop.getValue();
+
+        // Biến để lưu tên shop
+        String shopName = null;
+
         if ("open a shop".equals(shopChoice)) {
-            if (textfield_shop_name.getText().trim().isEmpty()) {
+            shopName = textfield_shop_name.getText().trim(); // Lấy tên shop ở đây
+            if (shopName.isEmpty()) {
                 updateAnnouncement("Vui lòng nhập tên shop!", "red");
                 return;
             }
@@ -91,10 +96,12 @@ public class RegisterController implements Initializable {
             return;
         }
 
-        String role = shopChoice.equals("open a shop") ? "SELLER" : "BIDDER";
+        String role = "open a shop".equals(shopChoice) ? "SELLER" : "BIDDER";
 
-        updateAnnouncement("⏳ Đang gửi yêu cầu đăng ký...", "white");
-        RequestSender.sendRegisterRequest(registerName, registerEmail, password, role);
+        updateAnnouncement("Đang gửi yêu cầu đăng ký...", "white");
+
+        // Cập nhật hàm gọi: Thêm tham số shopName vào cuối
+        RequestSender.sendRegisterRequest(registerName, registerEmail, password, role, shopName);
     }
 
     public void updateAnnouncement(String message, String color) {

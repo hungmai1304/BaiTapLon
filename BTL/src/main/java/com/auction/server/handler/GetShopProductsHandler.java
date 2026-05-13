@@ -5,6 +5,7 @@ import com.auction.common.model.product.ProductStatus;
 import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
+import com.auction.server.dao.ProductDao;
 import com.auction.server.model.ServerContext;
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
@@ -29,20 +30,16 @@ public class GetShopProductsHandler implements IMessageHandler {
             String statusFilter = (String) data.get("status");
 
             // 3. Lấy toàn bộ rồi filter
-            List<Product> result = context.getProductList().stream()
-                    .filter(p -> {
-                        // Lọc theo seller
-                        boolean matchSeller = sellerId == null ||
-                                (p.getOwner() != null && sellerId.equals(p.getOwner().getId()));
-
-                        // Lọc theo status nếu có truyền vào
-                        boolean matchStatus = statusFilter == null ||
-                                p.getStatus().name().equals(statusFilter);
-
-                        return matchSeller && matchStatus;
-                    })
-                    .collect(Collectors.toList());
-
+            // 3. GỌI DAO: Lấy thẳng danh sách từ Database theo ID user
+            List<Product> rawList = ProductDao.getInstance().getProductsByUserId(sellerId);
+            List<Product> result;
+            if (statusFilter != null && !statusFilter.isEmpty()) {
+                result = rawList.stream()
+                        .filter(p -> p.getStatus().name().equalsIgnoreCase(statusFilter))
+                        .collect(Collectors.toList());
+            } else {
+                result = rawList; // Lấy tất cả sản phẩm của user đó
+            }
             // 4. Đóng gói response
             Response response = new Response(
                     MessageType.GET_SHOP_PRODUCTS_RESPONSE,
