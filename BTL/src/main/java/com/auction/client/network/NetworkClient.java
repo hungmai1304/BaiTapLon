@@ -47,13 +47,16 @@ public class NetworkClient {
 
                 @Override
                 public void onMessage(String message) {
+//                    // 1. Debug thông minh:
+//                    // Nếu tin nhắn quá dài (thường là có chứa ảnh), chỉ in 200 ký tự đầu để xem Type và Status
+//                    if (message != null && message.length() > 200) {
+//                        System.out.println("📩 [Từ Server] (Gói tin lớn): " + message.substring(0, 200) + "... [Tổng: " + message.length() + " ký tự]");
+//                    } else {
+//                        System.out.println("📩 [Từ Server]: " + message);
+//                    }
 
-                    System.out.println(
-                            "📩 Server: " + message
-                    );
-
-                    ClientMessageDispatcher
-                            .dispatch(message);
+                    // 2. Vẫn dispatch bình thường để xử lý logic
+                    ClientMessageDispatcher.dispatch(message);
                 }
 
                 @Override

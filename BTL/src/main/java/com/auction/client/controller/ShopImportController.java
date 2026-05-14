@@ -156,4 +156,7 @@ public class ShopImportController {
         uploadLabel.setVisible(true);
         selectedImageBase64 = null;
     }
+    @FXML
+    public void categoryClicked(ActionEvent event) {
+    }
 }

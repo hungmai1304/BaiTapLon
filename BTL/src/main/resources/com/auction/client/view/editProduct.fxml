@@ -69,7 +69,7 @@
                                         <VBox spacing="8.0">
                                             <children>
                                                 <Label styleClass="label-title" text="Danh mục" />
-                                                <ComboBox fx:id="categoryComboBox" maxWidth="Infinity" onAction="#categoryClicked" promptText="Chọn danh mục" styleClass="custom-combo-box" />
+                                                <ComboBox fx:id="categoryComboBox" maxWidth="Infinity"  promptText="Chọn danh mục" styleClass="custom-combo-box" />
                                             </children>
                                         </VBox>
                                         <VBox spacing="8.0" VBox.vgrow="ALWAYS">

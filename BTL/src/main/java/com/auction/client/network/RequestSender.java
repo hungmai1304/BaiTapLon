@@ -1,135 +1,96 @@
 package com.auction.client.network;
 
 import com.auction.common.model.product.Product;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializer;
 
-// Nơi nhận tin nhắn gửi đến -> đóng gói -> và gửi
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
+
 public class RequestSender {
+    // Khởi tạo một đối tượng Gson dùng chung để tiết kiệm tài nguyên
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) -> {
+                // Biến LocalDateTime thành chuỗi String để gửi đi không bị lỗi
+                return new com.google.gson.JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+            })
+            .create();
 
     private RequestSender() {
+    }
+
+    /**
+     * Hàm phụ trợ để đóng gói và gửi request nhanh
+     */
+    private static void send(String type, Object data) {
+        Map<String, Object> requestMap = new HashMap<>();
+        requestMap.put("type", type);
+        requestMap.put("data", data);
+
+        // Gson tự động handle việc bọc ngoặc kép, ký tự đặc biệt và Base64
+        String json = gson.toJson(requestMap);
+
+        // Gửi đi, không in ra Console nữa
+        NetworkClient.sendCommand(json);
     }
 
     // =====================================================
     // LOGIN
     // =====================================================
-    public static void sendLoginRequest(
-            String email,
-            String password
-    ) {
-
-        String json = "{"
-                + "\"type\":\"LOGIN_REQUEST\","
-                + "\"data\":{"
-                + "\"email\":\"" + email + "\","
-                + "\"password\":\"" + password + "\""
-                + "}"
-                + "}";
-
-        NetworkClient.sendCommand(json);
+    public static void sendLoginRequest(String email, String password) {
+        Map<String, String> data = new HashMap<>();
+        data.put("email", email);
+        data.put("password", password);
+        send("LOGIN_REQUEST", data);
     }
 
     // =====================================================
     // REGISTER
     // =====================================================
-    public static void sendRegisterRequest(
-            String name,
-            String email,
-            String password,
-            String role,
-            String shopName // 1. Thêm tham số shopName
-    ) {
-        // 2. Bổ sung field "shopName" vào trong object "data"
-        // Lưu ý dấu phẩy sau trường "role"
-        String json = "{"
-                + "\"type\":\"REGISTER_REQUEST\","
-                + "\"data\":{"
-                + "\"name\":\"" + name + "\","
-                + "\"email\":\"" + email + "\","
-                + "\"password\":\"" + password + "\","
-                + "\"role\":\"" + role + "\","
-                + "\"shopName\":\"" + (shopName != null ? shopName : "") + "\""
-                + "}"
-                + "}";
-
-        NetworkClient.sendCommand(json);
+    public static void sendRegisterRequest(String name, String email, String password, String role, String shopName) {
+        Map<String, String> data = new HashMap<>();
+        data.put("name", name);
+        data.put("email", email);
+        data.put("password", password);
+        data.put("role", role);
+        data.put("shopName", shopName != null ? shopName : "");
+        send("REGISTER_REQUEST", data);
     }
-    //=======================================================
-    // IMPORT PRODUCT
-    //=======================================================
+
+    // =====================================================
+    // IMPORT PRODUCT (SỬ DỤNG BASE64 CHUẨN)
+    // =====================================================
     public static void sendImportProductRequest(Product product) {
-        String json = "{"
-                + "\"type\":\"IMPORT_PRODUCT_REQUEST\","
-                + "\"data\":{"
-                + "\"id\":\"" + product.getId() + "\","
-                + "\"timeCreate\":\"" + product.getTimeCreated() + "\","
-                + "\"name\":\"" + product.getName() + "\","
-                + "\"category\":\"" + product.getCategory() + "\","
-                + "\"startPrice\":" + product.getStartPrice() + ","
-                + "\"currentPrice\":" + product.getCurrentPrice() + ","
-                + "\"stepPrice\":" + product.getStepPrice() + ","
-                + "\"owner\":\"" + product.getOwner() + "\","
-                + "\"status\":\"" + product.getStatus() + "\"," // Nhớ dấu phẩy ở đây
-                + "\"description\":\"" + (product.getDescription() != null ? product.getDescription() : "") + "\","
-                + "\"imageBase64\":\"" + (product.getImageBase64() != null ? product.getImageBase64() : "") + "\""
-                + "}"
-                + "}";
-
-        NetworkClient.sendCommand(json);
+        // Gửi nguyên đối tượng Product, Gson sẽ tự lấy các field id, name, imageBase64...
+        send("IMPORT_PRODUCT_REQUEST", product);
     }
 
-    // load sản phẩm của user
-    public static void sendGetShopProductsRequest(String ownerId) {
-        String json = "{"
-                + "\"type\":\"GET_SHOP_PRODUCTS_REQUEST\","
-                + "\"data\":{"
-                + "\"sellerId\":\"" + ownerId + "\""
-                + "}"
-                + "}";
-        NetworkClient.sendCommand(json);
-    }
+    // =====================================================
+    // EDIT PRODUCT
+    // =====================================================
     public static void sendEditProductRequest(Product product) {
-        /*
-         * Cấu trúc JSON gửi đi bao gồm đầy đủ các thông tin của Product:
-         * id, timeCreate, name, category, startPrice, currentPrice, stepPrice, owner, status và description.
-         */
-
-        String json = "{"
-                + "\"type\":\"EDIT_PRODUCT_REQUEST\","
-                + "\"data\":{"
-                // Dữ liệu định danh và thời gian
-                + "\"id\":\"" + product.getId() + "\","
-                + "\"timeCreate\":\"" + product.getTimeCreated() + "\","
-
-                // Thông tin cơ bản
-                + "\"name\":\"" + product.getName() + "\","
-                + "\"category\":\"" + product.getCategory() + "\","
-
-                // Thông tin giá cả (Dạng số không cần dấu ngoặc kép)
-                + "\"startPrice\":" + product.getStartPrice() + ","
-                + "\"currentPrice\":" + product.getCurrentPrice() + ","
-                + "\"stepPrice\":" + product.getStepPrice() + ","
-
-                // Thông tin sở hữu và trạng thái
-                + "\"owner\":\"" + product.getOwner() + "\","
-                + "\"status\":\"" + product.getStatus() + "\","
-
-                // Mô tả sản phẩm (Xử lý null để tránh lỗi chuỗi "null")
-                + "\"description\":\"" + (product.getDescription() != null ? product.getDescription() : "") + "\","
-                + "\"imageBase64\":\"" + (product.getImageBase64() != null ? product.getImageBase64() : "") + "\""
-                + "}"
-                + "}";
-
-        NetworkClient.sendCommand(json);
+        send("EDIT_PRODUCT_REQUEST", product);
     }
-    public static void sendSellProductRequest(String productId) {
-        // Nối chuỗi JSON bằng tay giống y hệt các hàm ở trên
-        String json = "{"
-                + "\"type\":\"SELL_PRODUCT_REQUEST\","
-                + "\"data\":{"
-                + "\"id\":\"" + productId + "\""
-                + "}"
-                + "}";
 
-        // Gọi lệnh tĩnh giống hệ thống cũ
-        NetworkClient.sendCommand(json);
+    // =====================================================
+    // GET SHOP PRODUCTS
+    // =====================================================
+    public static void sendGetShopProductsRequest(String ownerId) {
+        Map<String, String> data = new HashMap<>();
+        data.put("sellerId", ownerId);
+        send("GET_SHOP_PRODUCTS_REQUEST", data);
+    }
+
+    // =====================================================
+    // SELL PRODUCT (BẮT ĐẦU ĐẤU GIÁ)
+    // =====================================================
+    public static void sendSellProductRequest(String productId) {
+        Map<String, String> data = new HashMap<>();
+        data.put("id", productId);
+        send("SELL_PRODUCT_REQUEST", data);
     }
 }
