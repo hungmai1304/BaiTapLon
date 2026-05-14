@@ -4,6 +4,7 @@ import com.auction.client.network.RequestSender;
 import com.auction.client.utils.ClientContext;
 import com.auction.client.utils.ControllerRegistry;
 import com.auction.client.utils.NavigationService;
+import com.auction.client.controller.SomeGlobal; // Đảm bảo đã import đúng class này
 import com.auction.common.model.product.Product;
 import com.auction.common.model.auction.Auction;
 import javafx.application.Platform;
@@ -16,11 +17,10 @@ import javafx.scene.chart.XYChart;
 
 /**
  * Controller quản lý màn hình đấu giá chi tiết.
- * Được Hùng và team sử dụng cho đồ án Java Socket.
+ * Đã được tối ưu để tránh lỗi null và hiển thị thông báo chính xác.
  */
 public class BiddingController {
 
-    // --- 1. KHAI BÁO CÁC THÀNH PHẦN GIAO DIỆN (@FXML) ---
     @FXML private Label lblProductName;
     @FXML private Label lblStartPrice;
     @FXML private Label lblPriceStep;
@@ -31,48 +31,51 @@ public class BiddingController {
     @FXML private TextField txtBidAmount;
     @FXML private LineChart<String, Number> priceChart;
 
-    // --- 2. KHAI BÁO DỮ LIỆU ---
     private Auction currentAuctionData;
     private XYChart.Series<String, Number> priceSeries = new XYChart.Series<>();
     private int bidCount = 0;
 
-    // --- 3. HÀM KHỞI TẠO (Tự động chạy khi load FXML) ---
     @FXML
     public void initialize() {
-        // Đăng ký controller để các Handler có thể tìm thấy và cập nhật UI
         ControllerRegistry.register("BiddingController", this);
 
         // Lấy dữ liệu phiên đấu giá hiện tại từ Context
         currentAuctionData = ClientContext.getInstance().getCurrentAuction();
 
+        // KIỂM TRA DỮ LIỆU: Nếu TikTokController chưa lưu Auction vào Context, ta báo lỗi luôn
         if (currentAuctionData != null && currentAuctionData.getItem() != null) {
             Product p = (Product) currentAuctionData.getItem();
 
-            // Đổ dữ liệu lên các nhãn hiển thị
             lblProductName.setText("Tên sản phẩm: " + p.getName());
             lblStartPrice.setText("Giá khởi điểm: " + String.format("%,.0fđ", p.getStartPrice()));
             lblPriceStep.setText("Bước giá tối thiểu: " + String.format("%,.0fđ", p.getStepPrice()));
             lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0fđ", currentAuctionData.getCurrentPrice()));
 
-            // Cập nhật người dẫn đầu (nếu đã có người ra giá)
             updateLeaderUI(currentAuctionData.getLeaderName(), currentAuctionData.getCurrentPrice());
+        } else {
+            lblNotification.setStyle("-fx-text-fill: #e74c3c;");
+            lblNotification.setText("⚠️ Lỗi: Không tìm thấy thông tin phiên đấu giá!");
         }
 
-        // Cấu hình biểu đồ đường (LineChart)
         if (priceSeries.getName() == null) {
             priceSeries.setName("Giá đấu");
             priceChart.getData().add(priceSeries);
         }
     }
 
-    // --- 4. XỬ LÝ SỰ KIỆN KHI BẤM NÚT "XÁC NHẬN RA GIÁ" ---
-    // --- 4. XỬ LÝ SỰ KIỆN KHI BẤM NÚT "XÁC NHẬN RA GIÁ" ---
     @FXML
     public void handlePlaceBidForAuction(ActionEvent event) {
         try {
+            // 1. KIỂM TRA DỮ LIỆU CỐT LÕI (Tránh lỗi văng đỏ lòm do null)
+            if (currentAuctionData == null || currentAuctionData.getItem() == null) {
+                lblNotification.setStyle("-fx-text-fill: #e74c3c;");
+                lblNotification.setText("⚠️ Lỗi dữ liệu! Vui lòng quay lại màn hình trước.");
+                return;
+            }
+
             String input = txtBidAmount.getText().trim();
             if (input.isEmpty()) {
-                lblNotification.setStyle("-fx-text-fill: #e74c3c;"); // Màu đỏ cho lỗi
+                lblNotification.setStyle("-fx-text-fill: #e74c3c;");
                 lblNotification.setText("⚠️ Vui lòng nhập giá tiền!");
                 return;
             }
@@ -82,26 +85,25 @@ public class BiddingController {
             Product p = (Product) currentAuctionData.getItem();
             double stepPrice = p.getStepPrice();
 
-            // Kiểm tra: Giá mới phải lớn hơn giá hiện tại
+            // 2. KIỂM TRA LOGIC ĐẤU GIÁ
             if (bidAmount <= currentPrice) {
                 lblNotification.setStyle("-fx-text-fill: #e74c3c;");
                 lblNotification.setText("⚠️ Giá phải cao hơn giá hiện hành!");
                 return;
             }
 
-            // Kiểm tra: Bước giá phải là bội số
             if ((bidAmount - currentPrice) % stepPrice != 0) {
                 lblNotification.setStyle("-fx-text-fill: #e74c3c;");
-                lblNotification.setText("⚠️ Sai bước giá! Phải là bội số của " + String.format("%,.0fđ", stepPrice));
+                lblNotification.setText("⚠️ Sai bước giá! Phải tăng theo bội số của " + String.format("%,.0fđ", stepPrice));
                 return;
             }
 
-            // Gửi yêu cầu đấu giá lên Server
+            // 3. GỬI YÊU CẦU LÊN SERVER
             String email = SomeGlobal.getCurrentUser().getEmail();
             RequestSender.sendPlaceBidRequest(p.getId(), bidAmount, email);
 
-            // CẬP NHẬT TRẠNG THÁI THÀNH CÔNG Ở ĐÂY
-            lblNotification.setStyle("-fx-text-fill: #2ecc71;"); // Màu xanh lá thành công
+            // THÔNG BÁO THÀNH CÔNG (Đã đổi màu xanh và nội dung như Hùng muốn)
+            lblNotification.setStyle("-fx-text-fill: #2ecc71;");
             lblNotification.setText("✅ Đặt giá thành công! Đang chờ hệ thống ghi nhận...");
 
             txtBidAmount.clear();
@@ -110,25 +112,24 @@ public class BiddingController {
             lblNotification.setStyle("-fx-text-fill: #e74c3c;");
             lblNotification.setText("⚠️ Vui lòng nhập con số hợp lệ!");
         } catch (Exception e) {
+            // Đây là nơi bắt các lỗi kết nối thật sự
             lblNotification.setStyle("-fx-text-fill: #e74c3c;");
-            lblNotification.setText("⚠️ Lỗi kết nối server!");
+            lblNotification.setText("⚠️ Lỗi hệ thống: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
-    // --- 5. CẬP NHẬT UI KHI CÓ BROADCAST TỪ SERVER ---
     public void updateAuctionPriceRealtime(double newPrice, String leaderName) {
         Platform.runLater(() -> {
-            // Cập nhật nhãn giá và người dẫn đầu
             lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0fđ", newPrice));
             updateLeaderUI(leaderName, newPrice);
 
-            // Cập nhật dữ liệu nội bộ
             if (currentAuctionData != null) {
                 currentAuctionData.setCurrentPrice(newPrice);
                 currentAuctionData.setLeaderName(leaderName);
             }
 
-            // Vẽ thêm điểm mới lên biểu đồ diễn biến giá
+            // Vẽ biểu đồ tự động nhảy khi có giá mới
             bidCount++;
             priceSeries.getData().add(new XYChart.Data<>(String.valueOf(bidCount), newPrice));
         });
@@ -147,12 +148,11 @@ public class BiddingController {
     @FXML
     public void handleClear(ActionEvent event) {
         txtBidAmount.clear();
-        lblNotification.setText("Đã xóa ô nhập!");
+        lblNotification.setText("");
     }
 
     @FXML
     public void handleBackToTikTok(ActionEvent event) {
-        // Hủy đăng ký trước khi thoát để tránh rò rỉ bộ nhớ
         ControllerRegistry.unregister("BiddingController");
         NavigationService.setCenterView("/com/auction/client/view/tiktokAuction.fxml");
     }
