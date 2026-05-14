@@ -64,6 +64,7 @@ public class PlaceBidHandler implements IMessageHandler {
             //Cập nhật thông tin phiên đấu giá (RAM)
             currentAuction.setCurrentPrice(bidAmount);
             currentAuction.setHighestBidder(newLeader);
+            currentAuction.setLeaderName(newLeader.getUsername());
 
             // Ghi sổ lịch sử bằng BidTransaction
             BidTransaction transaction = new BidTransaction();
