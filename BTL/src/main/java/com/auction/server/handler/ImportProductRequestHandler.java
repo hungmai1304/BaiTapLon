@@ -9,7 +9,7 @@ import com.auction.server.annotation.CommandMap;
 import com.auction.server.dao.ProductDao;
 import com.auction.server.dao.UserDao;
 import com.auction.server.model.ServerContext;
-import com.auction.server.service.FileService; // Thêm import file service
+import com.auction.server.service.FileService; // Nhớ check package utils hay service nhé
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
@@ -42,10 +42,15 @@ public class ImportProductRequestHandler implements IMessageHandler {
             double startPrice = ((Number) data.get("startPrice")).doubleValue();
             double stepPrice = ((Number) data.get("stepPrice")).doubleValue();
 
-            // --- BẮT ĐẦU XỬ LÝ FILE ẢNH ---
-            // Gọi service để lưu ảnh vào thư mục server_data/product_images/
-            // Nhận lại đường dẫn String (vd: "server_data/product_images/SP01.png")
-            String savedPath = FileService.saveImage(imageBase64, id);
+            // --- BẮT ĐẦU XỬ LÝ CLOUDINARY ---
+            // Gọi FileService để upload trực tiếp lên Cloudinary
+            // Trả về link URL ví dụ: https://res.cloudinary.com/dlylyya7s/image/upload/...
+            String imageUrl = FileService.saveImage(imageBase64, id);
+
+            if (imageUrl == null && imageBase64 != null && !imageBase64.isEmpty()) {
+                sendError(conn, gson, "Lỗi khi upload ảnh lên Cloudinary!");
+                return;
+            }
             // ------------------------------
 
             // 3. TẠO ĐỐI TƯỢNG PRODUCT
@@ -55,10 +60,10 @@ public class ImportProductRequestHandler implements IMessageHandler {
             product.setCategory(category);
             product.setDescription(description);
 
-            // QUAN TRỌNG: Lưu đường dẫn file vào Database thay vì Base64
-            product.setImagePath(savedPath);
+            // QUAN TRỌNG: Lưu URL của Cloudinary vào Database
+            product.setImagePath(imageUrl);
 
-            // Xóa Base64 để nhẹ RAM của Server khi lưu vào Context
+            // Xóa Base64 cho nhẹ RAM Server
             product.setImageBase64(null);
 
             product.setStartPrice(startPrice);
@@ -69,15 +74,15 @@ public class ImportProductRequestHandler implements IMessageHandler {
             product.setTimeCreated(LocalDateTime.now());
 
             // 4. LƯU VÀO DATABASE VÀ CONTEXT
-            // ProductDao.saveProduct cần được cập nhật để lưu cột 'image_path'
+            // ProductDao.saveProduct sẽ lưu cột image_path vào Postgres
             boolean isSaved = ProductDao.getInstance().saveProduct(product);
 
             if (isSaved) {
                 context.addProduct(product);
 
-                Response response = new Response(MessageType.IMPORT_PRODUCT_RESPONSE, "SUCCESS", "Đã lưu sản phẩm và ảnh thành công!");
+                Response response = new Response(MessageType.IMPORT_PRODUCT_RESPONSE, "SUCCESS", "Đã lưu sản phẩm và ảnh lên Cloud thành công!");
                 conn.send(gson.toJson(response));
-                System.out.println("[ImportProduct] User " + userEmail + " đã thêm SP: " + name + " (Ảnh: " + savedPath + ")");
+                System.out.println("[ImportProduct] Thành công! Link ảnh: " + imageUrl);
             } else {
                 sendError(conn, gson, "Không thể lưu sản phẩm vào Database!");
             }

@@ -1,72 +1,50 @@
 package com.auction.server.service;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Base64;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import java.util.Map;
 
 public class FileService {
-    // Đường dẫn gốc lưu trữ ảnh (sẽ nằm cùng cấp với thư mục src/bin của bạn)
-    private static final String IMAGE_STORE_PATH = "server_data/product_images/";
+    // Thông tin lấy từ Dashboard Cloudinary của mày
+    private static final Cloudinary cloudinary = new Cloudinary(ObjectUtils.asMap(
+            "cloud_name", "dlylyya7s",
+            "api_key", "962659778668757",
+            "api_secret", "deA_L_PE49UN4iX23Rtd8lx09vw" // Đã dán hộ mày luôn
+    ));
 
     /**
-     * Lưu ảnh từ chuỗi Base64 vào ổ cứng
-     * @param base64Data Chuỗi base64 nhận từ Client
-     * @param productId ID sản phẩm để đặt tên file cho duy nhất
-     * @return Đường dẫn file đã lưu (để lưu vào Database)
+     * Đẩy ảnh Base64 lên Cloudinary và lấy URL
      */
-    public static String saveImage(String base64Data, String productId) {
-        if (base64Data == null || base64Data.isEmpty()) return null;
-
+    public static String saveImage(String base64, String productId) {
         try {
-            // 1. Tạo thư mục nếu chưa tồn tại
-            File directory = new File(IMAGE_STORE_PATH);
-            if (!directory.exists()) {
-                directory.mkdirs();
-            }
+            if (base64 == null || base64.isEmpty()) return null;
 
-            // 2. Giải mã Base64 thành mảng byte (101001...)
-            byte[] imageBytes = Base64.getDecoder().decode(base64Data);
+            // Cloudinary cần prefix này để nhận diện Base64
+            String dataUrl = "data:image/png;base64," + base64;
 
-            // 3. Tạo đường dẫn file (ví dụ: server_data/product_images/PROD_001.png)
-            String filePath = IMAGE_STORE_PATH + productId + ".png";
+            // Upload lên mây
+            Map uploadResult = cloudinary.uploader().upload(dataUrl, ObjectUtils.asMap(
+                    "public_id", "product_" + productId, // Tên file trên cloud
+                    "overwrite", true,                    // Ghi đè nếu sửa sản phẩm
+                    "resource_type", "image"
+            ));
 
-            // 4. Ghi dữ liệu vào file
-            try (FileOutputStream fos = new FileOutputStream(filePath)) {
-                fos.write(imageBytes);
-            }
+            // Trả về link URL (ví dụ: https://res.cloudinary.com/...)
+            String url = (String) uploadResult.get("secure_url");
+            System.out.println("[Cloudinary] Upload thành công: " + url);
+            return url;
 
-            System.out.println("[FileService] Đã lưu ảnh cho SP: " + productId);
-            return filePath; // Trả về đường dẫn để bạn lưu vào cột image_path trong DB
         } catch (Exception e) {
-            System.err.println("[FileService] Lỗi khi lưu ảnh: " + e.getMessage());
+            System.err.println("[Cloudinary ERROR] Không thể upload ảnh: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }
 
-    /**
-     * Đọc file từ đường dẫn và chuyển thành Base64 để gửi cho Client
-     * @param filePath Đường dẫn lưu trong Database
-     * @return Chuỗi Base64 của ảnh
-     */
-    public static String readImageAsBase64(String filePath) {
-        if (filePath == null || filePath.isEmpty()) return null;
-
-        try {
-            File file = new File(filePath);
-            if (!file.exists()) return null;
-
-            // Đọc toàn bộ byte của file
-            byte[] fileContent = Files.readAllBytes(file.toPath());
-
-            // Chuyển sang Base64
-            return Base64.getEncoder().encodeToString(fileContent);
-        } catch (IOException e) {
-            System.err.println("[FileService] Lỗi khi đọc ảnh: " + e.getMessage());
-            return null;
-        }
+    // Hàm này ĐÉO CẦN NỮA vì ảnh nằm trên mây rồi, Client tự load qua URL
+    /*
+    public static String readImageAsBase64(String path) {
+        return null;
     }
+    */
 }

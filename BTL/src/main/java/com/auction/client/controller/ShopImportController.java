@@ -35,20 +35,20 @@ public class ShopImportController {
     private String selectedImageBase64 = null;
     private String editingProductId = null;
     private static ShopImportController instance;
-    //-----------------------------------------------------------------------------------
+
     public void updateSuccessLabel(String message, boolean isSuccess) {
         successLabel.setVisible(true);
         successLabel.setManaged(true);
-        successLabel.setText(message); // Sẽ hiển thị "Đã lưu sản phẩm thành công!"
+        successLabel.setText(message);
 
         if (isSuccess) {
             successLabel.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
-            deleteAllClicked(null); // Xóa form nếu thành công
+            // deleteAllClicked(null); // Tùy mày, nếu muốn xóa form sau khi lưu thành công
         } else {
             successLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
         }
     }
-    //-----------------------------------------------------------------------------------
+
     public ShopImportController() {
         instance = this;
     }
@@ -56,6 +56,7 @@ public class ShopImportController {
     public static ShopImportController getInstance() {
         return instance;
     }
+
     @FXML
     public void initialize() {
         categoryComboBox.setItems(FXCollections.observableArrayList(
@@ -63,7 +64,6 @@ public class ShopImportController {
         ));
     }
 
-    //-----------------------------------------------------------------------------------
     @FXML
     public void handleImageClicked(MouseEvent event) {
         FileChooser fileChooser = new FileChooser();
@@ -73,13 +73,11 @@ public class ShopImportController {
         );
         File file = fileChooser.showOpenDialog(null);
         if (file != null) {
-            // Hiển thị ảnh
             Image image = new Image(file.toURI().toString());
             productImageView.setImage(image);
             productImageView.setVisible(true);
             uploadLabel.setVisible(false);
 
-            // Convert sang base64
             try {
                 byte[] fileContent = java.nio.file.Files.readAllBytes(file.toPath());
                 selectedImageBase64 = java.util.Base64.getEncoder().encodeToString(fileContent);
@@ -97,43 +95,58 @@ public class ShopImportController {
     @FXML
     public void addProductClicked(ActionEvent event) {
         try {
-            String[] info = Generate_id_and_timecreated.generateFullInfo();
-            String id = info[0];
+            // Kiểm tra xem đang là thêm mới hay sửa
+            String id = (editingProductId == null) ? Generate_id_and_timecreated.generateFullInfo()[0] : editingProductId;
             LocalDateTime timeCreated = Generate_id_and_timecreated.getCurrentTimestamp2();
-
-            String productName = name.getText();
-            double startPrice = Double.parseDouble(price.getText());
-            String category = categoryComboBox.getValue();
-            String description = moreInfo.getText();
 
             Product product = new Product();
             product.setId(id);
+            product.setName(name.getText());
+            product.setCategory(categoryComboBox.getValue());
+            product.setStartPrice(Double.parseDouble(price.getText()));
+            product.setDescription(moreInfo.getText());
+            product.setImageBase64(selectedImageBase64); // Gửi base64 mới lên để server upload cloud
             product.setTimeCreated(timeCreated);
-            product.setName(productName);
-            product.setCategory(category);
-            product.setStartPrice(startPrice);
-            product.setCurrentPrice(startPrice);
-            product.setStepPrice(startPrice * 0.1);
-            product.setDescription(description);
             product.setStatus(AVAILABLE);
-            product.setImageBase64(selectedImageBase64);
+            product.setStepPrice(product.getStartPrice() * 0.1);
 
-            RequestSender.sendImportProductRequest(product);
+            if (editingProductId == null) {
+                RequestSender.sendImportProductRequest(product);
+            } else {
+                RequestSender.sendEditProductRequest(product);
+            }
 
+            successLabel.setText("Đang gửi dữ liệu lên Server...");
             successLabel.setVisible(true);
-            successLabel.setManaged(true);
-            successLabel.setText("✅ Đã gửi cho server!");
-            deleteAllClicked(null);
 
-        } catch (NumberFormatException e) {
-            System.err.println("Lỗi: Giá nhập vào phải là số!");
         } catch (Exception e) {
-            e.printStackTrace();
+            updateSuccessLabel("Lỗi: " + e.getMessage(), false);
+        }
+    }
+
+    // Đổ dữ liệu vào form khi bấm "Sửa" từ danh sách
+    public void fillProductData(Product product) {
+        editingProductId = product.getId();
+        name.setText(product.getName());
+        price.setText(String.valueOf(product.getStartPrice()));
+        moreInfo.setText(product.getDescription());
+        categoryComboBox.setValue(product.getCategory());
+
+        // QUAN TRỌNG: Load ảnh từ URL (imagePath) chứ không dùng Base64 nữa
+        if (product.getImagePath() != null && product.getImagePath().startsWith("http")) {
+            Image image = new Image(product.getImagePath(), true);
+            productImageView.setImage(image);
+            productImageView.setVisible(true);
+            uploadLabel.setVisible(false);
+        } else {
+            productImageView.setImage(null);
+            uploadLabel.setVisible(true);
         }
     }
 
     @FXML
     public void deleteAllClicked(ActionEvent event) {
+        editingProductId = null; // Reset trạng thái sửa về thêm mới
         name.clear();
         price.clear();
         moreInfo.clear();
@@ -142,25 +155,5 @@ public class ShopImportController {
         productImageView.setVisible(false);
         uploadLabel.setVisible(true);
         selectedImageBase64 = null;
-    }
-
-    @FXML
-    public void categoryClicked(ActionEvent event) {
-    }
-
-    public void fillProductData(Product product) {
-        editingProductId = product.getId();
-        name.setText(product.getName());
-        price.setText(String.valueOf(product.getStartPrice()));
-        moreInfo.setText(product.getDescription());
-        categoryComboBox.setValue(product.getCategory());
-
-        if (product.getImageBase64() != null && !product.getImageBase64().isEmpty()) {
-            byte[] imageBytes = java.util.Base64.getDecoder().decode(product.getImageBase64());
-            Image image = new Image(new java.io.ByteArrayInputStream(imageBytes));
-            productImageView.setImage(image);
-            productImageView.setVisible(true);
-            uploadLabel.setVisible(false);
-        }
     }
 }

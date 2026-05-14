@@ -6,7 +6,7 @@ import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.dao.ProductDao;
 import com.auction.server.model.ServerContext;
-import com.auction.server.service.FileService; // Thêm import
+import com.auction.server.service.FileService; // Nhớ check lại path này cho đúng (utils hay service)
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
@@ -49,31 +49,33 @@ public class EditProductHandler implements IMessageHandler {
                 productToEdit.setStepPrice(((Number) data.get("stepPrice")).doubleValue());
             }
 
-            // --- 3. XỬ LÝ ẢNH (QUAN TRỌNG) ---
+            // --- 3. XỬ LÝ LÊN MÂY (CLOUDINARY) ---
             if (data.containsKey("imageBase64")) {
                 String newImageBase64 = (String) data.get("imageBase64");
 
                 if (newImageBase64 != null && !newImageBase64.isEmpty()) {
-                    // Gọi FileService để lưu (nó sẽ ghi đè lên file .png cũ của productId này)
-                    String newPath = FileService.saveImage(newImageBase64, productId);
-                    productToEdit.setImagePath(newPath);
+                    // Đẩy ảnh mới lên Cloudinary, nó sẽ overwrite ảnh cũ dựa trên productId
+                    String newUrl = FileService.saveImage(newImageBase64, productId);
+
+                    if (newUrl != null) {
+                        productToEdit.setImagePath(newUrl); // Cập nhật link URL mới
+                    }
                 }
             }
-            // --------------------------------
+            // ------------------------------------
 
             // 4. LƯU XUỐNG DATABASE
             boolean isUpdated = ProductDao.getInstance().editProduct(productToEdit);
 
             if (isUpdated) {
-                // Cập nhật lại trong ServerContext (RAM) nếu sản phẩm này đang online
-                // Dù mày bảo "đéo cần" nhưng nếu không update RAM thì các client khác
-                // đang xem đấu giá sẽ vẫn thấy dữ liệu cũ đấy.
+                // Đồng bộ lại vào RAM (ServerContext)
+                // Đã có link URL mới nên các client sẽ thấy ảnh mới ngay lập tức
                 context.updateProduct(productToEdit);
 
                 Response response = new Response(MessageType.EDIT_PRODUCT_RESPONSE, "SUCCESS", "Cập nhật sản phẩm thành công!");
                 conn.send(gson.toJson(response));
 
-                System.out.println("-> [EditProduct] Thành công: ID " + productId);
+                System.out.println("-> [EditProduct] Thành công: ID " + productId + " (URL: " + productToEdit.getImagePath() + ")");
             } else {
                 sendError(conn, gson, "Lỗi khi cập nhật dữ liệu vào Database!");
             }

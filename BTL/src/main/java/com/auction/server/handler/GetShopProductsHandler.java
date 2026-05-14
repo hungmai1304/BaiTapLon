@@ -1,13 +1,11 @@
 package com.auction.server.handler;
 
-import com.auction.common.model.product.Product;
-import com.auction.common.model.product.ProductStatus;
 import com.auction.protocol.MessageType;
+import com.auction.common.model.product.Product;
 import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.dao.ProductDao;
 import com.auction.server.model.ServerContext;
-import com.auction.server.service.FileService; // Thêm import này
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
@@ -20,7 +18,7 @@ public class GetShopProductsHandler implements IMessageHandler {
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
-        System.out.println("[GetShopProductsHandler] Client " + conn.getRemoteSocketAddress() + " hỏi sản phẩm shop...");
+        System.out.println("[GetShopProductsHandler] Client " + conn.getRemoteSocketAddress() + " đang lấy danh sách shop...");
 
         try {
             // 1. Lấy sellerId từ request data
@@ -29,7 +27,8 @@ public class GetShopProductsHandler implements IMessageHandler {
             // 2. Lấy filter status nếu có
             String statusFilter = (String) data.get("status");
 
-            // 3. Lấy từ Database
+            // 3. Lấy dữ liệu từ Database
+            // ProductDao.getProductsByUserId sẽ lấy danh sách, trong đó image_path đã là link Cloudinary
             List<Product> rawList = ProductDao.getInstance().getProductsByUserId(sellerId);
             List<Product> result;
 
@@ -41,13 +40,9 @@ public class GetShopProductsHandler implements IMessageHandler {
                 result = rawList;
             }
 
-            // --- BƯỚC QUAN TRỌNG: ĐỌC ẢNH TỪ FILE VẬT LÝ ---
-            for (Product p : result) {
-                if (p.getImagePath() != null && !p.getImagePath().isEmpty()) {
-                    String base64 = FileService.readImageAsBase64(p.getImagePath());
-                    p.setImageBase64(base64); // Nhét chuỗi ảnh vào để gửi đi
-                }
-            }
+            // --- BƯỚC NÀY ĐÃ ĐƯỢC "KHAI TỬ" ---
+            // ĐÉO CẦN loop để readImageAsBase64 nữa.
+            // Server bây giờ chỉ gửi cái link URL (imagePath) về cho Client thôi.
             // ----------------------------------------------
 
             // 4. Đóng gói response
@@ -58,19 +53,14 @@ public class GetShopProductsHandler implements IMessageHandler {
             );
             response.getData().put("products", result);
 
+            // Gửi phát một, nhẹ tênh vì không có chuỗi Base64 nặng nề
             conn.send(gson.toJson(response));
 
-            // Xoá Base64 trên Object sau khi gửi để tránh tốn RAM server (vì Product này có thể nằm trong context)
-            for (Product p : result) {
-                p.setImageBase64(null);
-            }
-
-            System.out.println("[GetShopProductsHandler] Đã gửi " + result.size() + " sản phẩm kèm dữ liệu ảnh!");
+            System.out.println("[GetShopProductsHandler] Đã gửi " + result.size() + " sản phẩm. Client sẽ tự load ảnh từ URL.");
 
         } catch (Exception e) {
             System.err.println("[GetShopProductsHandler] Lỗi: " + e.getMessage());
             e.printStackTrace();
-            // Nên gửi một response lỗi về để client không bị treo loading
             conn.send(gson.toJson(new Response(MessageType.GET_SHOP_PRODUCTS_RESPONSE, "ERROR", e.getMessage())));
         }
     }
