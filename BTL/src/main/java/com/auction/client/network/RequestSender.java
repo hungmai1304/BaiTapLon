@@ -93,4 +93,28 @@ public class RequestSender {
         data.put("id", productId);
         send("SELL_PRODUCT_REQUEST", data);
     }
+    public static void sendPlaceBidRequest(String productId, double bidAmount, String userEmail) {
+        String json = "{"
+                + "\"type\":\"PLACE_BID_REQUEST\","
+                + "\"data\":{"
+                + "\"productId\":\"" + productId + "\","
+                + "\"bidAmount\":" + bidAmount + ","
+                + "\"email\":\"" + userEmail + "\""
+                + "}"
+                + "}";
+        NetworkClient.sendCommand(json);
+    }
+
+    public static void sendRegisterBotRequest(String productId, double maxPrice, double botStep, String userEmail) {
+        String json = "{"
+                + "\"type\":\"REGISTER_BOT_REQUEST\","
+                + "\"data\":{"
+                + "\"productId\":\"" + productId + "\","
+                + "\"maxPrice\":" + maxPrice + ","
+                + "\"botStep\":" + botStep + ","
+                + "\"email\":\"" + userEmail + "\""
+                + "}"
+                + "}";
+        NetworkClient.sendCommand(json);
+    }
 }

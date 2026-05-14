@@ -3,6 +3,7 @@ package com.auction.client.controller;
 import com.auction.client.utils.ClientContext;
 import com.auction.client.network.NetworkClient;
 import com.auction.client.utils.ControllerRegistry;
+import com.auction.client.utils.NavigationService;
 import com.auction.common.model.product.Product;
 import com.auction.protocol.MessageType;
 import com.auction.protocol.Request;
@@ -75,5 +76,14 @@ public class TikTokAuctionController {
 
     public void cleanup() {
         ControllerRegistry.unregister("TikTokAuctionController");
+    }
+    @FXML
+    public void handleBidding(ActionEvent event) {
+        NavigationService.setCenterView("/com/auction/client/view/biddingBoard.fxml");
+    }
+
+    @FXML
+    public void handleBotBid(ActionEvent event) {
+        NavigationService.setCenterView("/com/auction/client/view/botBidding.fxml");
     }
 }
