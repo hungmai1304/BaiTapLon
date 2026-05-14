@@ -153,8 +153,8 @@
 
                         <HBox spacing="30.0">
                             <children>
-                                <Button maxWidth="Infinity" styleClass="btn-bid" text="Đấu giá" HBox.hgrow="ALWAYS" />
-                                <Button maxWidth="Infinity" styleClass="btn-bot" text="BotBid" HBox.hgrow="ALWAYS" />
+                                <Button maxWidth="Infinity" onAction="#handleBidding" styleClass="btn-bid" text="Đấu giá" HBox.hgrow="ALWAYS" />
+                                <Button maxWidth="Infinity" onAction="#handleBotBid" styleClass="btn-bot" text="BotBid" HBox.hgrow="ALWAYS" />
                             </children>
                         </HBox>
                     </children>

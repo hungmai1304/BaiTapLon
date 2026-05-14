@@ -98,7 +98,13 @@ public class AuctionWebSocketServer extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        System.out.println("📩 Nhận: " + message);
+        // Debug thông minh: Không in cả cục Base64
+        if (message != null && message.length() > 200) {
+            System.out.println("📩 [Server Nhận] Gói tin lớn: " + message.substring(0, 150) + "... [Độ dài: " + message.length() + "]");
+        } else {
+            System.out.println("📩 [Server Nhận]: " + message);
+        }
+
         try {
             dispatcher.dispatch(conn, message);
         } catch (Exception e) {

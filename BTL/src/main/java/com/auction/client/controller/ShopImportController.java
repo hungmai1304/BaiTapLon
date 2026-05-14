@@ -8,8 +8,15 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.stage.FileChooser;
+
+import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
@@ -19,15 +26,65 @@ public class ShopImportController {
 
     @FXML private TextField name;
     @FXML private TextField price;
-    @FXML private ComboBox<String> categoryComboBox; // Đặt fx:id trong FXML là categoryComboBox
+    @FXML private ComboBox<String> categoryComboBox;
     @FXML private TextArea moreInfo;
+    @FXML private Label successLabel;
+    @FXML private ImageView productImageView;
+    @FXML private Label uploadLabel;
+
+    private String selectedImageBase64 = null;
+    private String editingProductId = null;
+    private static ShopImportController instance;
+
+    public void updateSuccessLabel(String message, boolean isSuccess) {
+        successLabel.setVisible(true);
+        successLabel.setManaged(true);
+        successLabel.setText(message);
+
+        if (isSuccess) {
+            successLabel.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+            // deleteAllClicked(null); // Tùy mày, nếu muốn xóa form sau khi lưu thành công
+        } else {
+            successLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+        }
+    }
+
+    public ShopImportController() {
+        instance = this;
+    }
+
+    public static ShopImportController getInstance() {
+        return instance;
+    }
 
     @FXML
     public void initialize() {
-        // Khởi tạo danh sách danh mục (nếu cần)
         categoryComboBox.setItems(FXCollections.observableArrayList(
                 "Điện tử", "Thời trang", "Gia dụng", "Xe cộ", "Khác"
         ));
+    }
+
+    @FXML
+    public void handleImageClicked(MouseEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Chọn ảnh sản phẩm");
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg")
+        );
+        File file = fileChooser.showOpenDialog(null);
+        if (file != null) {
+            Image image = new Image(file.toURI().toString());
+            productImageView.setImage(image);
+            productImageView.setVisible(true);
+            uploadLabel.setVisible(false);
+
+            try {
+                byte[] fileContent = java.nio.file.Files.readAllBytes(file.toPath());
+                selectedImageBase64 = java.util.Base64.getEncoder().encodeToString(fileContent);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @FXML
@@ -38,54 +95,68 @@ public class ShopImportController {
     @FXML
     public void addProductClicked(ActionEvent event) {
         try {
-            // 1. Tạo ID và Thời gian tự động
-            String[] info = Generate_id_and_timecreated.generateFullInfo();
-            String id = info[0];
-            LocalDateTime timeCreated=Generate_id_and_timecreated.getCurrentTimestamp2();
+            // Kiểm tra xem đang là thêm mới hay sửa
+            String id = (editingProductId == null) ? Generate_id_and_timecreated.generateFullInfo()[0] : editingProductId;
+            LocalDateTime timeCreated = Generate_id_and_timecreated.getCurrentTimestamp2();
 
-            // 2. Lấy dữ liệu từ giao diện
-            String productName = name.getText();
-            double startPrice = Double.parseDouble(price.getText());
-            String category = categoryComboBox.getValue();
-            String description = moreInfo.getText();
-
-            // 3. Tạo đối tượng Product (Dựa theo sơ đồ thực thể của bạn)
             Product product = new Product();
             product.setId(id);
+            product.setName(name.getText());
+            product.setCategory(categoryComboBox.getValue());
+            product.setStartPrice(Double.parseDouble(price.getText()));
+            product.setDescription(moreInfo.getText());
+            product.setImageBase64(selectedImageBase64); // Gửi base64 mới lên để server upload cloud
             product.setTimeCreated(timeCreated);
-            product.setName(productName);
-            product.setCategory(category);
-            product.setStartPrice(startPrice);
-            product.setCurrentPrice(startPrice); // Mặc định giá hiện tại = giá khởi điểm
-            product.setStepPrice(startPrice * 0.1); // Ví dụ bước giá mặc định 10%
-            product.setDescription(description);
             product.setStatus(AVAILABLE);
-            // product.setOwner("Tên User hiện tại"); // Thêm nếu bạn có lưu User session
+            product.setStepPrice(product.getStartPrice() * 0.1);
 
-            // 4. Gửi yêu cầu qua Network
-            RequestSender.sendImportProductRequest(product);
+            if (editingProductId == null) {
+                RequestSender.sendImportProductRequest(product);
+            } else {
+                RequestSender.sendEditProductRequest(product);
+            }
 
-            // 5. Thông báo hoặc chuyển trang
-            System.out.println("Đã gửi yêu cầu nhập hàng: " + productName);
-            handleBackClicked(null);
+            successLabel.setText("Đang gửi dữ liệu lên Server...");
+            successLabel.setVisible(true);
 
-        } catch (NumberFormatException e) {
-            System.err.println("Lỗi: Giá nhập vào phải là số!");
         } catch (Exception e) {
-            e.printStackTrace();
+            updateSuccessLabel("Lỗi: " + e.getMessage(), false);
+        }
+    }
+
+    // Đổ dữ liệu vào form khi bấm "Sửa" từ danh sách
+    public void fillProductData(Product product) {
+        editingProductId = product.getId();
+        name.setText(product.getName());
+        price.setText(String.valueOf(product.getStartPrice()));
+        moreInfo.setText(product.getDescription());
+        categoryComboBox.setValue(product.getCategory());
+
+        // QUAN TRỌNG: Load ảnh từ URL (imagePath) chứ không dùng Base64 nữa
+        if (product.getImagePath() != null && product.getImagePath().startsWith("http")) {
+            Image image = new Image(product.getImagePath(), true);
+            productImageView.setImage(image);
+            productImageView.setVisible(true);
+            uploadLabel.setVisible(false);
+        } else {
+            productImageView.setImage(null);
+            uploadLabel.setVisible(true);
         }
     }
 
     @FXML
     public void deleteAllClicked(ActionEvent event) {
+        editingProductId = null; // Reset trạng thái sửa về thêm mới
         name.clear();
         price.clear();
         moreInfo.clear();
         categoryComboBox.getSelectionModel().clearSelection();
+        productImageView.setImage(null);
+        productImageView.setVisible(false);
+        uploadLabel.setVisible(true);
+        selectedImageBase64 = null;
     }
-
     @FXML
     public void categoryClicked(ActionEvent event) {
-        // Xử lý khi chọn danh mục nếu cần
     }
 }

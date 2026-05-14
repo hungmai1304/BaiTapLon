@@ -47,13 +47,16 @@ public class NetworkClient {
 
                 @Override
                 public void onMessage(String message) {
+//                    // 1. Debug thông minh:
+//                    // Nếu tin nhắn quá dài (thường là có chứa ảnh), chỉ in 200 ký tự đầu để xem Type và Status
+//                    if (message != null && message.length() > 200) {
+//                        System.out.println("📩 [Từ Server] (Gói tin lớn): " + message.substring(0, 200) + "... [Tổng: " + message.length() + " ký tự]");
+//                    } else {
+//                        System.out.println("📩 [Từ Server]: " + message);
+//                    }
 
-                    System.out.println(
-                            "📩 Server: " + message
-                    );
-
-                    ClientMessageDispatcher
-                            .dispatch(message);
+                    // 2. Vẫn dispatch bình thường để xử lý logic
+                    ClientMessageDispatcher.dispatch(message);
                 }
 
                 @Override
@@ -102,21 +105,18 @@ public class NetworkClient {
     }
 
     public static void sendCommand(String command) {
-
-        if (webSocketClient != null
-                && webSocketClient.isOpen()) {
-
+        if (webSocketClient != null && webSocketClient.isOpen()) {
             webSocketClient.send(command);
 
-            System.out.println(
-                    "📤 Đã gửi: " + command
-            );
+            // Debug thông minh: Nếu gói tin quá dài thì chỉ in độ dài thôi
+            if (command.length() > 200) {
+                System.out.println("🚀 [Client] Đã gửi gói tin lớn (Size: " + command.length() + " chars)");
+            } else {
+                System.out.println("🚀 [Client] Đã gửi: " + command);
+            }
 
         } else {
-
-            System.err.println(
-                    "❌ Chưa kết nối mạng!"
-            );
+            System.err.println("❌ Chưa kết nối mạng!");
         }
     }
 
