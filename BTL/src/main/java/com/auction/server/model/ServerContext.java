@@ -103,6 +103,16 @@ public class ServerContext {
         }
     }
 
+    // Hàm tìm phiên đấu giá đang diễn ra theo ID của Món Hàng (Product ID)
+    public Auction getAuctionByProductId(String productId) {
+        synchronized (activeAuctions) {
+            return activeAuctions.stream()
+                    .filter(a -> a.getItem() != null && a.getItem().getId().equals(productId))
+                    .findFirst()
+                    .orElse(null);
+        }
+    }
+
     // Xóa phiên đấu giá (khi kết thúc 10 phút)
     public void removeAuction(int auctionId) {
         activeAuctions.removeIf(a -> a.getId() == auctionId);

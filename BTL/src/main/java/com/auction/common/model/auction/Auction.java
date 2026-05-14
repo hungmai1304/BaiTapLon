@@ -4,6 +4,8 @@ import com.auction.common.model.product.Item;
 import com.auction.common.model.user.User;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Auction {
     private int id;
@@ -15,6 +17,9 @@ public class Auction {
     private LocalDateTime endTime;      // Thời gian kết thúc
     private User highestBidder;         // Người chơi đang dẫn đầu
     private String status;              // Trạng thái: "PENDING", "ACTIVE", "COMPLETED"
+    // Ngăn chứa các lượt trả giá
+    private List<BidTransaction> biddingHistory = new ArrayList<>();
+
     public Auction(int id, Item item, double startPrice, double stepPrice, double currentPrice, LocalDateTime startTime, LocalDateTime endTime) {
         this.id=id;
         this.item=item;
@@ -63,6 +68,12 @@ public class Auction {
     }
     public void setStatus(String status) {
         this.status = status;
+    }
+    public List<BidTransaction> getBiddingHistory() {
+        return biddingHistory;
+    }
+    public void setBiddingHistory(List<BidTransaction> biddingHistory) {
+        this.biddingHistory = biddingHistory;
     }
 
     
