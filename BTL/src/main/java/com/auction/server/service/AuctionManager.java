@@ -5,7 +5,9 @@ import com.auction.common.model.product.ProductStatus;
 import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
 import com.auction.server.model.ServerContext;
+import com.auction.common.utils.LocalDateTimeAdapter;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.java_websocket.WebSocket;
 
 import java.time.LocalDateTime;
@@ -17,7 +19,9 @@ public class AuctionManager {
 
     // ========== SINGLETON PATTERN ==========
     private static AuctionManager instance;
-    private final Gson gson = new Gson();
+    private final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .create();
     private final Random random = new Random();
 
     private AuctionManager() {}
