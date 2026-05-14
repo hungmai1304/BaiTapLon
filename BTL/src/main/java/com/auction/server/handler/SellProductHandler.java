@@ -6,7 +6,7 @@ import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.dao.ProductDao;
 import com.auction.server.model.ServerContext;
-import com.auction.server.service.FileService; // Thêm import
+// XÓA cái import FileService đi vì không dùng nữa
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
@@ -30,7 +30,7 @@ public class SellProductHandler implements IMessageHandler {
             boolean isSold = ProductDao.getInstance().sellProduct(productId);
 
             if (isSold) {
-                // 2. Cập nhật RAM: Lấy bản mới nhất từ DB (có start_time, end_time) nhét vào Context
+                // 2. Cập nhật RAM: Lấy bản mới nhất từ DB
                 Product updatedProduct = ProductDao.getInstance().getProductById(productId);
                 if (updatedProduct != null) {
                     context.updateProduct(updatedProduct);
@@ -59,12 +59,8 @@ public class SellProductHandler implements IMessageHandler {
         // Lấy danh sách sản phẩm từ RAM
         List<Product> listToSend = context.getProductList();
 
-        // --- BƯỚC QUAN TRỌNG: Bơm ảnh vào để mọi người thấy hình ---
-        for (Product p : listToSend) {
-            if (p.getImagePath() != null && !p.getImagePath().isEmpty()) {
-                p.setImageBase64(FileService.readImageAsBase64(p.getImagePath()));
-            }
-        }
+        // --- BỎ HẾT CÁI VÒNG LẶP ĐỌC FILE Ở ĐÂY ---
+        // Vì imagePath đã là link URL rồi, Client chỉ việc cầm link đó mà hiển thị thôi.
 
         Response updateRes = new Response(MessageType.UPDATE_AUCTION_LIST_RESPONSE, "SUCCESS", "Sàn vừa có món mới!");
         updateRes.getData().put("productList", listToSend);
@@ -78,10 +74,9 @@ public class SellProductHandler implements IMessageHandler {
             }
         }
 
-        // --- BƯỚC QUAN TRỌNG: Xóa Base64 ngay sau khi gửi để giải phóng RAM ---
-        for (Product p : listToSend) {
-            p.setImageBase64(null);
-        }
+        // --- BỎ LUÔN CÁI BƯỚC set null Base64 giải phóng RAM ---
+        // Vì nãy giờ mình có nạp cái gì nặng vào đâu mà cần giải phóng.
+        System.out.println("-> [Broadcast] Đã cập nhật danh sách đấu giá mới cho tất cả Client qua URL Cloudinary.");
     }
 
     private void sendError(WebSocket conn, Gson gson, String msg) {
