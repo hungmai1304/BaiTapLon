@@ -12,9 +12,9 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="borderpane_home" styleClass="background" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.HomeController">
+<BorderPane fx:id="borderpane_home" styleClass="Scene-Black" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.HomeController">
    <left>
-      <VBox prefWidth="85.0" styleClass="Scene-Back-1" BorderPane.alignment="CENTER">
+      <VBox prefWidth="85.0" styleClass="Scene-Black" BorderPane.alignment="CENTER">
          <children>
             <VBox alignment="TOP_CENTER" spacing="10.0">
                <children>
