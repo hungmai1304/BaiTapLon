@@ -1,18 +1,18 @@
 package com.auction.server.handler;
 
 import com.auction.common.model.product.Product;
-import com.auction.common.model.product.ProductStatus; // Thêm import này
+import com.auction.common.model.product.ProductStatus;
 import com.auction.common.model.user.User;
 import com.auction.protocol.MessageType;
-import com.auction.protocol.Response; // Đảm bảo đã import class Response
+import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
-import com.auction.server.dao.ProductDao; // Cần import ProductDao
+import com.auction.server.dao.ProductDao;
 import com.auction.server.dao.UserDao;
 import com.auction.server.model.ServerContext;
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
-import java.time.LocalDateTime; // Thêm import nếu cần parse thời gian
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @CommandMap(value = MessageType.IMPORT_PRODUCT_REQUEST)
@@ -22,8 +22,6 @@ public class ImportProductRequestHandler implements IMessageHandler {
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
         try {
             // 1. LẤY THÔNG TIN NGƯỜI GỬI (OWNER)
-            // LỖI SAI: Không khai báo kiểu dữ liệu "WebSocket" bên trong lệnh gọi hàm
-            // LỖI SAI: Nên dùng tham số 'context' được truyền vào thay vì gọi static sai cú pháp
             String userEmail = context.getUserByConn(conn);
 
             if (userEmail == null) {
@@ -35,11 +33,11 @@ public class ImportProductRequestHandler implements IMessageHandler {
             User currentUser = UserDao.getInstance().getUserByEmail(userEmail);
 
             // 2. LẤY DỮ LIỆU SẢN PHẨM TỪ CLIENT (MAP data)
-            // Lưu ý: data.get trả về Object, cần ép kiểu hoặc chuyển đổi an toàn
             String id = (String) data.get("id");
             String name = (String) data.get("name");
             String category = (String) data.get("category");
             String description = (String) data.get("description");
+            String imageBase64 = (String) data.get("imageBase64"); // Nhận dữ liệu ảnh base64
 
             // Ép kiểu số an toàn (Gson thường parse số thành Double)
             double startPrice = ((Number) data.get("startPrice")).doubleValue();
@@ -51,6 +49,7 @@ public class ImportProductRequestHandler implements IMessageHandler {
             product.setName(name);
             product.setCategory(category);
             product.setDescription(description);
+            product.setImageBase64(imageBase64); // Gán ảnh base64 vào đối tượng Product
             product.setStartPrice(startPrice);
             product.setCurrentPrice(startPrice); // Giá hiện tại mới tạo bằng giá khởi điểm
             product.setStepPrice(stepPrice);
@@ -59,7 +58,7 @@ public class ImportProductRequestHandler implements IMessageHandler {
             // GÁN OWNER CHÍNH LÀ NGƯỜI ĐANG KẾT NỐI
             product.setOwner(currentUser);
 
-            // Set thời gian tạo (Dùng LocalDateTime theo cập nhật mới nhất của bạn)
+            // Set thời gian tạo
             product.setTimeCreated(LocalDateTime.now());
 
             // 4. LƯU VÀO DATABASE VÀ CONTEXT

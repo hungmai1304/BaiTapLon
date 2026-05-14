@@ -31,8 +31,9 @@ public class ProductDao {
      * Hàm lưu sản phẩm vào Database
      */
     public boolean saveProduct(Product product) {
-        String sql = "INSERT INTO products (id, name, category, description, start_price, current_price, step_price, status, owner_id, time_created) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // Cập nhật câu lệnh SQL: thêm cột image_base64 và thêm 1 dấu ? vào VALUES
+        String sql = "INSERT INTO products (id, name, category, description, image_base64, start_price, current_price, step_price, status, owner_id, time_created) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -41,16 +42,17 @@ public class ProductDao {
             pstmt.setString(2, product.getName());
             pstmt.setString(3, product.getCategory());
             pstmt.setString(4, product.getDescription());
-            pstmt.setDouble(5, product.getStartPrice());
-            pstmt.setDouble(6, product.getCurrentPrice());
-            pstmt.setDouble(7, product.getStepPrice());
-            pstmt.setString(8, product.getStatus().toString());
+            pstmt.setString(5, product.getImageBase64()); // Thêm tham số ảnh base64
+            pstmt.setDouble(6, product.getStartPrice());
+            pstmt.setDouble(7, product.getCurrentPrice());
+            pstmt.setDouble(8, product.getStepPrice());
+            pstmt.setString(9, product.getStatus().toString());
 
             // Lưu ID của owner (User)
-            pstmt.setString(9, product.getOwner().getId());
+            pstmt.setString(10, product.getOwner().getId());
 
             // Chuyển LocalDateTime sang Timestamp để lưu vào SQL
-            pstmt.setTimestamp(10, Timestamp.valueOf(product.getTimeCreated()));
+            pstmt.setTimestamp(11, Timestamp.valueOf(product.getTimeCreated()));
 
             return pstmt.executeUpdate() > 0;
 
