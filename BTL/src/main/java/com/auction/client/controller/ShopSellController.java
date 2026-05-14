@@ -134,7 +134,7 @@ public class ShopSellController {
 
     private void handleSell(Product product) {
         System.out.println("Sell: " + product.getName());
-        // TODO: RequestSender.sendSellProductRequest(product.getId());
+        RequestSender.sendSellProductRequest(product.getId());
     }
 
     @FXML

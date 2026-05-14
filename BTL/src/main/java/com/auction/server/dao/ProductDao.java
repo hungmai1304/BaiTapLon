@@ -243,4 +243,29 @@ public class ProductDao {
 
         return productList;
     }
+    // TÍNH NĂNG LÊN SÀN (SELL)
+    public boolean sellProduct(String productId) {
+        String sql = "UPDATE products SET status = 'ON_AUCTION', start_time = ?, end_time = ? WHERE id = ?";
+
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            // 1. start_time: Lấy ngay khoảnh khắc bấm nút
+            pstmt.setTimestamp(1, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
+
+            // 2. end_time: Set vô hạn (Ví dụ: ngày 31/12/2099) để test
+            pstmt.setTimestamp(2, java.sql.Timestamp.valueOf(java.time.LocalDateTime.of(2099, 12, 31, 23, 59, 59)));
+
+            // 3. ID sản phẩm
+            pstmt.setString(3, productId);
+
+            return pstmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.err.println("❌ [ProductDao] Lỗi khi đưa sản phẩm lên sàn: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }
