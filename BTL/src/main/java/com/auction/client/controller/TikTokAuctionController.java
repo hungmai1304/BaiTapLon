@@ -5,6 +5,7 @@ import com.auction.client.network.NetworkClient;
 import com.auction.client.utils.ControllerRegistry;
 import com.auction.client.utils.NavigationService;
 import com.auction.common.model.product.Product;
+import com.auction.common.model.auction.Auction; // Import thêm Auction
 import com.auction.protocol.MessageType;
 import com.auction.protocol.Request;
 import javafx.application.Platform;
@@ -23,14 +24,21 @@ public class TikTokAuctionController {
     @FXML
     public void initialize() {
         ControllerRegistry.register("TikTokAuctionController", this);
-        // Hiển thị sản phẩm đầu tiên nếu đã có dữ liệu
-        renderCurrentProduct();
+        // Ưu tiên hiển thị Auction vì đây là giao kèo mới với Server
+        renderCurrentAuction();
     }
 
-    private void renderCurrentProduct() {
-        Product current = ClientContext.getInstance().getCurrentProduct();
-        if (current != null) {
-            updateUI(current);
+    // --- SỬA LOGIC RENDER: Ưu tiên Auction trước ---
+    private void renderCurrentAuction() {
+        Auction currentAuction = ClientContext.getInstance().getCurrentAuction();
+        if (currentAuction != null) {
+            updateUI(currentAuction);
+        } else {
+            // Nếu chưa có Auction thì thử render Product cũ (nếu còn dùng)
+            Product currentProduct = ClientContext.getInstance().getCurrentProduct();
+            if (currentProduct != null) {
+                updateUI(currentProduct);
+            }
         }
     }
 
@@ -38,41 +46,31 @@ public class TikTokAuctionController {
         Platform.runLater(() -> {
             if (product != null) {
                 name.setText(product.getName());
-                price.setText(String.format("%,.0f VNĐ", product.getCurrentPrice()));
+                price.setText(String.format("%,.0f VNĐ", product.getStartPrice()));
                 step.setText(String.format("Bước giá: %,.0f VNĐ", product.getStepPrice()));
             }
         });
     }
-    public void updateUI(com.auction.common.model.auction.Auction auction) {
+
+    public void updateUI(Auction auction) {
         Platform.runLater(() -> {
             if (auction != null && auction.getItem() != null) {
-                // Sơ đồ: phiên -> product -> thông tin sản phẩm
                 Product product = (Product) auction.getItem();
                 name.setText(product.getName());
-                // Giá lấy từ phiên đấu giá (Auction)
+                // Giá lấy realtime từ phiên đấu giá (Auction)
                 price.setText(String.format("%,.0f VNĐ", auction.getCurrentPrice()));
                 step.setText(String.format("Bước giá: %,.0f VNĐ", product.getStepPrice()));
             }
         });
     }
 
-    private void renderCurrentAuction() {
-        com.auction.common.model.auction.Auction currentAuction = ClientContext.getInstance().getCurrentAuction();
-        if (currentAuction != null) {
-            updateUI(currentAuction);
-        }
-    }
-    // -----------------------------------------------------------
-
     @FXML
     public void handleUp(ActionEvent event) {
         boolean hasPrev = ClientContext.getInstance().previous();
         if (hasPrev) {
-            renderCurrentProduct();
+            renderCurrentAuction(); // Đổi sang render Auction
         } else {
             System.out.println("⚠️ Đã ở đầu danh sách!");
-            // Nếu muốn lướt vòng tròn hoặc lấy cũ hơn thì gửi command ở đây
-            // NetworkClient.sendCommand("GET_PREVIOUS_PAGE");
         }
     }
 
@@ -80,23 +78,23 @@ public class TikTokAuctionController {
     public void handleDown(ActionEvent event) {
         boolean hasNext = ClientContext.getInstance().next();
         if (hasNext) {
-            renderCurrentProduct();
+            renderCurrentAuction(); // Đổi sang render Auction
         } else {
-            System.out.println("? Chạm biên! Yêu cầu lấy thêm sản phẩm mới...");
+            System.out.println("? Chạm biên! Yêu cầu lấy thêm phiên đấu giá mới...");
 
-            // --- SỬA TẠI ĐÂY ---
-            // Tạo object Request thay vì gửi String thuần
-            Request auctionRequest = new Request(MessageType.GET_AUCTION_PRODUCT_REQUEST);
+            // --- SỬA LẠI TYPE REQUEST THEO GIAO KÈO 1 ---
+            // Đổi từ GET_AUCTION_PRODUCT_REQUEST sang GET_ACTIVE_AUCTIONS_REQUEST
+            Request auctionRequest = new Request(MessageType.GET_ACTIVE_AUCTIONS_REQUEST);
 
-            // Chuyển sang JSON rồi mới gửi
             NetworkClient.sendCommand(gson.toJson(auctionRequest));
-            // -------------------
+            // ------------------------------------------
         }
     }
 
     public void cleanup() {
         ControllerRegistry.unregister("TikTokAuctionController");
     }
+
     @FXML
     public void handleBidding(ActionEvent event) {
         NavigationService.setCenterView("/com/auction/client/view/biddingBoard.fxml");
