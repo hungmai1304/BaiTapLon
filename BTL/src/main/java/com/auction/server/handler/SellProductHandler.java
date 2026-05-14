@@ -2,6 +2,7 @@ package com.auction.server.handler;
 
 import com.auction.protocol.MessageType;
 import com.auction.common.model.product.Product;
+import com.auction.common.model.auction.Auction;
 import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.dao.ProductDao;
@@ -12,6 +13,8 @@ import org.java_websocket.WebSocket;
 
 import java.util.Map;
 import java.util.List;
+import java.time.LocalDateTime; // import để tính giờ
+import java.util.Random; //  import để random ID
 
 @CommandMap(value = MessageType.SELL_PRODUCT_REQUEST)
 public class SellProductHandler implements IMessageHandler {
@@ -34,6 +37,27 @@ public class SellProductHandler implements IMessageHandler {
                 Product updatedProduct = ProductDao.getInstance().getProductById(productId);
                 if (updatedProduct != null) {
                     context.updateProduct(updatedProduct);
+                    //  BẮT ĐẦU LOGIC TẠO PHIÊN ĐẤU GIÁ
+                    int auctionId = Math.abs(new Random().nextInt()); // Tạo ID tự động
+
+                    LocalDateTime now = LocalDateTime.now();
+                    LocalDateTime startTime = now.plusMinutes(30);
+                    LocalDateTime endTime = startTime.plusMinutes(10);
+
+                    // Đóng gói thành Phiên Đấu Giá
+                    Auction newAuction = new Auction(
+                            auctionId,
+                            updatedProduct,
+                            updatedProduct.getStartPrice(),
+                            updatedProduct.getStepPrice(),
+                            updatedProduct.getStartPrice(),
+                            startTime,
+                            endTime
+                    );
+                    newAuction.setStatus("PENDING");
+
+                    // Cất vào kho chứa Auction trên RAM
+                    context.addAuction(newAuction);
                 }
 
                 // 3. Phản hồi cho thằng Seller
@@ -44,6 +68,8 @@ public class SellProductHandler implements IMessageHandler {
 
                 // 4. Phát loa thông báo cho tất cả mọi người
                 broadcastNewList(context, gson);
+                // 5. Phát loa thông báo phiên đấu giá mới (Dành cho giao diện đấu giá sắp làm)
+                broadcastNewAuctionSession(context, gson);
 
             } else {
                 sendError(conn, gson, "Lỗi khi cập nhật trạng thái lên Database!");
@@ -77,6 +103,24 @@ public class SellProductHandler implements IMessageHandler {
         // --- BỎ LUÔN CÁI BƯỚC set null Base64 giải phóng RAM ---
         // Vì nãy giờ mình có nạp cái gì nặng vào đâu mà cần giải phóng.
         System.out.println("-> [Broadcast] Đã cập nhật danh sách đấu giá mới cho tất cả Client qua URL Cloudinary.");
+    }
+
+
+    //  HÀM NÀY ĐỂ BÁO CÁO DANH SÁCH AUCTION MỚI
+    private void broadcastNewAuctionSession(ServerContext context, Gson gson) {
+        List<Auction> activeAuctions = context.getActiveAuctions();
+
+        // Dùng một MessageType tên khác (UPDATE_ACTIVE_AUCTIONS_RESPONSE) để tránh đụng chạm
+        Response updateRes = new Response("UPDATE_ACTIVE_AUCTIONS_RESPONSE", "SUCCESS", "Có phiên đấu giá mới được lên lịch!");
+        updateRes.getData().put("auctionList", activeAuctions);
+
+        String message = gson.toJson(updateRes);
+        for (WebSocket client : context.getConnectedClients()) {
+            if (client.isOpen()) {
+                client.send(message);
+            }
+        }
+        System.out.println("-> [Broadcast MỚI] Đã phát sóng danh sách Phiên Đấu Giá.");
     }
 
     private void sendError(WebSocket conn, Gson gson, String msg) {

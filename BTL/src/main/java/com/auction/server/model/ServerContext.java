@@ -2,6 +2,7 @@ package com.auction.server.model;
 
 import com.auction.server.AuctionWebSocketServer;
 import com.auction.common.model.product.Product;
+import com.auction.common.model.auction.Auction;
 import org.java_websocket.WebSocket;
 
 import java.util.*;
@@ -15,6 +16,8 @@ public class ServerContext {
 
     // Quản lý User Online: Key là UserID hoặc Username, Value là kết nối WebSocket
     private final Map<String, WebSocket> onlineUsers = new ConcurrentHashMap<>();
+
+    private final List<Auction> activeAuctions = Collections.synchronizedList(new ArrayList<>());
 
     // Danh sách sản phẩm trên RAM (Dùng synchronizedList để an toàn khi nhiều Handler cùng đọc/ghi)
     private final List<Product> productList = Collections.synchronizedList(new ArrayList<>());
@@ -64,7 +67,7 @@ public class ServerContext {
         }
     }
 
-    // Hàm mày vừa viết, tao sửa lại logic check cho chắc chắn
+    // Hàm mày vừa viết, sửa lại logic check cho chắc chắn
     public void updateProduct(Product updatedProduct) {
         if (updatedProduct == null || updatedProduct.getId() == null) return;
 
@@ -81,6 +84,51 @@ public class ServerContext {
             // Nếu không tìm thấy trong danh sách hiện tại thì mới thêm mới
             if (!found) {
                 addProduct(updatedProduct);
+            }
+        }
+    }
+
+    // 🚀 BỔ SUNG MỚI: QUẢN LÝ PHIÊN ĐẤU GIÁ (AUCTION) TRÊN RAM
+
+    // Lấy toàn bộ danh sách phiên đấu giá
+    public List<Auction> getActiveAuctions() {
+        return activeAuctions;
+    }
+
+    // Thêm một phiên đấu giá mới vào RAM khi ai đó bấm "Lên sàn"
+    public void addAuction(Auction auction) {
+        if (auction != null) {
+            activeAuctions.add(auction);
+            System.out.println("[ServerContext] Đã thêm Phiên Đấu Giá (ID: " + auction.getId() + ") vào RAM.");
+        }
+    }
+
+    // Xóa phiên đấu giá (khi kết thúc 10 phút)
+    public void removeAuction(int auctionId) {
+        activeAuctions.removeIf(a -> a.getId() == auctionId);
+        System.out.println("[ServerContext] Đã xóa Phiên Đấu Giá (ID: " + auctionId + ") khỏi RAM.");
+    }
+
+    // Lấy thông tin 1 phiên đấu giá theo ID phiên
+    public Auction getAuctionById(int auctionId) {
+        synchronized (activeAuctions) {
+            return activeAuctions.stream()
+                    .filter(a -> a.getId() == auctionId)
+                    .findFirst()
+                    .orElse(null);
+        }
+    }
+
+    // Cập nhật giá tiền hoặc người dẫn đầu mới vào RAM
+    public void updateAuction(Auction updatedAuction) {
+        if (updatedAuction == null) return;
+        synchronized (activeAuctions) {
+            for (int i = 0; i < activeAuctions.size(); i++) {
+                if (activeAuctions.get(i).getId() == updatedAuction.getId()) {
+                    activeAuctions.set(i, updatedAuction);
+                    System.out.println("[ServerContext] Đã cập nhật RAM cho Phiên Đấu Giá ID: " + updatedAuction.getId());
+                    return;
+                }
             }
         }
     }
