@@ -68,7 +68,8 @@ public class RequestSender {
                 + "\"stepPrice\":" + product.getStepPrice() + ","
                 + "\"owner\":\"" + product.getOwner() + "\","
                 + "\"status\":\"" + product.getStatus() + "\"," // Nhớ dấu phẩy ở đây
-                + "\"description\":\"" + (product.getDescription() != null ? product.getDescription() : "") + "\"" // Thêm dòng này
+                + "\"description\":\"" + (product.getDescription() != null ? product.getDescription() : "") + "\","
+                + "\"imageBase64\":\"" + (product.getImageBase64() != null ? product.getImageBase64() : "") + "\""
                 + "}"
                 + "}";
 
@@ -112,7 +113,8 @@ public class RequestSender {
                 + "\"status\":\"" + product.getStatus() + "\","
 
                 // Mô tả sản phẩm (Xử lý null để tránh lỗi chuỗi "null")
-                + "\"description\":\"" + (product.getDescription() != null ? product.getDescription() : "") + "\""
+                + "\"description\":\"" + (product.getDescription() != null ? product.getDescription() : "") + "\","
+                + "\"imageBase64\":\"" + (product.getImageBase64() != null ? product.getImageBase64() : "") + "\""
                 + "}"
                 + "}";
 

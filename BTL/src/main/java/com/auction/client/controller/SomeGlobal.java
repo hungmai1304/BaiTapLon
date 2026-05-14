@@ -3,6 +3,7 @@ import com.auction.common.model.user.User;
 
 public class SomeGlobal {
     private static HomeController homeController;
+    private static MainController mainController;
 
     public static void setHomeController(HomeController controller) {
         homeController = controller;
@@ -29,5 +30,12 @@ public class SomeGlobal {
 
     public static void setCurrentUser(User user) {
         currentUser = user;
+    }
+    public static void setMainController(MainController ctrl) {
+        mainController = ctrl;
+    }
+
+    public static MainController getMainController() {
+        return mainController;
     }
 }

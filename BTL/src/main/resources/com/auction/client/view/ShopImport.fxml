@@ -12,6 +12,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
+<?import javafx.scene.image.ImageView?>
 <VBox prefHeight="1080.0" prefWidth="1831.0" styleClass="main-root" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.ShopImportController">
     <children>
         <HBox alignment="CENTER_LEFT" prefHeight="100.0" spacing="20.0" styleClass="header">
@@ -35,9 +36,12 @@
                                 <VBox spacing="15.0">
                                     <children>
                                         <Label styleClass="label-title" text="Hình ảnh sản phẩm" />
-                                        <StackPane prefHeight="350.0" prefWidth="350.0" styleClass="image-upload-area">
+                                        <StackPane fx:id="imageUploadArea" prefHeight="350.0" prefWidth="350.0"
+                                                   styleClass="image-upload-area" onMouseClicked="#handleImageClicked">
                                             <children>
-                                                <Label styleClass="upload-text" text="Thêm ảnh +" />
+                                                <ImageView fx:id="productImageView" fitHeight="350.0" fitWidth="350.0"
+                                                           preserveRatio="true" visible="false"/>
+                                                <Label fx:id="uploadLabel" styleClass="upload-text" text="Thêm ảnh +" />
                                             </children>
                                         </StackPane>
                                     </children>
