@@ -43,6 +43,26 @@ public class TikTokAuctionController {
             }
         });
     }
+    public void updateUI(com.auction.common.model.auction.Auction auction) {
+        Platform.runLater(() -> {
+            if (auction != null && auction.getItem() != null) {
+                // Sơ đồ: phiên -> product -> thông tin sản phẩm
+                Product product = (Product) auction.getItem();
+                name.setText(product.getName());
+                // Giá lấy từ phiên đấu giá (Auction)
+                price.setText(String.format("%,.0f VNĐ", auction.getCurrentPrice()));
+                step.setText(String.format("Bước giá: %,.0f VNĐ", product.getStepPrice()));
+            }
+        });
+    }
+
+    private void renderCurrentAuction() {
+        com.auction.common.model.auction.Auction currentAuction = ClientContext.getInstance().getCurrentAuction();
+        if (currentAuction != null) {
+            updateUI(currentAuction);
+        }
+    }
+    // -----------------------------------------------------------
 
     @FXML
     public void handleUp(ActionEvent event) {

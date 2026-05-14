@@ -61,9 +61,9 @@ public class Auction {
     public String getStatus() {
         return status;
     }
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    
+    public void setStatus(String status) {this.status = status;}
+    public Auction() {}
+    private String leaderName;
+    public String getLeaderName() {return leaderName;}
+    public void setLeaderName(String leaderName) {this.leaderName = leaderName;}
 }

@@ -34,11 +34,8 @@ public class ShopSellController {
 
     @FXML
     public void initialize() {
-
-        // 1. Đăng ký controller để Handler gọi được
         SomeGlobal.setShopSellController(this);
 
-        // 2. Cột STT
         colSTT.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(Integer item, boolean empty) {
@@ -48,10 +45,8 @@ public class ShopSellController {
             }
         });
 
-        // 3. Cột Tên
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
 
-        // 4. Cột Giá
         colPrice.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(Double item, boolean empty) {
@@ -62,10 +57,8 @@ public class ShopSellController {
         });
         colPrice.setCellValueFactory(new PropertyValueFactory<>("startPrice"));
 
-        // 5. Cột Mô tả
         colDesc.setCellValueFactory(new PropertyValueFactory<>("description"));
 
-        // 6. Cột Trạng thái
         colStatus.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(ProductStatus item, boolean empty) {
@@ -82,7 +75,6 @@ public class ShopSellController {
         });
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        // 7. Cột Thao tác
         colAction.setCellFactory(col -> new TableCell<>() {
             private final Button btnEdit = new Button("Edit");
             private final Button btnSell = new Button("Sell");
@@ -102,13 +94,10 @@ public class ShopSellController {
         });
 
         productTable.setItems(productList);
-
-        // 8. Gửi request lấy danh sách từ server
         String ownerId = SomeGlobal.getCurrentUser().getId();
         RequestSender.sendGetShopProductsRequest(ownerId);
     }
 
-    // Được gọi từ GetShopProductsClientHandler khi server trả về
     public void loadProducts(List<Product> products) {
         Platform.runLater(() -> {
             productList.setAll(products);
@@ -118,11 +107,10 @@ public class ShopSellController {
 
     private void handleEdit(Product product) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(
-                    "/com/auction/client/view/editProduct.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/editProduct.fxml"));
             VBox shopImportView = loader.load();
             editProductController controller = loader.getController();
-            controller.fillProductData(product);// good
+            controller.fillProductData(product);
             HomeController homeController = SomeGlobal.getHomeController();
             if (homeController != null && homeController.getBorderpaneHome() != null) {
                 homeController.getBorderpaneHome().setCenter(shopImportView);
@@ -132,15 +120,15 @@ public class ShopSellController {
         }
     }
 
+    // ĐÃ SỬA: Chỉ gửi ID theo đúng yêu cầu của ông Backend
     private void handleSell(Product product) {
-        System.out.println("Sell: " + product.getName());
-        RequestSender.sendSellProductRequest(product.getId());
+        System.out.println("Sell (Gửi ID lên Server): " + product.getName());
+        RequestSender.sendSellProductRequest(String.valueOf(product.getId()));
     }
 
     @FXML
     public void handleBackClicked(ActionEvent event) throws IOException {
-        VBox shop_view = FXMLLoader.load(getClass().getResource(
-                "/com/auction/client/view/Shop.fxml"));
+        VBox shop_view = FXMLLoader.load(getClass().getResource("/com/auction/client/view/Shop.fxml"));
         HomeController homeController = SomeGlobal.getHomeController();
         if (homeController != null && homeController.getBorderpaneHome() != null) {
             homeController.getBorderpaneHome().setCenter(shop_view);

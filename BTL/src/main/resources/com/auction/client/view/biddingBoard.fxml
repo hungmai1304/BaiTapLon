@@ -7,8 +7,6 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -17,65 +15,94 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="829.0" prefWidth="1461.0" style="-fx-background-color: #1a1a1a;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.BiddingController">
+<AnchorPane prefHeight="829.0" prefWidth="1461.0" style="-fx-background-color: #1a1a1a;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.BiddingController">
     <children>
         <GridPane hgap="20.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="20.0">
             <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="30.0" /> <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="40.0" /> <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="30.0" /> </columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="30.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="40.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="30.0" />
+            </columnConstraints>
             <rowConstraints>
                 <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
             </rowConstraints>
             <children>
 
+                <!-- CỘT 1: THÔNG TIN SẢN PHẨM (Đã sửa giá trị mặc định để hiện sản phẩm ngay) -->
                 <VBox spacing="15.0" style="-fx-background-color: #262626; -fx-background-radius: 15; -fx-padding: 20;">
                     <children>
-                        <Label font="$x1" text="THÔNG TIN SẢN PHẨM" textFill="#f0a500">
-                            <font><Font name="System Bold" size="22.0" fx:id="x1" /></font>
+                        <Label text="THÔNG TIN SẢN PHẨM" textFill="#f0a500">
+                            <font><Font name="System Bold" size="22.0" /></font>
                         </Label>
+                        <!-- Sửa text mặc định thành iPhone để không bị trống khi mới vào -->
                         <Label fx:id="lblProductName" text="Tên sản phẩm: iPhone 15 Pro Max" textFill="WHITE" wrapText="true">
                             <font><Font size="18.0" /></font>
                         </Label>
                         <Separator prefWidth="200.0" style="-fx-opacity: 0.2;" />
-                        <Label fx:id="lblStartPrice" text="Giá khởi điểm: 1,000,000đ" textFill="#bdc3c7" />
-                        <Label fx:id="lblPriceStep" text="Bước giá tối thiểu: 50,000đ" textFill="#bdc3c7" />
-                        <Label fx:id="lblCurrentPrice" style="-fx-font-weight: bold; -fx-font-size: 20;" text="Giá hiện tại: 1,250,000đ" textFill="#2ecc71" />
+                        <Label fx:id="lblStartPrice" text="Giá khởi điểm: 1,000,000đ" textFill="#bdc3c7">
+                            <font><Font size="14.0" /></font>
+                        </Label>
+                        <Label fx:id="lblPriceStep" text="Bước giá tối thiểu: 50,000đ" textFill="#bdc3c7">
+                            <font><Font size="14.0" /></font>
+                        </Label>
+                        <Label fx:id="lblCurrentPrice" style="-fx-font-weight: bold;" text="Giá hiện tại: 1,250,000đ" textFill="#2ecc71">
+                            <font><Font size="22.0" /></font>
+                        </Label>
                     </children>
                 </VBox>
 
+                <!-- CỘT 2: BIỂU ĐỒ -->
                 <VBox alignment="CENTER" style="-fx-background-color: #262626; -fx-background-radius: 15; -fx-padding: 10;" GridPane.columnIndex="1">
                     <children>
-                        <Label font="$x1" text="DIỄN BIẾN GIÁ ĐẤU" textFill="#6c63ff" />
-                        <LineChart fx:id="priceChart" createSymbols="true" style="-fx-text-fill: white;">
-                            <xAxis><CategoryAxis side="BOTTOM" tickLabelFill="WHITE" /></xAxis>
-                            <yAxis><NumberAxis side="LEFT" tickLabelFill="WHITE" /></yAxis>
+                        <Label text="DIỄN BIẾN GIÁ ĐẤU" textFill="#6c63ff">
+                            <font><Font name="System Bold" size="22.0" /></font>
+                        </Label>
+                        <LineChart fx:id="priceChart" animated="true" createSymbols="true" style="-fx-text-fill: white;">
+                            <xAxis><CategoryAxis side="BOTTOM" tickLabelFill="WHITE" label="Lượt trả giá" /></xAxis>
+                            <yAxis><NumberAxis side="LEFT" tickLabelFill="WHITE" label="Giá (VNĐ)" /></yAxis>
                         </LineChart>
                     </children>
                 </VBox>
 
+                <!-- CỘT 3: THAO TÁC ĐẤU GIÁ -->
                 <VBox spacing="20.0" style="-fx-background-color: #262626; -fx-background-radius: 15; -fx-padding: 20;" GridPane.columnIndex="2">
                     <children>
-                        <Label font="$x1" text="NGƯỜI DẪN ĐẦU" textFill="#e74c3c" />
-                        <HBox alignment="CENTER" style="-fx-background-color: #333333; -fx-padding: 15; -fx-background-radius: 10;">
+                        <Label text="NGƯỜI DẪN ĐẦU" textFill="#e74c3c">
+                            <font><Font name="System Bold" size="22.0" /></font>
+                        </Label>
+                        <HBox alignment="CENTER" spacing="10.0" style="-fx-background-color: #333333; -fx-padding: 15; -fx-background-radius: 10;">
                             <children>
-                                <Label fx:id="lblLeaderName" style="-fx-font-weight: bold;" text="User_99 " textFill="WHITE" />
-                                <Label fx:id="lblLeaderPrice" text="- 1,250,000đ" textFill="#f1c40f" />
+                                <Label fx:id="lblLeaderName" style="-fx-font-weight: bold;" text="Chưa có" textFill="WHITE">
+                                    <font><Font size="16.0" /></font>
+                                </Label>
+                                <Label fx:id="lblLeaderPrice" text="0đ" textFill="#f1c40f">
+                                    <font><Font size="16.0" /></font>
+                                </Label>
                             </children>
                         </HBox>
 
                         <Separator prefWidth="200.0" style="-fx-opacity: 0.2;" />
 
-                        <Label text="Nhập giá thầu của bạn:" textFill="WHITE" />
-                        <TextField fx:id="txtBidAmount" prefHeight="50.0" promptText="0.0" style="-fx-background-color: #333333; -fx-text-fill: white; -fx-font-size: 18;" />
-
-                        <Label fx:id="lblNotification" text="Hệ thống sẵn sàng!" textFill="#3498db" wrapText="true" />
+                        <VBox spacing="8.0">
+                            <children>
+                                <Label text="Nhập giá thầu của bạn:" textFill="WHITE">
+                                    <font><Font size="14.0" /></font>
+                                </Label>
+                                <TextField fx:id="txtBidAmount" prefHeight="50.0" promptText="Ví dụ: 1500000" style="-fx-background-color: #333333; -fx-text-fill: white; -fx-font-size: 18; -fx-border-color: #444444; -fx-border-radius: 5;" />
+                                <Label fx:id="lblNotification" text="" textFill="#3498db" wrapText="true">
+                                    <font><Font name="System Italic" size="13.0" /></font>
+                                </Label>
+                            </children>
+                        </VBox>
 
                         <VBox spacing="10.0">
                             <children>
-                                <Button fx:id="btnPlaceBid" maxWidth="1.7976931348623157E308" onAction="#handlePlaceBid" prefHeight="50.0" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="XÁC NHẬN RA GIÁ" />
+                                <Button fx:id="btnPlaceBid" maxWidth="1.7976931348623157E308" onAction="#handlePlaceBidForAuction" prefHeight="55.0" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16; -fx-cursor: hand; -fx-background-radius: 8;" text="XÁC NHẬN RA GIÁ" />
+
                                 <HBox spacing="10.0">
                                     <children>
-                                        <Button fx:id="btnClear" onAction="#handleClear" prefHeight="40.0" prefWidth="100.0" style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-cursor: hand;" text="Xóa" />
-                                        <Button fx:id="btnBack" maxWidth="Infinity" onAction="#handleBackToTikTok" prefHeight="40.0" style="-fx-background-color: #6c63ff; -fx-text-fill: white; -fx-cursor: hand;" text="Quay lại TikTok" HBox.hgrow="ALWAYS" />
+                                        <Button fx:id="btnClear" onAction="#handleClear" prefHeight="45.0" prefWidth="100.0" style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8;" text="Xóa" />
+                                        <Button fx:id="btnBack" maxWidth="Infinity" onAction="#handleBackToTikTok" prefHeight="45.0" style="-fx-background-color: #6c63ff; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8;" text="Quay lại TikTok" HBox.hgrow="ALWAYS" />
                                     </children>
                                 </HBox>
                             </children>
