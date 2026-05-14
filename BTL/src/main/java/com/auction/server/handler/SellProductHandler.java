@@ -6,10 +6,12 @@ import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.dao.ProductDao;
 import com.auction.server.model.ServerContext;
+import com.auction.server.service.FileService; // Thêm import
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
 import java.util.Map;
+import java.util.List;
 
 @CommandMap(value = MessageType.SELL_PRODUCT_REQUEST)
 public class SellProductHandler implements IMessageHandler {
@@ -17,7 +19,6 @@ public class SellProductHandler implements IMessageHandler {
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
         try {
-            // 1. Nhận ID chuẩn từ Client gửi lên (Đã sửa thành "id")
             String productId = (String) data.get("id");
 
             if (productId == null || productId.isEmpty()) {
@@ -25,24 +26,23 @@ public class SellProductHandler implements IMessageHandler {
                 return;
             }
 
-            // 2. DATABASE: Chọc thẳng xuống DB để cập nhật trạng thái ON_AUCTION, start_time, end_time
+            // 1. Cập nhật trạng thái trong Database
             boolean isSold = ProductDao.getInstance().sellProduct(productId);
 
             if (isSold) {
-                // 3. ĐỒNG BỘ RAM: Móc món hàng mới nhất từ DB lên để nhét vào RAM
-                // (Phải có bước này thì lúc Broadcast danh sách nó mới mang dữ liệu mới nhất đi)
-//                Product updatedProduct = ProductDao.getInstance().getProductById(productId);
-//                if (updatedProduct != null) {
-//                    // Update lại món hàng đó trong RAM
-//                    context.updateProduct(updatedProduct);
-//                }
+                // 2. Cập nhật RAM: Lấy bản mới nhất từ DB (có start_time, end_time) nhét vào Context
+                Product updatedProduct = ProductDao.getInstance().getProductById(productId);
+                if (updatedProduct != null) {
+                    context.updateProduct(updatedProduct);
+                }
 
-                // 4. Phản hồi cho thằng Shop vừa bấm nút Sell
+                // 3. Phản hồi cho thằng Seller
                 Response response = new Response(MessageType.SELL_PRODUCT_RESPONSE, "SUCCESS", "Đã đưa sản phẩm lên sàn đấu giá!");
                 conn.send(gson.toJson(response));
-                System.out.println("✅ [SellProduct] Đã đưa SP có ID " + productId + " lên sàn!");
 
-                // 5. 📢 BẬT LOA PHÁT THANH: Báo cho toàn bộ người dùng đang online biết sàn có đồ mới!
+                System.out.println("-> [SellProduct] Thành công: ID " + productId);
+
+                // 4. Phát loa thông báo cho tất cả mọi người
                 broadcastNewList(context, gson);
 
             } else {
@@ -55,17 +55,32 @@ public class SellProductHandler implements IMessageHandler {
         }
     }
 
-    // Cái loa phát thanh
     private void broadcastNewList(ServerContext context, Gson gson) {
+        // Lấy danh sách sản phẩm từ RAM
+        List<Product> listToSend = context.getProductList();
+
+        // --- BƯỚC QUAN TRỌNG: Bơm ảnh vào để mọi người thấy hình ---
+        for (Product p : listToSend) {
+            if (p.getImagePath() != null && !p.getImagePath().isEmpty()) {
+                p.setImageBase64(FileService.readImageAsBase64(p.getImagePath()));
+            }
+        }
+
         Response updateRes = new Response(MessageType.UPDATE_AUCTION_LIST_RESPONSE, "SUCCESS", "Sàn vừa có món mới!");
-        // Lưu ý: Key "productList" phải khớp với bên Client
-        updateRes.getData().put("productList", context.getProductList());
+        updateRes.getData().put("productList", listToSend);
+
         String message = gson.toJson(updateRes);
 
+        // Gửi cho tất cả mọi người đang online
         for (WebSocket client : context.getConnectedClients()) {
             if (client.isOpen()) {
                 client.send(message);
             }
+        }
+
+        // --- BƯỚC QUAN TRỌNG: Xóa Base64 ngay sau khi gửi để giải phóng RAM ---
+        for (Product p : listToSend) {
+            p.setImageBase64(null);
         }
     }
 
