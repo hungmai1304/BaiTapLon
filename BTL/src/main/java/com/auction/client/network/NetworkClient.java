@@ -105,21 +105,18 @@ public class NetworkClient {
     }
 
     public static void sendCommand(String command) {
-
-        if (webSocketClient != null
-                && webSocketClient.isOpen()) {
-
+        if (webSocketClient != null && webSocketClient.isOpen()) {
             webSocketClient.send(command);
 
-            System.out.println(
-                    "📤 Đã gửi: " + command
-            );
+            // Debug thông minh: Nếu gói tin quá dài thì chỉ in độ dài thôi
+            if (command.length() > 200) {
+                System.out.println("🚀 [Client] Đã gửi gói tin lớn (Size: " + command.length() + " chars)");
+            } else {
+                System.out.println("🚀 [Client] Đã gửi: " + command);
+            }
 
         } else {
-
-            System.err.println(
-                    "❌ Chưa kết nối mạng!"
-            );
+            System.err.println("❌ Chưa kết nối mạng!");
         }
     }
 
