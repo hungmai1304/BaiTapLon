@@ -13,6 +13,31 @@ public class ClientContext {
     private int currentIndex = 0;
 
     private ClientContext() {}
+    private final ObservableList<com.auction.common.model.auction.Auction> auctionList = FXCollections.observableArrayList();
+    private int currentAuctionIndex = 0;
+
+    public void setAuctionList(List<com.auction.common.model.auction.Auction> auctions) {
+        this.auctionList.setAll(auctions);
+        this.currentAuctionIndex = 0;
+    }
+
+    public ObservableList<com.auction.common.model.auction.Auction> getAuctionList() {
+        return auctionList;
+    }
+
+    public com.auction.common.model.auction.Auction getCurrentAuction() {
+        if (auctionList.isEmpty()) return null;
+        return auctionList.get(currentAuctionIndex);
+    }
+
+    public boolean nextAuction() {
+        if (currentAuctionIndex < auctionList.size() - 1) {
+            currentAuctionIndex++;
+            return true;
+        }
+        return false;
+    }
+    // ---------------------------------------------
 
     public static synchronized ClientContext getInstance() {
         if (instance == null) instance = new ClientContext();
