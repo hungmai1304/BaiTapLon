@@ -34,7 +34,28 @@ public class ShopImportController {
 
     private String selectedImageBase64 = null;
     private String editingProductId = null;
+    private static ShopImportController instance;
+    //-----------------------------------------------------------------------------------
+    public void updateSuccessLabel(String message, boolean isSuccess) {
+        successLabel.setVisible(true);
+        successLabel.setManaged(true);
+        successLabel.setText(message); // Sẽ hiển thị "Đã lưu sản phẩm thành công!"
 
+        if (isSuccess) {
+            successLabel.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+            deleteAllClicked(null); // Xóa form nếu thành công
+        } else {
+            successLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+        }
+    }
+    //-----------------------------------------------------------------------------------
+    public ShopImportController() {
+        instance = this;
+    }
+
+    public static ShopImportController getInstance() {
+        return instance;
+    }
     @FXML
     public void initialize() {
         categoryComboBox.setItems(FXCollections.observableArrayList(
@@ -42,6 +63,7 @@ public class ShopImportController {
         ));
     }
 
+    //-----------------------------------------------------------------------------------
     @FXML
     public void handleImageClicked(MouseEvent event) {
         FileChooser fileChooser = new FileChooser();
@@ -100,7 +122,7 @@ public class ShopImportController {
 
             successLabel.setVisible(true);
             successLabel.setManaged(true);
-            successLabel.setText("✅ Lưu sản phẩm thành công!");
+            successLabel.setText("✅ Đã gửi cho server!");
             deleteAllClicked(null);
 
         } catch (NumberFormatException e) {
