@@ -26,7 +26,7 @@ public class TikTokAuctionController {
     public void initialize() {
         ControllerRegistry.register("TikTokAuctionController", this);
         RequestSender.send("TIK_TOK_LISTENER_REQUEST",null);
-        RequestSender.send("GET_AUCTIONS_REQUEST",null);
+        RequestSender.send("GET_ACTIVE_AUCTIONS_REQUEST",null);
         // Ưu tiên hiển thị Auction vì đây là giao kèo mới với Server
         renderCurrentAuction();
     }
@@ -96,6 +96,7 @@ public class TikTokAuctionController {
 
     public void cleanup() {
         ControllerRegistry.unregister("TikTokAuctionController");
+        RequestSender.send("STOP_TIK_TOK_LISTENER_REQUEST", null);
     }
 
     @FXML
@@ -107,4 +108,5 @@ public class TikTokAuctionController {
     public void handleBotBid(ActionEvent event) {
         NavigationService.setCenterView("/com/auction/client/view/botBidding.fxml");
     }
+
 }

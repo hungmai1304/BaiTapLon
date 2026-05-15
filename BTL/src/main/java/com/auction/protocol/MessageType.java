@@ -47,5 +47,10 @@ public class MessageType {
 
     // 4. Server broadcast cho cả sàn biết vừa có giá mới (Đúng chuẩn Giao kèo 2 của Hùng)
     public static final String BROADCAST_NEW_BID = "BROADCAST_NEW_BID";
+
+
+    // 3. Client gửi lệnh xin ra giá (Bid)
+    public static final String STOP_TIK_TOK_LISTENER_REQUEST= "STOP_TIK_TOK_LISTENER_REQUEST";
+    public static final String STOP_TIK_TOK_LISTENER_RESPONSE = "STOP_TIK_TOK_LISTENER_RESPONSE";
 }
     // (Sau này làm tính năng gì thì cứ khai báo thêm vào đây)
