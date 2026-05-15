@@ -167,4 +167,28 @@ public class ProductDao {
 
         return product;
     }
+    public List<Product> getProductsByUserEmail(String email) {
+        List<Product> productList = new ArrayList<>();
+        // Dùng JOIN để lấy sản phẩm dựa trên email của chủ sở hữu
+        String sql = "SELECT p.* FROM products p " +
+                "JOIN users u ON p.owner_id = u.id " +
+                "WHERE u.email = ?";
+
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, email);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    // Tận dụng lại hàm map dặm có sẵn của mày
+                    productList.add(mapResultSetToProduct(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ Lỗi khi lấy sản phẩm theo email: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return productList;
+    }
 }

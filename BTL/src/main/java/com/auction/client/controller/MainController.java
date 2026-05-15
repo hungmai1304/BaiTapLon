@@ -3,6 +3,7 @@ package com.auction.client.controller;
 import com.auction.client.network.RequestSender;
 import com.auction.client.utils.NavigationService;
 import com.auction.common.model.user.User;
+import com.auction.protocol.MessageType;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import java.time.LocalTime;
@@ -49,7 +50,7 @@ public class MainController {
 
             HI_USER_NAME.setText(greeting + username.toUpperCase());
         }
-        RequestSender.sendGetShopProductsRequest(user.getId());
+        RequestSender.send(MessageType.GET_SHOP_PRODUCTS_REQUEST, null);
     }
 
 

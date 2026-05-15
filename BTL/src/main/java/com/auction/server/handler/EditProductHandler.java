@@ -78,7 +78,7 @@ public class EditProductHandler implements IMessageHandler {
                 // --- PHẦN MÀY CẦN: GỬI LẠI DANH SÁCH MỚI ---
 
                 // Lấy lại toàn bộ danh sách sản phẩm của Shop này (dựa trên email chủ sở hữu)
-                List<Product> updatedList = ProductDao.getInstance().getProductsByUserId(userEmail);
+                List<Product> updatedList = ProductDao.getInstance().getProductsByUserEmail(userEmail);
 
                 // Gửi phản hồi thành công kèm danh sách sản phẩm mới
                 Response response = new Response(

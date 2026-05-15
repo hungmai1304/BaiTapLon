@@ -24,7 +24,15 @@ public class UserDao {
         return instance;
     }
 
+
+
     public boolean insertBidder(String email, String password, String name, String id, Timestamp timeCreated) {
+        // 1. Check trùng email trước khi insert
+        if (getUserByEmail(email) != null) {
+            System.err.println("❌ Lỗi: Email " + email + " đã tồn tại!");
+            return false;
+        }
+
         String sql = "INSERT INTO users (id, email, password, name, time_created, role) VALUES (?, ?, ?, ?, ?, 'BIDDER')";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -37,12 +45,18 @@ public class UserDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Lỗi insert Bidder: " + e.getMessage());
+            System.err.println("❌ Lỗi insert Bidder: " + e.getMessage());
             return false;
         }
     }
 
     public boolean insertSeller(String email, String password, String name, String id, Timestamp timeCreated, String shopName) {
+        // 1. Check trùng email trước khi insert
+        if (getUserByEmail(email) != null) {
+            System.err.println("❌ Lỗi: Email " + email + " đã tồn tại!");
+            return false;
+        }
+
         String sql = "INSERT INTO users (id, email, password, name, time_created, role, shop_name) VALUES (?, ?, ?, ?, ?, 'SELLER', ?)";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -56,10 +70,30 @@ public class UserDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Lỗi insert Seller: " + e.getMessage());
+            System.err.println("❌ Lỗi insert Seller: " + e.getMessage());
             return false;
         }
     }
+
+
+    public User getUserByEmail(String email) {
+        String sql = "SELECT * FROM users WHERE email = ?";
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, email);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ Lỗi getUserByEmail: " + e.getMessage());
+        }
+        return null; // Trả về null nếu không tìm thấy
+    }
+
+// ... các hàm mapResultSetToUser phía dưới giữ nguyên ...
 
     public User authenticate(String email, String password) {
         String sql = "SELECT * FROM users WHERE email = ? AND password = ?";
@@ -80,22 +114,7 @@ public class UserDao {
         return null;
     }
 
-    public User getUserByEmail(String email) {
-        String sql = "SELECT * FROM users WHERE email = ?";
-        try (Connection conn = Db.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, email);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToUser(rs);
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi getUserByEmail: " + e.getMessage());
-        }
-        return null;
-    }
 
     // Hàm hỗ trợ map dữ liệu (Đã sửa lỗi parse thời gian)
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
