@@ -103,16 +103,6 @@ public class ServerContext {
         }
     }
 
-    // Hàm tìm phiên đấu giá đang diễn ra theo ID của Món Hàng (Product ID)
-    public Auction getAuctionByProductId(String productId) {
-        synchronized (activeAuctions) {
-            return activeAuctions.stream()
-                    .filter(a -> a.getItem() != null && a.getItem().getId().equals(productId))
-                    .findFirst()
-                    .orElse(null);
-        }
-    }
-
     // Xóa phiên đấu giá (khi kết thúc 10 phút)
     public void removeAuction(int auctionId) {
         activeAuctions.removeIf(a -> a.getId() == auctionId);
@@ -170,5 +160,19 @@ public class ServerContext {
 
     public Collection<WebSocket> getConnectedClients() {
         return onlineUsers.values();
+    }
+    /**
+     * Lấy phiên đấu giá đang hoạt động dựa trên ID sản phẩm.
+     * Dùng khi Client gửi lệnh Bid (đấu giá) kèm theo productId.
+     */
+    public Auction getAuctionByProductId(String productId) {
+        if (productId == null) return null;
+
+        synchronized (activeAuctions) {
+            return activeAuctions.stream()
+                    .filter(a -> a.getItem() != null && productId.equals(a.getItem().getId()))
+                    .findFirst()
+                    .orElse(null);
+        }
     }
 }
