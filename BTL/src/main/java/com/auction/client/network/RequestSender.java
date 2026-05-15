@@ -19,7 +19,7 @@ public class RequestSender {
 
     private RequestSender() {}
 
-    private static void send(String type, Object data) {
+    public static void send(String type, Object data) {
         Map<String, Object> requestMap = new HashMap<>();
         requestMap.put("type", type);
         requestMap.put("data", data);

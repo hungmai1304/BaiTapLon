@@ -1,8 +1,12 @@
 package com.auction.server.model;
 
+import com.auction.protocol.Response;
 import com.auction.server.AuctionWebSocketServer;
 import com.auction.common.model.product.Product;
 import com.auction.common.model.auction.Auction;
+import com.auction.protocol.MessageType;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.java_websocket.WebSocket;
 
 import java.util.*;
@@ -14,13 +18,20 @@ public class ServerContext {
     private AuctionWebSocketServer server;
     private Product currentProduct;
 
-    // Quản lý User Online: Key là UserID hoặc Username, Value là kết nối WebSocket
+    // Sử dụng Gson chung để tối ưu hiệu năng khi broadcast
+    private final Gson gson = new Gson();
+
+    // Quản lý User Online
     private final Map<String, WebSocket> onlineUsers = new ConcurrentHashMap<>();
 
+    // Danh sách phiên đấu giá
     private final List<Auction> activeAuctions = Collections.synchronizedList(new ArrayList<>());
 
-    // Danh sách sản phẩm trên RAM (Dùng synchronizedList để an toàn khi nhiều Handler cùng đọc/ghi)
+    // Danh sách sản phẩm trên RAM
     private final List<Product> productList = Collections.synchronizedList(new ArrayList<>());
+
+    // Danh sách những người đăng ký nhận tin TikTok (Listener)
+    private final Set<WebSocket> tiktokListeners = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private ServerContext() {}
 
@@ -41,10 +52,8 @@ public class ServerContext {
     public Product getCurrentProduct() { return currentProduct; }
     public void setCurrentProduct(Product product) { this.currentProduct = product; }
 
-    // --- Quản lý danh sách sản phẩm (RAM) ---
-    public List<Product> getProductList() {
-        return productList;
-    }
+    // --- Quản lý danh sách sản phẩm ---
+    public List<Product> getProductList() { return productList; }
 
     public void addProduct(Product product) {
         if (product != null) {
@@ -67,86 +76,115 @@ public class ServerContext {
         }
     }
 
-    // Hàm mày vừa viết, sửa lại logic check cho chắc chắn
     public void updateProduct(Product updatedProduct) {
         if (updatedProduct == null || updatedProduct.getId() == null) return;
-
         synchronized (productList) {
             boolean found = false;
             for (int i = 0; i < productList.size(); i++) {
                 if (productList.get(i).getId().equals(updatedProduct.getId())) {
                     productList.set(i, updatedProduct);
-                    System.out.println("[ServerContext] Đã cập nhật RAM cho SP: " + updatedProduct.getName());
                     found = true;
                     break;
                 }
             }
-            // Nếu không tìm thấy trong danh sách hiện tại thì mới thêm mới
-            if (!found) {
-                addProduct(updatedProduct);
-            }
+            if (!found) addProduct(updatedProduct);
         }
     }
 
-    // 🚀 BỔ SUNG MỚI: QUẢN LÝ PHIÊN ĐẤU GIÁ (AUCTION) TRÊN RAM
+    // --- Quản lý Phiên đấu giá (Có Broadcast) ---
+    public List<Auction> getActiveAuctions() { return activeAuctions; }
 
-    // Lấy toàn bộ danh sách phiên đấu giá
-    public List<Auction> getActiveAuctions() {
-        return activeAuctions;
-    }
-
-    // Thêm một phiên đấu giá mới vào RAM khi ai đó bấm "Lên sàn"
     public void addAuction(Auction auction) {
         if (auction != null) {
             activeAuctions.add(auction);
             System.out.println("[ServerContext] Đã thêm Phiên Đấu Giá (ID: " + auction.getId() + ") vào RAM.");
+            broadcastAuctionUpdate();
         }
     }
 
-    // Xóa phiên đấu giá (khi kết thúc 10 phút)
     public void removeAuction(int auctionId) {
-        activeAuctions.removeIf(a -> a.getId() == auctionId);
-        System.out.println("[ServerContext] Đã xóa Phiên Đấu Giá (ID: " + auctionId + ") khỏi RAM.");
-    }
-
-    // Lấy thông tin 1 phiên đấu giá theo ID phiên
-    public Auction getAuctionById(int auctionId) {
-        synchronized (activeAuctions) {
-            return activeAuctions.stream()
-                    .filter(a -> a.getId() == auctionId)
-                    .findFirst()
-                    .orElse(null);
+        boolean removed = activeAuctions.removeIf(a -> a.getId() == auctionId);
+        if (removed) {
+            System.out.println("[ServerContext] Đã xóa Phiên Đấu Giá (ID: " + auctionId + ") khỏi RAM.");
+            broadcastAuctionUpdate();
         }
     }
 
-    // Cập nhật giá tiền hoặc người dẫn đầu mới vào RAM
     public void updateAuction(Auction updatedAuction) {
         if (updatedAuction == null) return;
         synchronized (activeAuctions) {
             for (int i = 0; i < activeAuctions.size(); i++) {
                 if (activeAuctions.get(i).getId() == updatedAuction.getId()) {
                     activeAuctions.set(i, updatedAuction);
-                    System.out.println("[ServerContext] Đã cập nhật RAM cho Phiên Đấu Giá ID: " + updatedAuction.getId());
+                    System.out.println("[ServerContext] Đã cập nhật Auction ID: " + updatedAuction.getId());
+                    broadcastAuctionUpdate();
                     return;
                 }
             }
         }
     }
 
-    // --- Quản lý User (WebSocket) ---
+    public Auction getAuctionByProductId(String productId) {
+        if (productId == null) return null;
+        synchronized (activeAuctions) {
+            return activeAuctions.stream()
+                    .filter(a -> a.getItem() != null && productId.equals(a.getItem().getId()))
+                    .findFirst()
+                    .orElse(null);
+        }
+    }
+
+    // --- Quản lý TikTok Listeners ---
+    public void addTikTokListener(WebSocket conn) {
+        tiktokListeners.add(conn);
+    }
+
+    public void removeTikTokListener(WebSocket conn) {
+        tiktokListeners.remove(conn);
+    }
+
+    public Set<WebSocket> getTikTokListeners() {
+        return tiktokListeners;
+    }
+
+    /**
+     * Broadcast danh sách đấu giá mới nhất tới tất cả Listeners
+     */
+    private void broadcastAuctionUpdate() {
+        if (tiktokListeners.isEmpty()) return;
+
+        // Đóng gói Response
+        Response response = new Response(MessageType.GET_ACTIVE_AUCTIONS_RESPONSE, "SUCCESS", "Cập nhật danh sách đấu giá.");
+        // Copy list để tránh ConcurrentModificationException khi GSON đang đọc
+        response.getData().put("auctionList", new ArrayList<>(activeAuctions));
+
+        String json = gson.toJson(response);
+        System.out.println("[ServerContext] Broadcast cập nhật tới " + tiktokListeners.size() + " listeners.");
+
+        Iterator<WebSocket> it = tiktokListeners.iterator();
+        while (it.hasNext()) {
+            WebSocket conn = it.next();
+            if (conn != null && conn.isOpen()) {
+                conn.send(json);
+            } else {
+                it.remove(); // Tự dọn dẹp connection chết
+            }
+        }
+    }
+
+    // --- Quản lý User Connection ---
     public void addOnlineUser(String userId, WebSocket conn) {
         onlineUsers.put(userId, conn);
-        System.out.println("[ServerContext] User [" + userId + "] đã kết nối!");
+        System.out.println("[ServerContext] User [" + userId + "] đã online!");
     }
 
     public void removeUser(WebSocket conn) {
         if (conn == null) return;
-        // Xóa an toàn bằng removeIf dựa trên giá trị (WebSocket)
         onlineUsers.entrySet().removeIf(entry -> entry.getValue().equals(conn));
+        removeTikTokListener(conn); // Dọn dẹp cả listener nếu có
     }
 
     public String getUserByConn(WebSocket conn) {
-        if (conn == null) return null;
         return onlineUsers.entrySet().stream()
                 .filter(entry -> entry.getValue().equals(conn))
                 .map(Map.Entry::getKey)
@@ -154,25 +192,7 @@ public class ServerContext {
                 .orElse(null);
     }
 
-    public WebSocket getConnByUser(String userId) {
-        return onlineUsers.get(userId);
-    }
-
     public Collection<WebSocket> getConnectedClients() {
         return onlineUsers.values();
-    }
-    /**
-     * Lấy phiên đấu giá đang hoạt động dựa trên ID sản phẩm.
-     * Dùng khi Client gửi lệnh Bid (đấu giá) kèm theo productId.
-     */
-    public Auction getAuctionByProductId(String productId) {
-        if (productId == null) return null;
-
-        synchronized (activeAuctions) {
-            return activeAuctions.stream()
-                    .filter(a -> a.getItem() != null && productId.equals(a.getItem().getId()))
-                    .findFirst()
-                    .orElse(null);
-        }
     }
 }

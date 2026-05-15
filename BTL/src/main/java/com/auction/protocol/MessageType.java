@@ -31,6 +31,9 @@ public class MessageType {
     // Server thông báo với client(Dùng sau khi có người vừa đăng bán thành công)
     public static final String UPDATE_AUCTION_LIST_RESPONSE = "UPDATE_AUCTION_LIST_RESPONSE";
 
+
+    public static final String TIK_TOK_LISTENER_REQUEST = "TIK_TOK_LISTENER_REQUEST";
+    public static final String TIK_TOK_LISTENER_RESPONSE = "TIK_TOK_LISTENER_RESPONSE";
     // 1. Client xin danh sách các phiên đấu giá đang diễn ra
     public static final String GET_ACTIVE_AUCTIONS_REQUEST = "GET_ACTIVE_AUCTIONS_REQUEST";
     public static final String GET_ACTIVE_AUCTIONS_RESPONSE = "GET_ACTIVE_AUCTIONS_RESPONSE";

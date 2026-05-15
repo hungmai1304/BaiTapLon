@@ -1,5 +1,6 @@
 package com.auction.client.controller;
 
+import com.auction.client.network.RequestSender;
 import com.auction.client.utils.ClientContext;
 import com.auction.client.network.NetworkClient;
 import com.auction.client.utils.ControllerRegistry;
@@ -24,6 +25,8 @@ public class TikTokAuctionController {
     @FXML
     public void initialize() {
         ControllerRegistry.register("TikTokAuctionController", this);
+        RequestSender.send("TIK_TOK_LISTENER_REQUEST",null);
+        RequestSender.send("GET_AUCTIONS_REQUEST",null);
         // Ưu tiên hiển thị Auction vì đây là giao kèo mới với Server
         renderCurrentAuction();
     }
