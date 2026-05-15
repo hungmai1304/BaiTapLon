@@ -9,9 +9,6 @@ public class MessageType {
     public static final String REGISTER_REQUEST = "REGISTER_REQUEST";
     public static final String REGISTER_RESPONSE = "REGISTER_RESPONSE";
 
-    // Yêu cầu lấy sản phẩm đang đấu giá (ON_AUCTION)
-    public static final String GET_AUCTION_PRODUCT_REQUEST  = "GET_AUCTION_PRODUCT_REQUEST";
-    public static final String GET_AUCTION_PRODUCT_RESPONSE = "GET_AUCTION_PRODUCT_RESPONSE";
 
     // Yêu cầu lấy danh sách sản phẩm của shop (AVAILABLE/SOLD...)
     public static final String GET_SHOP_PRODUCTS_REQUEST  = "GET_SHOP_PRODUCTS_REQUEST";

@@ -1,5 +1,6 @@
 package com.auction.server;
 
+import com.auction.protocol.MessageType;
 import com.auction.protocol.Request;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.handler.IMessageHandler;
@@ -46,10 +47,25 @@ public class MessageDispatcher {
             Request request = gson.fromJson(message, Request.class);
 
             if (request != null && request.getType() != null) {
-                // Lấy handler bằng Type chuẩn hóa
                 String type = request.getType().trim().toUpperCase();
-                IMessageHandler handler = handlers.get(type);
 
+                // 1. Kiểm tra xem đây có phải là lệnh ngoại lệ (không cần login) không
+                boolean isAuthRequest = type.equals(MessageType.LOGIN_REQUEST)
+                        || type.equals(MessageType.REGISTER_REQUEST);
+
+                // 2. Kiểm tra trạng thái Online của kết nối
+                String userId = context.getUserByConn(conn);
+                boolean isOnline = (userId != null);
+
+                // LOGIC: Nếu không phải lệnh Auth VÀ cũng không online thì chặn đứng
+                if (!isAuthRequest && !isOnline) {
+                    System.err.println("[Dispatcher] Unauthorized access attempt from: " + conn.getRemoteSocketAddress());
+                    conn.send("{\"type\":\"ERROR\",\"message\":\"UNAUTHORIZED_PLEASE_LOGIN\"}");
+                    return;
+                }
+
+                // 3. Tìm và gọi Handler
+                IMessageHandler handler = handlers.get(type);
                 if (handler != null) {
                     handler.handle(conn, request.getData(), gson, context);
                 } else {

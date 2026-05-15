@@ -2,26 +2,43 @@ package com.auction.client.handler;
 
 import com.auction.client.annotation.ResponseHandler;
 import com.auction.client.controller.ShopImportController;
-import com.auction.client.network.IClientHandler; // Nhớ import cái này
+import com.auction.client.network.IClientHandler;
+import com.auction.client.network.RequestSender;
+import com.auction.client.utils.ControllerRegistry; // Dùng Registry cho đồng bộ với các file khác
 import com.auction.protocol.Response;
 import javafx.application.Platform;
 
 @ResponseHandler(type = "IMPORT_PRODUCT_RESPONSE")
-public class ImportProductResponseHandler implements IClientHandler { // BẮT BUỘC phải implements
+public class ImportProductResponseHandler implements IClientHandler {
 
-    @Override // Ghi đè phương thức từ interface
+    @Override
     public void handle(Response response) {
         if (response == null) return;
 
         String status = response.getStatus();
         String message = response.getMessage();
+
+        // Check Success ở đây
         boolean isSuccess = "SUCCESS".equalsIgnoreCase(status);
 
-        // Cập nhật UI
-        ShopImportController controller = ShopImportController.getInstance();
+        // Lấy controller từ Registry (hoặc dùng getInstance() nếu mày chắc chắn nó chạy)
+        ShopImportController controller = (ShopImportController) ControllerRegistry.get("ShopImportController");
+
         if (controller != null) {
             Platform.runLater(() -> {
-                controller.updateSuccessLabel(message, isSuccess);
+                if (isSuccess) {
+                    // Logic khi thành công (ví dụ: hiện chữ xanh, xóa form)
+                    System.out.println("[importproductresponsehandler]Import thành công: " + message);
+                    controller.updateSuccessLabel(message, true);
+                    RequestSender.sendGetActiveAuctionsRequest();
+
+                    // Mày có thể gọi thêm hàm xóa trắng các ô nhập liệu ở đây nếu cần
+                    // controller.clearFields();
+                } else {
+                    // Logic khi thất bại (ví dụ: hiện chữ đỏ)
+                    System.err.println("[importproductresponsehandler] Import thất bại: " + message);
+                    controller.updateSuccessLabel("[importproductresponsehandler]Lỗi: " + message, false);
+                }
             });
         }
     }

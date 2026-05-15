@@ -16,20 +16,13 @@ public class AuctionClient extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-
         NavigationService.init(stage);// save stage
 
         NetworkClient.connectAndKeepAlive();// new thread
 
-        FXMLLoader loader =
-                new FXMLLoader(
-                        getClass().getResource(
-                                "/com/auction/client/view/login.fxml"
-                        )
-                );
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/login.fxml"));
 
-        Scene scene =
-                new Scene(loader.load());
+        Scene scene = new Scene(loader.load());
 
         stage.setScene(scene);
 
@@ -37,11 +30,6 @@ public class AuctionClient extends Application {
         //-----------------------------------------------------------------------------------
         stage.setOnCloseRequest(event -> {
             System.out.println("Đang đóng ứng dụng...");
-
-            // 1. Thực hiện dọn dẹp, ví dụ: ngắt kết nối server nếu cần
-            // NetworkClient.disconnect();
-
-            // 2. Đảm bảo toàn bộ luồng (thread) chạy ngầm bị dừng lại
             Platform.exit(); // Dừng JavaFX Runtime
             System.exit(0);  // Khai tử hoàn toàn Process (Dùng khi có thread ngầm cứng đầu)
         });

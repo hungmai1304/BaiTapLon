@@ -1,5 +1,6 @@
 package com.auction.server.handler;
 
+import com.auction.common.model.auction.Auction;
 import com.auction.protocol.MessageType;
 import com.auction.common.model.product.Product;
 import com.auction.protocol.Response;
@@ -10,6 +11,7 @@ import com.auction.server.service.FileService; // Nhớ check lại path này ch
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
+import java.util.List;
 import java.util.Map;
 
 @CommandMap(value = MessageType.EDIT_PRODUCT_REQUEST)
@@ -72,7 +74,14 @@ public class EditProductHandler implements IMessageHandler {
                 // Đã có link URL mới nên các client sẽ thấy ảnh mới ngay lập tức
                 context.updateProduct(productToEdit);
 
-                Response response = new Response(MessageType.EDIT_PRODUCT_RESPONSE, "SUCCESS", "Cập nhật sản phẩm thành công!");
+//                Response response = new Response(MessageType.EDIT_PRODUCT_RESPONSE, "SUCCESS", "Cập nhật sản phẩm thành công!");
+//                conn.send(gson.toJson(response));
+                // tao tra lai danh sach sau khi da edit cho thang seller
+                List<Auction> activeAuctions = context.getActiveAuctions();
+                Response response = new Response(MessageType.GET_ACTIVE_AUCTIONS_RESPONSE, "SUCCESS", "Lấy danh sách đấu giá thành công!");
+                response.getData().put("auctionList", activeAuctions);
+
+                // Chỉ gửi trả lại cho ĐÚNG cái thằng vừa xin
                 conn.send(gson.toJson(response));
 
                 System.out.println("-> [EditProduct] Thành công: ID " + productId + " (URL: " + productToEdit.getImagePath() + ")");

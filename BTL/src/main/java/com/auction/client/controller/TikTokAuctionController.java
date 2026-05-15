@@ -70,7 +70,7 @@ public class TikTokAuctionController {
         if (hasPrev) {
             renderCurrentAuction();
         } else {
-            System.out.println("[TikTok] Đã ở đầu danh sách!");
+            System.out.println("[TikTokController] Đã ở đầu danh sách!");
         }
     }
 
@@ -81,7 +81,7 @@ public class TikTokAuctionController {
         if (hasNext) {
             renderCurrentAuction();
         } else {
-            System.out.println("[TikTok] Hết danh sách! Đang tải thêm...");
+            System.out.println("[TikTokController] Hết danh sách! Đang tải thêm...");
             RequestSender.send(MessageType.GET_ACTIVE_AUCTIONS_REQUEST, null);
         }
     }

@@ -3,6 +3,7 @@ package com.auction.client.handler;
 import com.auction.client.annotation.ResponseHandler; // Đổi sang annotation dùng cho auto-scan
 import com.auction.client.controller.LoginController;
 import com.auction.client.network.IClientHandler;
+import com.auction.client.network.RequestSender;
 import com.auction.client.utils.ControllerRegistry;
 import com.auction.client.utils.NavigationService;
 import com.auction.protocol.Response;
@@ -28,7 +29,7 @@ public class LoginHandler implements IClientHandler {
                 SomeGlobal.setCurrentUser(user);
                 // 2. Chuyển màn hình Home (NavigationService đã có Platform.runLater)
                 navigate("/com/auction/client/view/home.fxml", "Auction - Trang chủ", true);
-
+                RequestSender.sendGetActiveAuctionsRequest();
                 // 3. Hủy đăng ký vì màn hình Login đã đóng, không cần giữ lại trong Registry
                 ControllerRegistry.unregister("LoginController");
             } else {

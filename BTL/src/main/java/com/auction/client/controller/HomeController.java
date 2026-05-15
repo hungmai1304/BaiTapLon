@@ -45,8 +45,6 @@ public class HomeController implements Initializable {
         try {
             SomeGlobal.setHomeController(this);
             loadMainView();
-            Request auctionRequest = new Request(MessageType.GET_AUCTION_PRODUCT_REQUEST);
-            com.auction.client.network.NetworkClient.sendCommand(ClientMessageDispatcher.gson.toJson(auctionRequest));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -68,12 +66,7 @@ public class HomeController implements Initializable {
     public void handleSearchClicked(ActionEvent event)
             throws IOException {
 
-        VBox search =
-                FXMLLoader.load(
-                        getClass().getResource(
-                                "/com/auction/client/view/search.fxml"
-                        )
-                );
+        VBox search = FXMLLoader.load(getClass().getResource("/com/auction/client/view/search.fxml"));
 
         borderpane_home.setCenter(search);
     }

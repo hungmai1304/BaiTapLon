@@ -83,7 +83,7 @@ public class AuctionManager {
 
         // Tạo response
         Response response = new Response(
-                MessageType.GET_AUCTION_PRODUCT_RESPONSE,
+                MessageType.GET_ACTIVE_AUCTIONS_RESPONSE,
                 "SUCCESS",
                 "Sản phẩm mới lên đấu giá: " + product.getName()
         );
