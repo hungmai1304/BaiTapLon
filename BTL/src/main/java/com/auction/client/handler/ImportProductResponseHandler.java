@@ -5,6 +5,7 @@ import com.auction.client.controller.ShopImportController;
 import com.auction.client.network.IClientHandler;
 import com.auction.client.network.RequestSender;
 import com.auction.client.utils.ControllerRegistry; // Dùng Registry cho đồng bộ với các file khác
+import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
 import javafx.application.Platform;
 
@@ -30,7 +31,7 @@ public class ImportProductResponseHandler implements IClientHandler {
                     // Logic khi thành công (ví dụ: hiện chữ xanh, xóa form)
                     System.out.println("[importproductresponsehandler]Import thành công: " + message);
                     controller.updateSuccessLabel(message, true);
-                    RequestSender.sendGetActiveAuctionsRequest();
+                    RequestSender.send(MessageType.GET_SHOP_PRODUCTS_REQUEST, null);
 
                     // Mày có thể gọi thêm hàm xóa trắng các ô nhập liệu ở đây nếu cần
                     // controller.clearFields();

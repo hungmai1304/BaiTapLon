@@ -52,11 +52,7 @@ public class RequestSender {
         send(MessageType.EDIT_PRODUCT_REQUEST, product);
     }
 
-    public static void sendGetShopProductsRequest(String ownerId) {
-        Map<String, String> data = new HashMap<>();
-        data.put("sellerId", ownerId);
-        send(MessageType.GET_SHOP_PRODUCTS_REQUEST, data);
-    }
+
 
     // --- ĐẤU GIÁ (AUCTIONS) ---
 

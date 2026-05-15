@@ -94,8 +94,8 @@ public class ShopSellController {
         });
 
         productTable.setItems(productList);
-        String ownerId = SomeGlobal.getCurrentUser().getId();
-        RequestSender.sendGetShopProductsRequest(ownerId);
+
+
     }
 
     public void loadProducts(List<Product> products) {

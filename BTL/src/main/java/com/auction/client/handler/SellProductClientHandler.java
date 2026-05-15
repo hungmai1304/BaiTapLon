@@ -2,6 +2,8 @@ package com.auction.client.handler;
 
 import com.auction.client.annotation.ResponseHandler;
 import com.auction.client.network.IClientHandler;
+import com.auction.client.network.RequestSender;
+import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
 import javafx.application.Platform;
 
@@ -16,7 +18,7 @@ public class SellProductClientHandler implements IClientHandler {
                 System.out.println("   Message: " + response.getMessage());
 
                 // TODO: Refresh lại UI - reload danh sách shop
-                // Ví dụ: SomeGlobal.getShopController().refreshProductList();
+                RequestSender.send(MessageType.GET_SHOP_PRODUCTS_REQUEST, null);
 
             } else {
                 System.err.println("❌ [Client] Lỗi khi lên sàn: " + response.getMessage());
