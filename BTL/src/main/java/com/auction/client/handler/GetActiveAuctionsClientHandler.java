@@ -12,6 +12,7 @@ import com.google.gson.reflect.TypeToken;
 import javafx.application.Platform;
 
 import java.util.List;
+
 @ResponseHandler(type = "GET_ACTIVE_AUCTIONS_RESPONSE")
 public class GetActiveAuctionsClientHandler implements IClientHandler {
 
@@ -20,36 +21,35 @@ public class GetActiveAuctionsClientHandler implements IClientHandler {
     @Override
     public void handle(Response response) {
         try {
-            System.out.println(">>> [HANDLER MỚI] DATA TỪ SERVER: " + response.getData());
+            System.out.println(">>> [HANDLER] Nhận dữ liệu auctionList từ Server.");
 
-            // 1. LẤY ĐÚNG KEY TỪ SERVER ("auctionList")
+            // 1. Lấy dữ liệu với key chuẩn "auctionList"
             Object rawData = response.getData().get("auctionList");
 
             if (rawData != null) {
-                // 2. Ép kiểu an toàn tuyệt đối bằng TypeToken
+                // 2. Parse JSON sang List Auction
                 String jsonString = gson.toJson(rawData);
                 java.lang.reflect.Type listType = new TypeToken<List<Auction>>(){}.getType();
                 List<Auction> auctionList = gson.fromJson(jsonString, listType);
 
                 if (auctionList != null && !auctionList.isEmpty()) {
-                    System.out.println(">>> BÓC THÀNH CÔNG: " + auctionList.size() + " phiên đấu giá!");
-
-                    // 3. Cất vào kho chung
+                    // 3. Cập nhật vào danh sách QUẢN LÝ MỚI (Duy nhất) trong ClientContext
                     ClientContext.getInstance().setAuctionList(auctionList);
 
-                    // 4. Gọi Giao diện (TikTok) cập nhật hình ảnh (Lấy chuẩn logic của Hùng)
+                    // 4. Cập nhật giao diện TikTok
                     Platform.runLater(() -> {
                         TikTokAuctionController tiktokCtrl = (TikTokAuctionController) ControllerRegistry.get("TikTokAuctionController");
                         if (tiktokCtrl != null) {
-                            tiktokCtrl.updateUI(ClientContext.getInstance().getCurrentAuction());
+                            // Dùng renderCurrentAuction để nó tự lấy con trỏ currentIndex mới nhất
+                            tiktokCtrl.renderCurrentAuction();
                         }
                     });
                 }
             } else {
-                System.err.println(">>> [LỖI] Không tìm thấy key 'auctionList' trong Response. Cần check lại Server!");
+                System.err.println(">>> [LỖI] Server trả về data null cho key 'auctionList'");
             }
         } catch (Exception e) {
-            System.err.println(">>> [LỖI PARSE GSON] " + e.getMessage());
+            System.err.println(">>> [LỖI PARSE] " + e.getMessage());
             e.printStackTrace();
         }
     }

@@ -1,81 +1,96 @@
 package com.auction.client.utils;
 
-import com.auction.common.model.product.Product;
+import com.auction.common.model.auction.Auction;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import java.util.List;
 
 public class ClientContext {
     private static ClientContext instance;
-    private final ObservableList<Product> auctionProducts = FXCollections.observableArrayList();
 
-    // Biến con trỏ hiện tại
+    // Danh sách quản lý duy nhất: Toàn bộ phiên đấu giá đang hoạt động
+    private final ObservableList<Auction> activeAuctions = FXCollections.observableArrayList();
+
+    // Con trỏ (index) duy nhất để điều hướng (lướt Up/Down)
     private int currentIndex = 0;
 
     private ClientContext() {}
-    private final ObservableList<com.auction.common.model.auction.Auction> auctionList = FXCollections.observableArrayList();
-    private int currentAuctionIndex = 0;
 
-    public void setAuctionList(List<com.auction.common.model.auction.Auction> auctions) {
-        this.auctionList.setAll(auctions);
-        this.currentAuctionIndex = 0;
+    public static synchronized ClientContext getInstance() {
+        if (instance == null) {
+            instance = new ClientContext();
+        }
+        return instance;
     }
 
-    public ObservableList<com.auction.common.model.auction.Auction> getAuctionList() {
-        return auctionList;
+    /**
+     * Cập nhật danh sách đấu giá mới nhất từ Server
+     */
+    public void setAuctionList(List<Auction> auctions) {
+        if (auctions == null) return;
+
+        this.activeAuctions.setAll(auctions);
+
+        // Kiểm tra an toàn cho con trỏ sau khi cập nhật list mới
+        if (currentIndex >= activeAuctions.size()) {
+            this.currentIndex = Math.max(0, activeAuctions.size() - 1);
+        }
     }
 
-    public com.auction.common.model.auction.Auction getCurrentAuction() {
-        if (auctionList.isEmpty()) return null;
-        return auctionList.get(currentAuctionIndex);
+    public ObservableList<Auction> getActiveAuctions() {
+        return activeAuctions;
     }
 
+    /**
+     * Lấy phiên đấu giá tại vị trí con trỏ hiện tại
+     */
+    public Auction getCurrentAuction() {
+        if (activeAuctions.isEmpty()) return null;
+
+        // Đảm bảo index không bị out of bounds
+        if (currentIndex < 0 || currentIndex >= activeAuctions.size()) {
+            currentIndex = 0;
+        }
+        return activeAuctions.get(currentIndex);
+    }
+
+    /**
+     * Di chuyển tới phiên đấu giá tiếp theo (Dùng cho nút Down)
+     */
     public boolean nextAuction() {
-        if (currentAuctionIndex < auctionList.size() - 1) {
-            currentAuctionIndex++;
+        if (currentIndex < activeAuctions.size() - 1) {
+            currentIndex++;
             return true;
         }
         return false;
     }
-    // ---------------------------------------------
 
-    public static synchronized ClientContext getInstance() {
-        if (instance == null) instance = new ClientContext();
-        return instance;
-    }
-
-    public void setAuctionProducts(List<Product> products) {
-        this.auctionProducts.setAll(products);
-        this.currentIndex = 0; // Reset về đầu danh sách khi nhận list mới
-    }
-
-    public ObservableList<Product> getAuctionProducts() {
-        return auctionProducts;
-    }
-
-    // Lấy sản phẩm hiện tại dựa trên con trỏ
-    public Product getCurrentProduct() {
-        if (auctionProducts.isEmpty()) return null;
-        return auctionProducts.get(currentIndex);
-    }
-
-    // Logic di chuyển tới
-    public boolean next() {
-        if (currentIndex < auctionProducts.size() - 1) {
-            currentIndex++;
-            return true; // Di chuyển thành công
-        }
-        return false; // Đã chạm biên dưới
-    }
-
-    // Logic di chuyển lùi
-    public boolean previous() {
+    /**
+     * Di chuyển lùi lại phiên đấu giá trước (Dùng cho nút Up)
+     */
+    public boolean previousAuction() {
         if (currentIndex > 0) {
             currentIndex--;
-            return true; // Di chuyển thành công
+            return true;
         }
-        return false; // Đã chạm biên trên
+        return false;
     }
 
-    public int getCurrentIndex() { return currentIndex; }
+    public int getCurrentIndex() {
+        return currentIndex;
+    }
+
+    public void setCurrentIndex(int index) {
+        if (index >= 0 && index < activeAuctions.size()) {
+            this.currentIndex = index;
+        }
+    }
+
+    /**
+     * Xóa sạch dữ liệu khi logout hoặc đóng app
+     */
+    public void clear() {
+        activeAuctions.clear();
+        currentIndex = 0;
+    }
 }
