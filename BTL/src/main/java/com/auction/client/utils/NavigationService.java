@@ -61,6 +61,24 @@ public class NavigationService {
             }
         });
     }
+    public static void setTopView(String fxmlPath) {
+        Platform.runLater(() -> {
+            try {
+                Parent view = FXMLLoader.load(NavigationService.class.getResource(fxmlPath));
+                HomeController homeController = SomeGlobal.getHomeController();
+
+                if (homeController != null && homeController.getBorderpaneHome() != null) {
+                    // Thay đổi view ở vùng TOP của BorderPane
+                    homeController.getBorderpaneHome().setTop(view);
+                } else {
+                    System.err.println("Lỗi: Không tìm thấy HomeController hoặc BorderPane khi setTop!");
+                }
+            } catch (IOException e) {
+                System.err.println("Lỗi load FXML ở vùng Top: " + fxmlPath);
+                e.printStackTrace();
+            }
+        });
+    }
 
 
 }

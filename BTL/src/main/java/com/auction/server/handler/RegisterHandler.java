@@ -5,7 +5,7 @@ import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.dao.UserDao;
 import com.auction.server.model.ServerContext;
-import com.auction.common.utils.Generate_id_and_timecreated; // Nhớ import cái này
+import com.auction.common.utils.Generate_id_and_timecreated;
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
@@ -27,10 +27,13 @@ public class RegisterHandler implements IMessageHandler {
             String password = (String) data.get("password");
             String role = (String) data.get("role");
 
-            // 2. Tạo ID và TimeCreated (Dùng Utils của bạn)
+            // 2. Tạo ID và TimeCreated
             LocalDateTime now = Generate_id_and_timecreated.getCurrentTimestamp2();
             String id = Generate_id_and_timecreated.hashTimestampToId(now.toString());
             Timestamp sqlTimestamp = Timestamp.valueOf(now); // Chuyển sang SQL Timestamp để lưu DB
+
+            // Số dư mặc định ban đầu khi đăng ký tài khoản mới là 0.0
+            double initialBalance = 0.0;
 
             boolean isSuccess = false;
 
@@ -42,10 +45,12 @@ public class RegisterHandler implements IMessageHandler {
                     sendError(conn, gson, "Người bán phải có tên Shop!");
                     return;
                 }
-                isSuccess = UserDao.getInstance().insertSeller(email, password, name, id, sqlTimestamp, shopName);
+                // ĐÃ SỬA: Thêm tham số initialBalance vào đây
+                isSuccess = UserDao.getInstance().insertSeller(email, password, name, id, sqlTimestamp, shopName, initialBalance);
             } else {
                 // Nếu là Bidder
-                isSuccess = UserDao.getInstance().insertBidder(email, password, name, id, sqlTimestamp);
+                // ĐÃ SỬA: Thêm tham số initialBalance vào đây
+                isSuccess = UserDao.getInstance().insertBidder(email, password, name, id, sqlTimestamp, initialBalance);
             }
 
             // 4. Trả về kết quả

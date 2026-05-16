@@ -4,6 +4,20 @@ import com.auction.common.model.user.User;
 public class SomeGlobal {
     private static HomeController homeController;
     private static MainController mainController;
+    private static ShopSellController shopSellController;
+    private static User currentUser;
+
+    // --- THÊM BIẾN VÀ HÀM CHO BANK CONTROLLER TẠI ĐÂY ---
+    private static BankController bankController;
+
+    public static void setBankController(BankController controller) {
+        bankController = controller;
+    }
+
+    public static BankController getBankController() {
+        return bankController;
+    }
+    // -----------------------------------------------------
 
     public static void setHomeController(HomeController controller) {
         homeController = controller;
@@ -12,7 +26,6 @@ public class SomeGlobal {
     public static HomeController getHomeController() {
         return homeController;
     }
-    private static ShopSellController shopSellController;
 
     public static ShopSellController getShopSellController() {
         return shopSellController;
@@ -22,8 +35,6 @@ public class SomeGlobal {
         shopSellController = controller;
     }
 
-    private static User currentUser;
-
     public static User getCurrentUser() {
         return currentUser;
     }
@@ -31,6 +42,7 @@ public class SomeGlobal {
     public static void setCurrentUser(User user) {
         currentUser = user;
     }
+
     public static void setMainController(MainController ctrl) {
         mainController = ctrl;
     }
