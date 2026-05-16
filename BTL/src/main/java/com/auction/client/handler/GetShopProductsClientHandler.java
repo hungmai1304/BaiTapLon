@@ -2,6 +2,7 @@ package com.auction.client.handler;
 
 import com.auction.client.annotation.ResponseHandler;
 import com.auction.client.network.IClientHandler;
+import com.auction.client.utils.ClientContext;
 import com.auction.common.model.product.Product;
 import com.auction.protocol.Response;
 import com.google.gson.Gson;
@@ -30,45 +31,35 @@ public class GetShopProductsClientHandler implements IClientHandler {
     @Override
     public void handle(Response response) {
         if ("SUCCESS".equalsIgnoreCase(response.getStatus())) {
+            try {
+                // 1. Parse dữ liệu
+                Object productsObj = response.getData().get("products");
+                String jsonData = gson.toJson(productsObj);
+                Type listType = new TypeToken<List<Product>>(){}.getType();
+                List<Product> shopProducts = gson.fromJson(jsonData, listType);
 
-            Platform.runLater(() -> {
-                System.out.println("-> [GetShopProductsClientHandler] Nhận danh sách sản phẩm từ Cloudinary!");
+                if (shopProducts != null) {
+                    // 2. Lưu vào ClientContext
+                    ClientContext.getInstance().setShopProducts(shopProducts);
 
-                try {
-                    // 1. Parse dữ liệu từ Response
-                    // Lúc này trong mỗi Product, imagePath đã là link "https://res.cloudinary.com/..."
-                    Object productsObj = response.getData().get("products");
-                    String jsonData = gson.toJson(productsObj);
-                    Type listType = new TypeToken<List<Product>>(){}.getType();
-                    List<Product> shopProducts = gson.fromJson(jsonData, listType);
-
-                    if (shopProducts != null) {
-                        System.out.println("-> Số sản phẩm nhận về: " + shopProducts.size());
-
-                        // 2. CẬP NHẬT SỐ LƯỢNG CHO MÀN HÌNH MAIN
-                        MainController mainController = SomeGlobal.getMainController();
-                        if (mainController != null) {
-                            mainController.updateProductCount(shopProducts.size());
+                    // 3. Cập nhật UI
+                    Platform.runLater(() -> {
+                        // Cập nhật số lượng hiển thị trên Main
+                        MainController main = SomeGlobal.getMainController();
+                        if (main != null) {
+                            main.updateProductCount(ClientContext.getInstance().getShopProductCount());
                         }
 
-                        // 3. CẬP NHẬT CHO MÀN HÌNH SHOP (Nạp danh sách vào UI)
-                        // Các item trong Shop sẽ dùng link URL để load ảnh cực nhanh
-                        ShopSellController shopController = SomeGlobal.getShopSellController();
-                        if (shopController != null) {
-                            shopController.loadProducts(shopProducts);
+                        // Yêu cầu ShopController render từ danh sách trong Context
+                        ShopSellController shop = SomeGlobal.getShopSellController();
+                        if (shop != null) {
+                            shop.loadProducts(ClientContext.getInstance().getShopProducts());
                         }
-
-                        System.out.println("-> [Client] Đã hiển thị danh sách sản phẩm thành công.");
-                    }
-
-                } catch (Exception e) {
-                    System.err.println("-> Lỗi phân tích sản phẩm shop: " + e.getMessage());
-                    e.printStackTrace();
+                    });
                 }
-            });
-
-        } else {
-            System.err.println("-> Lỗi từ Server: " + response.getMessage());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }

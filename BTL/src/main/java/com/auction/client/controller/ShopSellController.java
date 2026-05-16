@@ -1,11 +1,10 @@
 package com.auction.client.controller;
 
 import com.auction.client.network.RequestSender;
-import com.auction.client.utils.NavigationService;
+import com.auction.client.utils.ClientContext; // Thêm import này
 import com.auction.common.model.product.Product;
 import com.auction.common.model.product.ProductStatus;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -19,8 +18,6 @@ import java.io.IOException;
 import java.util.List;
 
 public class ShopSellController {
-    String email = SomeGlobal.getCurrentUser().getEmail();
-
     @FXML private TableView<Product> productTable;
     @FXML private TableColumn<Product, Integer> colSTT;
     @FXML private TableColumn<Product, String> colName;
@@ -30,12 +27,15 @@ public class ShopSellController {
     @FXML private TableColumn<Product, Void> colAction;
     @FXML private Label totalLabel;
 
-    private ObservableList<Product> productList = FXCollections.observableArrayList();
-
     @FXML
     public void initialize() {
         SomeGlobal.setShopSellController(this);
 
+        // Đổ dữ liệu từ Context vào Table ngay khi mở màn hình
+        productTable.setItems(ClientContext.getInstance().getShopProducts());
+        updateTotalLabel();
+
+        // Cấu hình các cột (Giữ nguyên logic cũ của bạn)
         colSTT.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(Integer item, boolean empty) {
@@ -52,7 +52,7 @@ public class ShopSellController {
             protected void updateItem(Double item, boolean empty) {
                 super.updateItem(item, empty);
                 setAlignment(javafx.geometry.Pos.CENTER);
-                setText(empty || item == null ? null : String.format("%,.0fđ", item));
+                setText(empty || item == null ? null : String.format("%,.0f?", item));
             }
         });
         colPrice.setCellValueFactory(new PropertyValueFactory<>("startPrice"));
@@ -66,7 +66,7 @@ public class ShopSellController {
                 setAlignment(javafx.geometry.Pos.CENTER);
                 if (empty || item == null) { setText(null); setStyle(""); return; }
                 switch (item) {
-                    case AVAILABLE  -> { setText("Ở trong kho");   setStyle("-fx-text-fill: #f0a500;"); }
+                    case AVAILABLE  -> { setText("Trong kho");   setStyle("-fx-text-fill: #f0a500;"); }
                     case ON_AUCTION -> { setText("Đang treo bán"); setStyle("-fx-text-fill: #6c63ff;"); }
                     case SOLD       -> { setText("Đã bán");        setStyle("-fx-text-fill: #4caf50;"); }
                     default         -> { setText(item.toString()); setStyle(""); }
@@ -92,16 +92,25 @@ public class ShopSellController {
                 setGraphic(empty ? null : box);
             }
         });
-
-        productTable.setItems(productList);
-
-
     }
 
+    /**
+     * Cập nhật lại Label tổng số lượng
+     */
+    private void updateTotalLabel() {
+        int count = ClientContext.getInstance().getShopProductCount();
+        totalLabel.setText("Tổng cộng: " + count + " sản phẩm đang chờ");
+    }
+
+    /**
+     * Hàm này được gọi từ Handler khi có dữ liệu mới từ Server
+     */
     public void loadProducts(List<Product> products) {
         Platform.runLater(() -> {
-            productList.setAll(products);
-            totalLabel.setText("Tổng cộng: " + products.size() + " sản phẩm đang chờ");
+            // Vì Table đã bind với ObservableList trong Context nên chỉ cần update Label
+            updateTotalLabel();
+            // Nếu bạn muốn cuộn lên đầu bảng khi có list mới:
+            productTable.refresh();
         });
     }
 
@@ -120,9 +129,8 @@ public class ShopSellController {
         }
     }
 
-    // ĐÃ SỬA: Chỉ gửi ID theo đúng yêu cầu của ông Backend
     private void handleSell(Product product) {
-        System.out.println("Sell (Gửi ID lên Server): " + product.getName());
+        System.out.println("Sell (Gửi ID lên Server): " + product.getId());
         RequestSender.sendSellProductRequest(String.valueOf(product.getId()));
     }
 

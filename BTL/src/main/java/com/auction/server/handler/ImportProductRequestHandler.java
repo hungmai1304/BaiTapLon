@@ -54,6 +54,9 @@ public class ImportProductRequestHandler implements IMessageHandler {
             product.setStatus(ProductStatus.AVAILABLE);
             product.setTimeCreated(LocalDateTime.now());
             product.setCurrentPrice(product.getStartPrice());
+            if (product.getId() == null || product.getId().trim().isEmpty()) {
+                product.setId(java.util.UUID.randomUUID().toString());
+            }
 
             // Xóa Base64 ngay lập tức để giải phóng RAM
             product.setImageBase64(null);
