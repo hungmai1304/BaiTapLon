@@ -208,7 +208,7 @@ public class ProductDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Lỗi khi lấy sản phẩm theo email: " + e.getMessage());
+            System.err.println("Lỗi khi lấy sản phẩm theo email: " + e.getMessage());
             e.printStackTrace();
         }
         return productList;

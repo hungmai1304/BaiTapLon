@@ -12,7 +12,7 @@ public class ControllerRegistry {
 
     public static void register(String key, Object controller) {
         registry.put(key, controller);
-        System.out.println("📌 Đã đăng ký Controller: " + key);
+        System.out.println("[ControllerRegistry] Đã đăng ký Controller: " + key);
     }
 //-----------------------------------------------------------------------------------
 

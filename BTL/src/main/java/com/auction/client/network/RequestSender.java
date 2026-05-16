@@ -85,4 +85,10 @@ public class RequestSender {
     }
     // đừng có xóa của tao:
     //RequestSender.send(MessageType.GET_SHOP_PRODUCTS_REQUEST, null);
+
+    public static void sendDeleteProductRequest(String productId) {
+        Map<String, String> data = new HashMap<>();
+        data.put("id", productId);
+        send(MessageType.DELETE_PRODUCT_REQUEST, data);
+    }
 }

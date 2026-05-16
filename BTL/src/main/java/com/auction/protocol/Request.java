@@ -12,13 +12,13 @@ public class Request {
         this.data = new HashMap<>();
     }
 
-    // ✅ THÊM MỚI - Constructor tiện lợi
+    // THÊM MỚI - Constructor tiện lợi
     public Request(String type) {
         this.type = type;
         this.data = new HashMap<>();
     }
 
-    // ✅ THÊM MỚI - Thêm filter vào data dễ dàng
+    // THÊM MỚI - Thêm filter vào data dễ dàng
     public Request addData(String key, Object value) {
         this.data.put(key, value);
         return this; // cho phép chain: new Request(...).addData(...).addData(...)

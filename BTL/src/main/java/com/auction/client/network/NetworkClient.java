@@ -27,7 +27,7 @@ public class NetworkClient {
         if (webSocketClient != null
                 && webSocketClient.isOpen()) {
 
-            System.out.println("✅ Đã được kết nối tới server.");
+            System.out.println("[Network] Đã được kết nối tới server.");
 
             return;
         }
@@ -44,7 +44,7 @@ public class NetworkClient {
                 ) {
 
                     System.out.println(
-                            "✅ Đã kết nối tới server!"
+                            "[Network] Đã kết nối tới server!"
                     );
                 }
 
@@ -69,7 +69,7 @@ public class NetworkClient {
                         boolean remote
                 ) {
 
-                    System.out.println("❌ Mất kết nối");
+                    System.out.println("[Network] Mất kết nối");
 
                     System.out.println(
                             "Code: " + code
@@ -84,7 +84,7 @@ public class NetworkClient {
                 public void onError(Exception ex) {
 
                     System.err.println(
-                            "❌ Lỗi mạng:"
+                            "[Network] Lỗi mạng:"
                     );
 
                     ex.printStackTrace();
@@ -92,13 +92,13 @@ public class NetworkClient {
             };
 
             System.out.println(
-                    "🔄 Đang kết nối tới server..."
+                    "[Network] Đang kết nối tới server..."
             );
 
             webSocketClient.connectBlocking();
 
             System.out.println(
-                    "✅ Kết nối hoàn tất."
+                    "[Network] Kết nối hoàn tất."
             );
 
         } catch (Exception e) {
@@ -113,13 +113,13 @@ public class NetworkClient {
 
             // Debug thông minh: Nếu gói tin quá dài thì chỉ in độ dài thôi
             if (command.length() > 200) {
-                System.out.println("🚀 [Client] Đã gửi gói tin lớn (Size: " + command.length() + " chars)");
+                System.out.println("[Network] Đã gửi gói tin lớn (Size: " + command.length() + " chars)");
             } else {
-                System.out.println("🚀 [Client] Đã gửi: " + command);
+                System.out.println("[Network] Đã gửi: " + command);
             }
 
         } else {
-            System.err.println("❌ Chưa kết nối mạng!");
+            System.err.println("[Network] Chưa kết nối mạng!");
         }
     }
 

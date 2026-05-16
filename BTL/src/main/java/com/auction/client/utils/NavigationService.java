@@ -39,7 +39,7 @@ public class NavigationService {
                 primaryStage.setResizable(true);
                 primaryStage.show();
             } catch (IOException e) {
-                System.err.println("❌ Lỗi khi chuyển màn hình: " + fxmlPath);
+                System.err.println("[Navigation] Lỗi khi chuyển màn hình: " + fxmlPath);
                 e.printStackTrace();
             }
         });
@@ -53,10 +53,10 @@ public class NavigationService {
                 if (homeController != null && homeController.getBorderpaneHome() != null) {
                     homeController.getBorderpaneHome().setCenter(view);
                 } else {
-                    System.err.println("Lỗi: Không tìm thấy HomeController hoặc BorderPane!");
+                    System.err.println("[Navigation] Lỗi: Không tìm thấy HomeController hoặc BorderPane!");
                 }
             } catch (IOException e) {
-                System.err.println("Lỗi load FXML: " + fxmlPath);
+                System.err.println("[Navigation] Lỗi load FXML: " + fxmlPath);
                 e.printStackTrace();
             }
         });

@@ -41,10 +41,10 @@ public class ClientMessageDispatcher {
 
                 // Lưu Key luôn luôn là chữ HOA để tìm kiếm chính xác
                 handlerMap.put(type.trim().toUpperCase(), handlerInstance);
-                System.out.println("✔ [Client] Registered Handler: " + type);
+                System.out.println("[MessageDispatcher] Registered Handler: " + type);
             }
         } catch (Exception e) {
-            System.err.println("❌ Lỗi khởi tạo Dispatcher: " + e.getMessage());
+            System.err.println("[MessageDispatcher] Lỗi khởi tạo Dispatcher: " + e.getMessage());
         }
     }
 
@@ -64,13 +64,13 @@ public class ClientMessageDispatcher {
                     // Thường là handler.handle(response) hoặc handler.onResponse(response)
                     handler.handle(response);
 
-                    System.out.println("✅ [Client] Đã xử lý: " + type);
+                    System.out.println("[MessageDispatcher] Đã xử lý: " + type);
                 } else {
-                    System.err.println("⚠ [Client] Chưa đăng ký Handler cho: " + type);
+                    System.err.println("[MessageDispatcher] Chưa đăng ký Handler cho: " + type);
                 }
             }
         } catch (Exception e) {
-            System.err.println("❌ Lỗi Parse: " + e.getMessage());
+            System.err.println("[MessageDispatcher] Lỗi Parse: " + e.getMessage());
             e.printStackTrace();
         }
     }

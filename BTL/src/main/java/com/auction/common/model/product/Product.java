@@ -57,7 +57,7 @@ public class Product extends Item {
     public LocalDateTime getEndTime() { return endTime; }
     public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
 
-    // ✅ THÊM MỚI - getter/setter cho status và auctionId
+    // THÊM MỚI - getter/setter cho status và auctionId
     public ProductStatus getStatus() { return status; }
     public void setStatus(ProductStatus status) { this.status = status; }
 

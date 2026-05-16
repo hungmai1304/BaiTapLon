@@ -49,5 +49,8 @@ public class MessageType {
     // 3. Client gửi lệnh xin ra giá (Bid)
     public static final String STOP_TIK_TOK_LISTENER_REQUEST= "STOP_TIK_TOK_LISTENER_REQUEST";
     public static final String STOP_TIK_TOK_LISTENER_RESPONSE = "STOP_TIK_TOK_LISTENER_RESPONSE";
+
+    public static final String DELETE_PRODUCT_REQUEST = "DELETE_PRODUCT_REQUEST";
+    public static final String DELETE_PRODUCT_RESPONSE = "DELETE_PRODUCT_RESPONSE";
 }
     // (Sau này làm tính năng gì thì cứ khai báo thêm vào đây)
