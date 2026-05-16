@@ -60,10 +60,11 @@ public class EditProductHandler implements IMessageHandler {
                 productToEdit.setStepPrice(((Number) data.get("stepPrice")).doubleValue());
             }
 
-            // 4. Xử lý ảnh mới (Cloudinary)
+            // 4. Xử lý ảnh mới (Đẩy lên Cloudinary thông qua FileService)
             if (data.containsKey("imageBase64")) {
                 String newImageBase64 = (String) data.get("imageBase64");
                 if (newImageBase64 != null && !newImageBase64.isEmpty()) {
+                    // Trả về link Cloudinary (https://res.cloudinary.com/...)
                     String newUrl = FileService.saveImage(newImageBase64, productId);
                     if (newUrl != null) productToEdit.setImagePath(newUrl);
                 }
@@ -75,21 +76,24 @@ public class EditProductHandler implements IMessageHandler {
             if (isUpdated) {
                 context.updateProduct(productToEdit); // Cập nhật RAM
 
-                // --- PHẦN MÀY CẦN: GỬI LẠI DANH SÁCH MỚI ---
-
-                // Lấy lại toàn bộ danh sách sản phẩm của Shop này (dựa trên email chủ sở hữu)
+                // Lấy lại toàn bộ danh sách sản phẩm của Shop này từ DB
                 List<Product> updatedList = ProductDao.getInstance().getProductsByUserEmail(userEmail);
 
-                // Gửi phản hồi thành công kèm danh sách sản phẩm mới
+                // ---> ĐÃ XÓA BỎ VÒNG LẶP ĐỌC BASE64 NẶNG NỀ Ở ĐÂY <---
+                // Dữ liệu lúc này trong updatedList đã có sẵn imagePath là Link Cloudinary rồi.
+
+                // Đóng gói và gửi phản hồi về cho Client
                 Response response = new Response(
                         MessageType.EDIT_PRODUCT_RESPONSE,
                         "SUCCESS",
                         "Cập nhật thành công!"
                 );
+
+                // Đặt trực tiếp danh sách sản phẩm mới vào Map data của Response để Client nhận được
                 response.getData().put("products", updatedList);
 
                 conn.send(gson.toJson(response));
-                System.out.println("[EditProduct] Đã gửi lại danh sách mới cho user: " + userEmail);
+                System.out.println("[EditProduct] Đã sửa và gửi danh sách sản phẩm về cho user: " + userEmail);
 
             } else {
                 sendError(conn, gson, "Lỗi cập nhật Database!");

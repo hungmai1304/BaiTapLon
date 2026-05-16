@@ -7,15 +7,17 @@ public class ServerLauncher {
         try {
 
             // Render cấp port qua biến môi trường
-            String portStr = System.getenv("PORT");
+//            String portStr = System.getenv("PORT");
 
             int port;
 
-            if (portStr != null) {
-                port = Integer.parseInt(portStr);
-            } else {
-                port = 10000;
-            }
+//            if (portStr != null) {
+//                port = Integer.parseInt(portStr);
+//            } else {
+//                port = 10000;
+//            }
+
+            port=10000;
 
             System.out.println("================================");
             System.out.println("🚀 SERVER ĐẤU GIÁ ĐANG KHỞI ĐỘNG");

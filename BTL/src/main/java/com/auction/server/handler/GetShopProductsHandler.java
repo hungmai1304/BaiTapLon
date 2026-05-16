@@ -36,7 +36,6 @@ public class GetShopProductsHandler implements IMessageHandler {
             String statusFilter = (String) data.get("status");
 
             // 3. Lấy dữ liệu từ Database dựa trên userEmail vừa xác nhận
-            // Sử dụng userEmail lấy từ conn để đảm bảo an toàn, không sợ bị fake sellerId từ client
             List<Product> rawList = ProductDao.getInstance().getProductsByUserEmail(userEmail);
             List<Product> result;
 
@@ -48,6 +47,9 @@ public class GetShopProductsHandler implements IMessageHandler {
                 result = rawList;
             }
 
+            // ---> ĐÃ XÓA VÒNG LẶP ĐỌC FILE BASE64 Ở ĐÂY <---
+            // Dữ liệu trong 'result' đã chứa sẵn ImagePath là link Cloudinary, Client sẽ tự load.
+
             // 4. Đóng gói response
             Response response = new Response(
                     MessageType.GET_SHOP_PRODUCTS_RESPONSE,
@@ -56,7 +58,7 @@ public class GetShopProductsHandler implements IMessageHandler {
             );
             response.getData().put("products", result);
 
-            // Gửi dữ liệu về (chỉ chứa link URL ảnh, cực nhẹ)
+            // Gửi dữ liệu về (chỉ chứa Text và Link Ảnh, siêu nhẹ)
             conn.send(gson.toJson(response));
 
             System.out.println("[GetShopProductsHandler] Đã gửi " + result.size() + " sản phẩm cho shop của " + userEmail);

@@ -11,8 +11,8 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
-
 <?import javafx.scene.image.ImageView?>
+
 <VBox prefHeight="1080.0" prefWidth="1831.0" styleClass="main-root" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.ShopImportController">
     <children>
         <HBox alignment="CENTER_LEFT" prefHeight="100.0" spacing="20.0" styleClass="header">
@@ -40,7 +40,7 @@
                                                    styleClass="image-upload-area" onMouseClicked="#handleImageClicked">
                                             <children>
                                                 <ImageView fx:id="productImageView" fitHeight="350.0" fitWidth="350.0"
-                                                           preserveRatio="true" visible="false"/>
+                                                           preserveRatio="true" visible="false" managed="false" />
                                                 <Label fx:id="uploadLabel" styleClass="upload-text" text="Thêm ảnh +" />
                                             </children>
                                         </StackPane>
@@ -55,6 +55,7 @@
                                                 <TextField fx:id="name" promptText="VD: MacBook Pro M3..." styleClass="custom-text-field" />
                                             </children>
                                         </VBox>
+
                                         <HBox spacing="20.0">
                                             <children>
                                                 <VBox spacing="8.0" HBox.hgrow="ALWAYS">
@@ -66,12 +67,14 @@
                                                 <VBox spacing="8.0" HBox.hgrow="ALWAYS" />
                                             </children>
                                         </HBox>
+
                                         <VBox spacing="8.0">
                                             <children>
                                                 <Label styleClass="label-title" text="Danh mục" />
                                                 <ComboBox fx:id="categoryComboBox" maxWidth="Infinity" onAction="#categoryClicked" promptText="Chọn danh mục" styleClass="custom-combo-box" />
                                             </children>
                                         </VBox>
+
                                         <VBox spacing="8.0" VBox.vgrow="ALWAYS">
                                             <children>
                                                 <Label styleClass="label-title" text="Mô tả sản phẩm" />

@@ -39,8 +39,10 @@ public class ProductDao {
 
     // 2. LƯU SẢN PHẨM MỚI
     public boolean saveProduct(Product product) {
-        String sql = "INSERT INTO products (id, name, category, description, image_path, start_price, current_price, step_price, status, owner_id, time_created) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // Thêm 2 cột vào SQL
+        String sql = "INSERT INTO products (id, name, category, description, image_path, start_price, " +
+                "current_price, step_price, status, owner_id, time_created, start_time, end_time) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -49,13 +51,17 @@ public class ProductDao {
             pstmt.setString(2, product.getName());
             pstmt.setString(3, product.getCategory());
             pstmt.setString(4, product.getDescription());
-            pstmt.setString(5, product.getImagePath()); // Đây là link Cloudinary
+            pstmt.setString(5, product.getImagePath());
             pstmt.setDouble(6, product.getStartPrice());
             pstmt.setDouble(7, product.getCurrentPrice());
             pstmt.setDouble(8, product.getStepPrice());
             pstmt.setString(9, product.getStatus().toString());
             pstmt.setString(10, (product.getOwner() != null) ? product.getOwner().getId() : null);
             pstmt.setTimestamp(11, Timestamp.valueOf(product.getTimeCreated()));
+
+            // Thêm 2 tham số mới (Kiểm tra null để tránh crash)
+            pstmt.setTimestamp(12, (product.getStartTime() != null) ? Timestamp.valueOf(product.getStartTime()) : null);
+            pstmt.setTimestamp(13, (product.getEndTime() != null) ? Timestamp.valueOf(product.getEndTime()) : null);
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -85,7 +91,7 @@ public class ProductDao {
 
         String sql = "UPDATE products SET name = ?, category = ?, description = ?, image_path = ?, " +
                 "start_price = ?, current_price = ?, step_price = ?, " +
-                "status = ?, owner_id = ?, time_created = ? " +
+                "status = ?, owner_id = ?, time_created = ?, start_time = ?, end_time = ? " +
                 "WHERE id = ?";
 
         try (Connection conn = Db.getConnection();
@@ -94,14 +100,19 @@ public class ProductDao {
             pstmt.setString(1, product.getName());
             pstmt.setString(2, product.getCategory());
             pstmt.setString(3, product.getDescription());
-            pstmt.setString(4, product.getImagePath()); // Link Cloudinary mới
+            pstmt.setString(4, product.getImagePath());
             pstmt.setDouble(5, product.getStartPrice());
             pstmt.setDouble(6, product.getCurrentPrice());
             pstmt.setDouble(7, product.getStepPrice());
             pstmt.setString(8, product.getStatus().toString());
             pstmt.setString(9, (product.getOwner() != null) ? product.getOwner().getId() : null);
             pstmt.setTimestamp(10, Timestamp.valueOf(product.getTimeCreated()));
-            pstmt.setString(11, product.getId());
+
+            // Thêm 2 tham số mới
+            pstmt.setTimestamp(11, (product.getStartTime() != null) ? Timestamp.valueOf(product.getStartTime()) : null);
+            pstmt.setTimestamp(12, (product.getEndTime() != null) ? Timestamp.valueOf(product.getEndTime()) : null);
+
+            pstmt.setString(13, product.getId());
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -150,7 +161,7 @@ public class ProductDao {
         product.setName(rs.getString("name"));
         product.setCategory(rs.getString("category"));
         product.setDescription(rs.getString("description"));
-        product.setImagePath(rs.getString("image_path")); // Link Cloudinary
+        product.setImagePath(rs.getString("image_path"));
         product.setStartPrice(rs.getDouble("start_price"));
         product.setCurrentPrice(rs.getDouble("current_price"));
         product.setStepPrice(rs.getDouble("step_price"));
@@ -164,8 +175,19 @@ public class ProductDao {
         User owner = new User();
         owner.setId(rs.getString("owner_id"));
         product.setOwner(owner);
+        Timestamp startTimeTs = rs.getTimestamp("start_time");
+        if (startTimeTs != null) {
+            product.setStartTime(startTimeTs.toLocalDateTime());
+        }
+
+        // Đọc thêm end_time
+        Timestamp endTimeTs = rs.getTimestamp("end_time");
+        if (endTimeTs != null) {
+            product.setEndTime(endTimeTs.toLocalDateTime());
+        }
 
         return product;
+
     }
     public List<Product> getProductsByUserEmail(String email) {
         List<Product> productList = new ArrayList<>();

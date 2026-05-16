@@ -15,6 +15,7 @@ import org.java_websocket.WebSocket;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 @CommandMap(value = MessageType.IMPORT_PRODUCT_REQUEST)
 public class ImportProductRequestHandler implements IMessageHandler {
@@ -29,47 +30,54 @@ public class ImportProductRequestHandler implements IMessageHandler {
                 return;
             }
 
-            // 2. Map data từ Client sang Object Product (Dùng Gson để chuẩn hóa dữ liệu)
-            // Việc map qua JsonTree giúp tránh lỗi ép kiểu Number của Map
+            // 2. Map data từ Client sang Object Product
             String jsonData = gson.toJson(data);
             Product product = gson.fromJson(jsonData, Product.class);
 
-            // 3. Xử lý ảnh (Chỉ xử lý, không in ra terminal)
+            // --- SỬA Ở ĐÂY: KHỞI TẠO ID TRƯỚC ĐỂ LÀM TÊN FILE TRÊN CLOUDINARY ---
+            if (product.getId() == null || product.getId().trim().isEmpty()) {
+                // Tạo một ID duy nhất, ví dụ cắt ngắn bớt cho tên file Cloudinary đỡ dài (tùy chọn)
+                String generatedId = UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
+                product.setId(generatedId);
+            }
+
+            // 3. Xử lý ảnh (Đẩy lên Cloudinary)
             String imageBase64 = product.getImageBase64();
             if (imageBase64 != null && !imageBase64.isEmpty()) {
-                // Upload lên Cloudinary thông qua FileService
+                // Lúc này product.getId() chắc chắn đã có giá trị
                 String imageUrl = FileService.saveImage(imageBase64, product.getId());
-
                 if (imageUrl != null) {
-                    product.setImagePath(imageUrl);
+                    product.setImagePath(imageUrl); // Lưu Link Cloudinary vào DB
                 } else {
                     sendError(conn, gson, "Không thể upload ảnh lên Cloud.");
                     return;
                 }
             }
 
-            // 4. Thiết lập các thông số mặc định trước khi lưu
+            // 4. Thiết lập các thông số mặc định
             User currentUser = UserDao.getInstance().getUserByEmail(userEmail);
             product.setOwner(currentUser);
             product.setStatus(ProductStatus.AVAILABLE);
             product.setTimeCreated(LocalDateTime.now());
             product.setCurrentPrice(product.getStartPrice());
-            if (product.getId() == null || product.getId().trim().isEmpty()) {
-                product.setId(java.util.UUID.randomUUID().toString());
-            }
 
-            // Xóa Base64 ngay lập tức để giải phóng RAM
+            // Đảm bảo start_time và end_time là null khi mới import
+            product.setStartTime(null);
+            product.setEndTime(null);
+
+            // Giải phóng RAM (Xóa chuỗi Base64 đi vì đã có link URL, không cần lưu vào DB)
             product.setImageBase64(null);
 
             // 5. Lưu vào Database và Context
             boolean isSaved = ProductDao.getInstance().saveProduct(product);
+
             if (isSaved) {
                 context.addProduct(product);
 
-                // Gửi phản hồi thành công (Chỉ in link ảnh ngắn gọn)
+                // Gửi phản hồi thành công
                 Response response = new Response(MessageType.IMPORT_PRODUCT_RESPONSE, "SUCCESS", "Sản phẩm đã được lưu!");
                 conn.send(gson.toJson(response));
-                System.out.println("[Server] Import thành công SP: " + product.getName() + " -> " + product.getImagePath());
+                System.out.println("[Server] Import thành công SP: " + product.getName() + " | ID: " + product.getId());
             } else {
                 sendError(conn, gson, "Lỗi lưu Database.");
             }

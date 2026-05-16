@@ -3,6 +3,7 @@ package com.auction.client.controller;
 import com.auction.client.network.RequestSender;
 import com.auction.client.utils.NavigationService;
 import com.auction.common.model.product.Product;
+import com.auction.protocol.MessageType;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -31,10 +32,13 @@ public class editProductController {
     @FXML private Label uploadLabel;
 
     private String selectedImageBase64 = null;
-    private String editingProductId = null;
+
+    // Giữ lại đối tượng sản phẩm gốc để bảo tồn các thông tin khác (owner, timeCreated,...)
+    private Product originalProduct = null;
 
     @FXML
     public void initialize() {
+        // Đã sửa lỗi hiển thị Tiếng Việt
         categoryComboBox.setItems(FXCollections.observableArrayList(
                 "Điện tử", "Thời trang", "Gia dụng", "Xe cộ", "Khác"
         ));
@@ -52,6 +56,8 @@ public class editProductController {
             Image image = new Image(file.toURI().toString());
             productImageView.setImage(image);
             productImageView.setVisible(true);
+            productImageView.setManaged(true); // Đảm bảo layout tính toán kích thước khi có ảnh mới
+
             uploadLabel.setVisible(false);
 
             try {
@@ -66,64 +72,109 @@ public class editProductController {
     @FXML
     public void handleBackClicked(ActionEvent event) throws IOException {
         NavigationService.setCenterView("/com/auction/client/view/ShopSell.fxml");
+        RequestSender.send(MessageType.GET_SHOP_PRODUCTS_REQUEST, null);
     }
 
     @FXML
-    public void addProductClicked(ActionEvent event) {
+    public void editProductClicked(ActionEvent event) {
         try {
-            if (this.editingProductId == null) {
-                System.err.println("Lỗi: Không tìm thấy ID của sản phẩm cần sửa!");
+            if (this.originalProduct == null) {
+                successLabel.setVisible(true);
+                successLabel.setText("Lỗi: Không tìm thấy thông tin sản phẩm cần sửa!");
+                successLabel.setManaged(true);
+                successLabel.setStyle("-fx-text-fill: red;");
                 return;
             }
 
-            Product product = new Product();
-            product.setId(this.editingProductId);
-            product.setName(name.getText());
-            product.setCategory(categoryComboBox.getValue());
+            // Cập nhật các thông tin mới do người dùng nhập vào đối tượng gốc ban đầu
+            originalProduct.setName(name.getText());
+            originalProduct.setCategory(categoryComboBox.getValue());
 
             double startPrice = Double.parseDouble(price.getText());
-            product.setStartPrice(startPrice);
-            product.setCurrentPrice(startPrice);
-            product.setStepPrice(startPrice * 0.1);
+            originalProduct.setStartPrice(startPrice);
+            originalProduct.setCurrentPrice(startPrice);
+            originalProduct.setStepPrice(startPrice * 0.1);
 
-            product.setDescription(moreInfo.getText());
-            product.setStatus(AVAILABLE);
+            originalProduct.setDescription(moreInfo.getText());
+            originalProduct.setStatus(AVAILABLE);
 
-            // Gửi base64 mới LÊN Cloudinary (nếu người dùng có chọn ảnh mới)
-            // Nếu selectedImageBase64 == null, Server sẽ giữ nguyên link cũ
-            product.setImageBase64(selectedImageBase64);
+            // Nếu người dùng chọn ảnh mới -> Gửi Base64 mới lên.
+            // Nếu không -> Server giữ nguyên file cũ trên ổ cứng (selectedImageBase64 ban đầu được giữ từ ảnh cũ hoặc giữ null)
+            originalProduct.setImageBase64(selectedImageBase64);
 
-            RequestSender.sendEditProductRequest(product);
+            // Gửi toàn bộ đối tượng (Đã có sẵn thông tin Owner) lên Server
+            RequestSender.sendEditProductRequest(originalProduct);
 
             successLabel.setVisible(true);
+            successLabel.setManaged(true);
             successLabel.setText("Đã gửi yêu cầu cập nhật lên Server...");
+            successLabel.setStyle("-fx-text-fill: green;");
 
         } catch (NumberFormatException e) {
+            successLabel.setVisible(true);
+            successLabel.setManaged(true);
             successLabel.setText("Lỗi: Giá phải là số!");
             successLabel.setStyle("-fx-text-fill: red;");
         } catch (Exception e) {
             e.printStackTrace();
+            successLabel.setVisible(true);
+            successLabel.setManaged(true);
+            successLabel.setText("Lỗi hệ thống: " + e.getMessage());
+            successLabel.setStyle("-fx-text-fill: red;");
         }
     }
 
     // Đổ dữ liệu từ màn hình Shop vào màn hình Edit
     public void fillProductData(Product product) {
-        this.editingProductId = product.getId();
+        // --- 3 DÒNG NÀY ĐỂ DEBUG XEM LỖI Ở ĐÂU ---
+        System.out.println("=== KIỂM TRA DỮ LIỆU KHI BẤM EDIT ===");
+        System.out.println("ImagePath (Trong DB): " + product.getImagePath());
+        System.out.println("ImageBase64: " + (product.getImageBase64() != null ? "Có dữ liệu (Độ dài: " + product.getImageBase64().length() + ")" : "RỖNG (NULL)!!!"));
+
+        // Lưu lại trọn vẹn đối tượng sản phẩm (Bao gồm cả trường Owner bên trong)
+        this.originalProduct = product;
+
         name.setText(product.getName());
         price.setText(String.format("%.0f", product.getStartPrice()));
         moreInfo.setText(product.getDescription());
         categoryComboBox.setValue(product.getCategory());
 
-        // --- QUAN TRỌNG: Load ảnh cũ từ URL Cloudinary ---
+        // --- GIỮ NGUYÊN: Hỗ trợ load ảnh từ URL Cloudinary (Nếu có sẵn) ---
         if (product.getImagePath() != null && product.getImagePath().startsWith("http")) {
-            // Load từ link web trực tiếp
             Image image = new Image(product.getImagePath(), true);
             productImageView.setImage(image);
             productImageView.setVisible(true);
+            productImageView.setManaged(true);
             uploadLabel.setVisible(false);
-        } else {
-            productImageView.setImage(null);
-            uploadLabel.setVisible(true);
+        }
+        // --- THÊM MỚI: Xử lý hiển thị ảnh từ chuỗi Base64 do Server Local đọc và trả về ---
+        else if (product.getImageBase64() != null && !product.getImageBase64().isEmpty()) {
+            try {
+                // 1. Giải mã chuỗi Base64 nhận từ Server thành mảng byte
+                byte[] imageBytes = java.util.Base64.getDecoder().decode(product.getImageBase64());
+
+                // 2. Đọc luồng byte dữ liệu nhị phân thành JavaFX Image
+                java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(imageBytes);
+                Image image = new Image(bais);
+
+                // 3. Hiển thị lên ImageView cục bộ
+                productImageView.setImage(image);
+                productImageView.setVisible(true);
+                productImageView.setManaged(true);
+                uploadLabel.setVisible(false);
+
+                // Đồng bộ lại biến toàn cục để phòng trường hợp user bấm Save luôn mà không thay đổi ảnh
+                this.selectedImageBase64 = product.getImageBase64();
+
+            } catch (Exception e) {
+                System.err.println("[Client Error] Không thể dựng ảnh từ dữ liệu Base64!");
+                e.printStackTrace(); // In ra chi tiết lỗi giải mã (nếu có)
+                setDefaultUploadState();
+            }
+        }
+        // --- Trường hợp không có dữ liệu ảnh nào ---
+        else {
+            setDefaultUploadState();
         }
     }
 
@@ -133,8 +184,14 @@ public class editProductController {
         price.clear();
         moreInfo.clear();
         categoryComboBox.getSelectionModel().clearSelection();
+        setDefaultUploadState();
+    }
+
+    // Hàm phụ trợ cô lập logic reset giao diện upload ảnh để tái sử dụng
+    private void setDefaultUploadState() {
         productImageView.setImage(null);
         productImageView.setVisible(false);
+        productImageView.setManaged(false);
         uploadLabel.setVisible(true);
         selectedImageBase64 = null;
     }

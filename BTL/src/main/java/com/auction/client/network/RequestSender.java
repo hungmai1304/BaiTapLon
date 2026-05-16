@@ -83,4 +83,6 @@ public class RequestSender {
         data.put("email", userEmail);
         send("REGISTER_BOT_REQUEST", data);
     }
+    // đừng có xóa của tao:
+    //RequestSender.send(MessageType.GET_SHOP_PRODUCTS_REQUEST, null);
 }

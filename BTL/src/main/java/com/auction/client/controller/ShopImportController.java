@@ -4,6 +4,7 @@ import com.auction.client.network.RequestSender;
 import com.auction.common.utils.Generate_id_and_timecreated;
 import com.auction.client.utils.NavigationService;
 import com.auction.common.model.product.Product;
+import com.auction.protocol.MessageType;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -43,7 +44,6 @@ public class ShopImportController {
 
         if (isSuccess) {
             successLabel.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
-            // deleteAllClicked(null); // Tùy mày, nếu muốn xóa form sau khi lưu thành công
         } else {
             successLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
         }
@@ -59,6 +59,7 @@ public class ShopImportController {
 
     @FXML
     public void initialize() {
+        // Đã sửa font Tiếng Việt
         categoryComboBox.setItems(FXCollections.observableArrayList(
                 "Điện tử", "Thời trang", "Gia dụng", "Xe cộ", "Khác"
         ));
@@ -76,6 +77,7 @@ public class ShopImportController {
             Image image = new Image(file.toURI().toString());
             productImageView.setImage(image);
             productImageView.setVisible(true);
+            productImageView.setManaged(true);
             uploadLabel.setVisible(false);
 
             try {
@@ -90,6 +92,7 @@ public class ShopImportController {
     @FXML
     public void handleBackClicked(ActionEvent event) throws IOException {
         NavigationService.setCenterView("/com/auction/client/view/Shop.fxml");
+        RequestSender.send(MessageType.GET_SHOP_PRODUCTS_REQUEST, null);
     }
 
     @FXML
@@ -105,7 +108,7 @@ public class ShopImportController {
             product.setCategory(categoryComboBox.getValue());
             product.setStartPrice(Double.parseDouble(price.getText()));
             product.setDescription(moreInfo.getText());
-            product.setImageBase64(selectedImageBase64); // Gửi base64 mới lên để server upload cloud
+            product.setImageBase64(selectedImageBase64); // Gửi base64 mới lên để server lưu
             product.setTimeCreated(timeCreated);
             product.setStatus(AVAILABLE);
             product.setStepPrice(product.getStartPrice() * 0.1);
@@ -116,9 +119,12 @@ public class ShopImportController {
                 RequestSender.sendEditProductRequest(product);
             }
 
-            successLabel.setText("Đang gửi dữ liệu lên Server...");
+            successLabel.setText("Gửi yêu cầu thành công!");
+            successLabel.setManaged(true);
             successLabel.setVisible(true);
 
+        } catch (NumberFormatException e) {
+            updateSuccessLabel("Lỗi: Giá phải là số hợp lệ!", false);
         } catch (Exception e) {
             updateSuccessLabel("Lỗi: " + e.getMessage(), false);
         }
@@ -128,19 +134,41 @@ public class ShopImportController {
     public void fillProductData(Product product) {
         editingProductId = product.getId();
         name.setText(product.getName());
-        price.setText(String.valueOf(product.getStartPrice()));
+        price.setText(String.format("%.0f", product.getStartPrice()));
         moreInfo.setText(product.getDescription());
         categoryComboBox.setValue(product.getCategory());
 
-        // QUAN TRỌNG: Load ảnh từ URL (imagePath) chứ không dùng Base64 nữa
+        // --- HỖ TRỢ LOAD ẢNH CŨ TỪ CLOUDINARY (Nếu có) ---
         if (product.getImagePath() != null && product.getImagePath().startsWith("http")) {
             Image image = new Image(product.getImagePath(), true);
             productImageView.setImage(image);
             productImageView.setVisible(true);
+            productImageView.setManaged(true);
             uploadLabel.setVisible(false);
-        } else {
-            productImageView.setImage(null);
-            uploadLabel.setVisible(true);
+        }
+        // --- THÊM MỚI: XỬ LÝ LOAD ẢNH TỪ BASE64 CỦA SERVER ---
+        else if (product.getImageBase64() != null && !product.getImageBase64().isEmpty()) {
+            try {
+                byte[] imageBytes = java.util.Base64.getDecoder().decode(product.getImageBase64());
+                java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(imageBytes);
+                Image image = new Image(bais);
+
+                productImageView.setImage(image);
+                productImageView.setVisible(true);
+                productImageView.setManaged(true);
+                uploadLabel.setVisible(false);
+
+                // Giữ lại chuỗi Base64 phòng trường hợp user chỉ sửa text mà không đổi ảnh
+                this.selectedImageBase64 = product.getImageBase64();
+            } catch (Exception e) {
+                System.err.println("[ShopImport Error] Không thể dựng ảnh từ dữ liệu Base64!");
+                e.printStackTrace();
+                setDefaultUploadState();
+            }
+        }
+        // --- NẾU KHÔNG CÓ ẢNH NÀO ---
+        else {
+            setDefaultUploadState();
         }
     }
 
@@ -151,11 +179,18 @@ public class ShopImportController {
         price.clear();
         moreInfo.clear();
         categoryComboBox.getSelectionModel().clearSelection();
+        setDefaultUploadState();
+    }
+
+    // Hàm phụ trợ gộp chung logic reset UI ảnh
+    private void setDefaultUploadState() {
         productImageView.setImage(null);
         productImageView.setVisible(false);
+        productImageView.setManaged(false);
         uploadLabel.setVisible(true);
         selectedImageBase64 = null;
     }
+
     @FXML
     public void categoryClicked(ActionEvent event) {
     }
