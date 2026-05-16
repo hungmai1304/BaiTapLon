@@ -9,8 +9,8 @@ public class NetworkClient {
 
     // Production
 //    private static final String SERVER_URL ="ws://f95392e43d88892f-58-186-123-109.serveousercontent.com";
-//    private static final String SERVER_URL ="wss://baitaplon-qegw.onrender.com";
-    private static final String SERVER_URL = "ws://localhost:10000";
+    private static final String SERVER_URL ="wss://baitaplon-qegw.onrender.com";
+//    private static final String SERVER_URL = "ws://localhost:10000";
 
 
     // Local
