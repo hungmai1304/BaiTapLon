@@ -57,7 +57,7 @@ public class SellProductHandler implements IMessageHandler {
 
                     LocalDateTime now = LocalDateTime.now();
                     LocalDateTime startTime = now.plusMinutes(30);
-                    LocalDateTime endTime = startTime.plusMinutes(10);
+                    LocalDateTime endTime = startTime.plusMinutes(15);
 
                     // Đóng gói thành Phiên Đấu Giá
                     Auction newAuction = new Auction(
@@ -78,7 +78,7 @@ public class SellProductHandler implements IMessageHandler {
                 // PHẦN MỚI THÊM: HẸN GIỜ TỰ ĐỘNG CHUYỂN TRẠNG THÁI
                 // =========================================================
                 long delayToActive = 30; // Chờ 30p để bắt đầu
-                long delayToCompleted = 40; // Tổng 40p để kết thúc
+                long delayToCompleted = 45; // Tổng 45p để kết thúc
 
                 // Hẹn giờ 1: MỞ BÁT (PENDING -> ACTIVE)
                 scheduler.schedule(() -> {
