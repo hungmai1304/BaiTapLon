@@ -1,6 +1,7 @@
 package com.auction.client.controller;
 
 import com.auction.client.network.RequestSender;
+import com.auction.client.utils.ClientContext;
 import com.auction.client.utils.NavigationService;
 import com.auction.common.model.user.User;
 import com.auction.protocol.MessageType;
@@ -23,6 +24,7 @@ public class MainController {
     private Label HI_USER_NAME;
     @FXML private Label shop_number_product;
     @FXML private Label about_you_name;
+    @FXML private Label balance_main;
 
 
     @FXML
@@ -50,7 +52,14 @@ public class MainController {
 
             HI_USER_NAME.setText(greeting + username.toUpperCase());
         }
+        if (balance_main != null) {
+            // Tự động lắng nghe và định dạng số dư hiển thị dạng: 1,000,000.00
+            balance_main.textProperty().bind(
+                    ClientContext.getInstance().userBalanceProperty().asString("%,.2f")
+            );
+        }
         RequestSender.send(MessageType.GET_SHOP_PRODUCTS_REQUEST, null);
+        RequestSender.send(MessageType.GET_BALANCE_REQUEST, null);
     }
 
 
@@ -61,6 +70,8 @@ public class MainController {
             }
         });
     }
+
+
     @FXML
     public void handleBalanceClicked(MouseEvent event) {
         NavigationService.setCenterView("/com/auction/client/view/bank.fxml");

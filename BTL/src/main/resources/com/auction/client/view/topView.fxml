@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Font?>
+
+<HBox alignment="CENTER_RIGHT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="69.0" prefWidth="1651.0" styleClass="Scene-Black" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.TopViewController">
+   <children>
+      <Label fx:id="clock" prefHeight="49.0" prefWidth="240.0" styleClass="link-text" text="Clock: 00:00:00">
+         <font>
+            <Font size="23.0" />
+         </font>
+         <HBox.margin>
+            <Insets right="200.0" />
+         </HBox.margin>
+      </Label>
+      <Label fx:id="balance" prefHeight="49.0" prefWidth="240.0" styleClass="link-text" text="Your Balance: 0.0">
+         <font>
+            <Font size="23.0" />
+         </font>
+         <HBox.margin>
+            <Insets right="50.0" />
+         </HBox.margin>
+      </Label>
+   </children>
+   <padding>
+      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+   </padding>
+</HBox>

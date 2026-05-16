@@ -1,7 +1,10 @@
 package com.auction.client.utils;
 
+import com.auction.client.controller.SomeGlobal;
 import com.auction.common.model.auction.Auction;
 import com.auction.common.model.product.Product;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import java.util.List;
@@ -12,6 +15,7 @@ public class ClientContext {
     private final ObservableList<Auction> activeAuctions = FXCollections.observableArrayList();
     private final ObservableList<Product> shopProducts = FXCollections.observableArrayList();
     private int currentIndex = 0;
+    private final DoubleProperty userBalance = new SimpleDoubleProperty(0.0);
 
     private ClientContext() {}
 
@@ -82,6 +86,51 @@ public class ClientContext {
         activeAuctions.clear();
         shopProducts.clear();
         currentIndex = 0;
+        userBalance.set(0.0);
+    }
+    // --- QUẢN LÝ USER BALANCE ---
+
+    /**
+     * Cập nhật số dư mới vào ClientContext để UI tự động thay đổi,
+     * đồng thời đồng bộ luôn vào đối tượng User hiện tại trong SomeGlobal.
+     * * @param balance Số dư mới cần cập nhật
+     */
+    public void setUserBalance(double balance) {
+        // 1. Cập nhật cho object User trước
+        if (SomeGlobal.getCurrentUser() != null) {
+            SomeGlobal.getCurrentUser().setBalance(balance);
+        }
+
+        // 2. Cập nhật cho Property trên luồng JavaFX để kích hoạt các UI đã bind tự nhảy số
+        if (javafx.application.Platform.isFxApplicationThread()) {
+            this.userBalance.set(balance);
+        } else {
+            javafx.application.Platform.runLater(() -> this.userBalance.set(balance));
+        }
+    }
+
+    /**
+     * Lấy giá trị số dư hiện tại dưới dạng double
+     */
+    public double getUserBalance() {
+        return userBalance.get();
+    }
+
+    /**
+     * Lấy đối tượng Property để thực hiện bind dữ liệu lên các thành phần UI (Label, Text,...)
+     */
+    public DoubleProperty userBalanceProperty() {
+        return userBalance;
+    }
+
+    public void updateBalance(double newBalance) {
+        // 1. Cập nhật cho Property để update UI
+        this.setUserBalance(newBalance);
+
+        // 2. Tự động cập nhật cho User object nếu có dữ liệu
+        if (SomeGlobal.getCurrentUser() != null) {
+            SomeGlobal.getCurrentUser().setBalance(newBalance);
+        }
     }
 
     public ObservableList<Auction> getActiveAuctions() { return activeAuctions; }

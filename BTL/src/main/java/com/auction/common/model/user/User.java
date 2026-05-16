@@ -11,6 +11,7 @@ public class User extends BaseEntity {
     // Các thông tin thời gian chung
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private double balance;
 
     public User() {}
 
@@ -53,5 +54,14 @@ public class User extends BaseEntity {
 
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
+    }
+
+    // --- THÊM GETTER VÀ SETTER CHO BALANCE Ở ĐÂY ---
+    public double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
     }
 }
