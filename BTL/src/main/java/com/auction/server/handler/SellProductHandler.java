@@ -8,6 +8,9 @@ import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.dao.ProductDao;
 import com.auction.server.model.ServerContext;
+import com.google.gson.*;
+import java.time.format.DateTimeFormatter;
+
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 import java.util.Map;
@@ -23,6 +26,13 @@ public class SellProductHandler implements IMessageHandler {
     // TẠO MỘT BỘ ĐẾM GIỜ CHẠY NGẦM ĐỘC LẬP (Không làm đơ logic cũ)
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
+    //  TẠO SAFEGSON (Chuyên trị lỗi thời gian)
+    private static final Gson safeGson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
+                    new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
+            .registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, typeOfT, context) ->
+                    LocalDateTime.parse(json.getAsString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+            .create();
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -101,7 +111,7 @@ public class SellProductHandler implements IMessageHandler {
                             context.updateProduct(p); // Cập nhật RAM
 
                             // C. Gọi lại hàm Broadcast CŨ của anh để báo Client tải lại My Shop
-                            broadcastNewList(context, gson);
+                            broadcastNewList(context, safeGson);
                         }
                         System.out.println("[Timer] SP " + productId + " đã HẾT GIỜ. Trả về kho!");
                     }
@@ -109,22 +119,22 @@ public class SellProductHandler implements IMessageHandler {
 
                 // 3. Phản hồi cho thằng Seller
                 Response response = new Response(MessageType.SELL_PRODUCT_RESPONSE, "SUCCESS", "Đã đưa sản phẩm lên sàn đấu giá!");
-                conn.send(gson.toJson(response));
+                conn.send(safeGson.toJson(response));
 
                 System.out.println("-> [SellProduct] Thành công: ID " + productId);
 
                 // 4. Phát loa thông báo cho tất cả mọi người
-                broadcastNewList(context, gson);
+                broadcastNewList(context, safeGson);
                 // 5. Phát loa thông báo phiên đấu giá mới (Dành cho giao diện đấu giá sắp làm)
-                broadcastNewAuctionSession(context, gson);
+                broadcastNewAuctionSession(context, safeGson);
 
             } else {
-                sendError(conn, gson, "Lỗi khi cập nhật trạng thái lên Database!");
+                sendError(conn, safeGson, "Lỗi khi cập nhật trạng thái lên Database!");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            sendError(conn, gson, "Lỗi hệ thống: " + e.getMessage());
+            sendError(conn, safeGson, "Lỗi hệ thống: " + e.getMessage());
         }
     }
 
@@ -138,7 +148,7 @@ public class SellProductHandler implements IMessageHandler {
         Response updateRes = new Response(MessageType.UPDATE_AUCTION_LIST_RESPONSE, "SUCCESS", "Sàn vừa có món mới!");
         updateRes.getData().put("productList", listToSend);
 
-        String message = gson.toJson(updateRes);
+        String message = safeGson.toJson(updateRes);
 
         // Gửi cho tất cả mọi người đang online
         for (WebSocket client : context.getConnectedClients()) {
@@ -161,7 +171,7 @@ public class SellProductHandler implements IMessageHandler {
         Response updateRes = new Response("UPDATE_ACTIVE_AUCTIONS_RESPONSE", "SUCCESS", "Có phiên đấu giá mới được lên lịch!");
         updateRes.getData().put("auctionList", activeAuctions);
 
-        String message = gson.toJson(updateRes);
+        String message = safeGson.toJson(updateRes);
         for (WebSocket client : context.getConnectedClients()) {
             if (client.isOpen()) {
                 client.send(message);
@@ -172,6 +182,6 @@ public class SellProductHandler implements IMessageHandler {
 
     private void sendError(WebSocket conn, Gson gson, String msg) {
         Response response = new Response(MessageType.SELL_PRODUCT_RESPONSE, "ERROR", msg);
-        conn.send(gson.toJson(response));
+        conn.send(safeGson.toJson(response));
     }
 }
