@@ -57,7 +57,8 @@ public class ProductDao {
             pstmt.setDouble(8, product.getStepPrice());
             pstmt.setString(9, product.getStatus().toString());
             pstmt.setString(10, (product.getOwner() != null) ? product.getOwner().getId() : null);
-            pstmt.setTimestamp(11, Timestamp.valueOf(product.getTimeCreated()));
+
+            pstmt.setTimestamp(11, (product.getTimeCreated() != null) ? Timestamp.valueOf(product.getTimeCreated()) : null);
 
             // Thêm 2 tham số mới (Kiểm tra null để tránh crash)
             pstmt.setTimestamp(12, (product.getStartTime() != null) ? Timestamp.valueOf(product.getStartTime()) : null);
@@ -106,7 +107,7 @@ public class ProductDao {
             pstmt.setDouble(7, product.getStepPrice());
             pstmt.setString(8, product.getStatus().toString());
             pstmt.setString(9, (product.getOwner() != null) ? product.getOwner().getId() : null);
-            pstmt.setTimestamp(10, Timestamp.valueOf(product.getTimeCreated()));
+            pstmt.setTimestamp(10, (product.getTimeCreated() != null) ? Timestamp.valueOf(product.getTimeCreated()) : null);
 
             // Thêm 2 tham số mới
             pstmt.setTimestamp(11, (product.getStartTime() != null) ? Timestamp.valueOf(product.getStartTime()) : null);

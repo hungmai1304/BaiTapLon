@@ -80,7 +80,7 @@ public class SellProductHandler implements IMessageHandler {
                     }
                 }, delayToActive, TimeUnit.SECONDS); // ⚠️ LÚC TEST ĐỔI THÀNH TimeUnit.SECONDS
 
-                // Hẹn giờ 2: KHÓA SỔ VÀ TRẢ ĐỒ VỀ KHO (ACTIVE -> COMPLETED)
+                /// Hẹn giờ 2: KHÓA SỔ VÀ TRẢ ĐỒ VỀ KHO (ACTIVE -> COMPLETED)
                 scheduler.schedule(() -> {
                     Auction auctionToEnd = context.getAuctionByProductId(productId);
                     if (auctionToEnd != null && !"COMPLETED".equals(auctionToEnd.getStatus())) {
@@ -92,9 +92,12 @@ public class SellProductHandler implements IMessageHandler {
                         // B. Kéo sản phẩm về trạng thái có sẵn để "My Shop" bình thường lại
                         Product p = context.getProductById(productId);
                         if (p != null) {
-                            // Ghi chú: Nếu trạng thái mặc định của anh là IDLE thì đổi chữ AVAILABLE thành IDLE nhé
                             p.setStatus(ProductStatus.AVAILABLE);
-                            ProductDao.getInstance().editProduct(p); // Lưu xuống DB
+                            
+                            p.setStartTime(null);
+                            p.setEndTime(null);
+
+                            ProductDao.getInstance().editProduct(p); // Lưu xuống DB (Lúc này DB sẽ nhận 2 cái null an toàn)
                             context.updateProduct(p); // Cập nhật RAM
 
                             // C. Gọi lại hàm Broadcast CŨ của anh để báo Client tải lại My Shop
