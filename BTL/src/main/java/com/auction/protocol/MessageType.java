@@ -76,4 +76,9 @@ public class MessageType {
     // Người thắng cuộc vào nhận sản phẩm và hệ thống tự động trừ tiền trong ví
     public static final String CLAIM_PRIZE_REQUEST = "CLAIM_PRIZE_REQUEST";
     public static final String CLAIM_PRIZE_RESPONSE = "CLAIM_PRIZE_RESPONSE";
+
+    // xoa san pham
+    public static final String DELETE_PRODUCT_REQUEST = "DELETE_PRODUCT_REQUEST";
+    public static final String DELETE_PRODUCT_RESPONSE = "DELETE_PRODUCT_RESPONSE";
+
 }
