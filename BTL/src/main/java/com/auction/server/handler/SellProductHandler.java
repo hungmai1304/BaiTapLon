@@ -2,6 +2,7 @@ package com.auction.server.handler;
 
 import com.auction.protocol.MessageType;
 import com.auction.common.model.product.Product;
+import com.auction.common.model.product.ProductStatus;
 import com.auction.common.model.auction.Auction;
 import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
@@ -13,9 +14,15 @@ import java.util.Map;
 import java.util.List;
 import java.time.LocalDateTime; // import để tính giờ
 import java.util.Random; //  import để random ID
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @CommandMap(value = MessageType.SELL_PRODUCT_REQUEST)
 public class SellProductHandler implements IMessageHandler {
+    // TẠO MỘT BỘ ĐẾM GIỜ CHẠY NGẦM ĐỘC LẬP (Không làm đơ logic cũ)
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
+
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -57,6 +64,45 @@ public class SellProductHandler implements IMessageHandler {
                     // Cất vào kho chứa Auction trên RAM
                     context.addAuction(newAuction);
                 }
+
+                // PHẦN MỚI THÊM: HẸN GIỜ TỰ ĐỘNG CHUYỂN TRẠNG THÁI
+                // =========================================================
+                long delayToActive = 30; // Chờ 30p để bắt đầu
+                long delayToCompleted = 40; // Tổng 40p để kết thúc
+
+                // Hẹn giờ 1: MỞ BÁT (PENDING -> ACTIVE)
+                scheduler.schedule(() -> {
+                    Auction auctionToStart = context.getAuctionByProductId(productId);
+                    if (auctionToStart != null && "PENDING".equals(auctionToStart.getStatus())) {
+                        auctionToStart.setStatus("ACTIVE");
+                        context.updateAuction(auctionToStart);
+                        System.out.println(" [Timer] SP " + productId + " đã lên sàn ĐẤU GIÁ!");
+                    }
+                }, delayToActive, TimeUnit.SECONDS); // ⚠️ LÚC TEST ĐỔI THÀNH TimeUnit.SECONDS
+
+                // Hẹn giờ 2: KHÓA SỔ VÀ TRẢ ĐỒ VỀ KHO (ACTIVE -> COMPLETED)
+                scheduler.schedule(() -> {
+                    Auction auctionToEnd = context.getAuctionByProductId(productId);
+                    if (auctionToEnd != null && !"COMPLETED".equals(auctionToEnd.getStatus())) {
+
+                        // A. Chốt phiên đấu giá
+                        auctionToEnd.setStatus("COMPLETED");
+                        context.updateAuction(auctionToEnd);
+
+                        // B. Kéo sản phẩm về trạng thái có sẵn để "My Shop" bình thường lại
+                        Product p = context.getProductById(productId);
+                        if (p != null) {
+                            // Ghi chú: Nếu trạng thái mặc định của anh là IDLE thì đổi chữ AVAILABLE thành IDLE nhé
+                            p.setStatus(ProductStatus.AVAILABLE);
+                            ProductDao.getInstance().editProduct(p); // Lưu xuống DB
+                            context.updateProduct(p); // Cập nhật RAM
+
+                            // C. Gọi lại hàm Broadcast CŨ của anh để báo Client tải lại My Shop
+                            broadcastNewList(context, gson);
+                        }
+                        System.out.println("[Timer] SP " + productId + " đã HẾT GIỜ. Trả về kho!");
+                    }
+                }, delayToCompleted, TimeUnit.SECONDS); // ⚠ LÚC TEST ĐỔI THÀNH TimeUnit.SECONDS
 
                 // 3. Phản hồi cho thằng Seller
                 Response response = new Response(MessageType.SELL_PRODUCT_RESPONSE, "SUCCESS", "Đã đưa sản phẩm lên sàn đấu giá!");

@@ -144,8 +144,14 @@ public class ProductDao {
         String sql = "UPDATE products SET status = 'ON_AUCTION', start_time = ?, end_time = ? WHERE id = ?";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setTimestamp(1, Timestamp.valueOf(java.time.LocalDateTime.now()));
-            pstmt.setTimestamp(2, Timestamp.valueOf(java.time.LocalDateTime.of(2099, 12, 31, 23, 59, 59)));
+
+            // Tính toán thời gian y hệt như trên RAM
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            java.time.LocalDateTime startTime = now.plusMinutes(30); // Chờ 30p
+            java.time.LocalDateTime endTime = startTime.plusMinutes(10); // Đấu 10p
+
+            pstmt.setTimestamp(1, Timestamp.valueOf(startTime));
+            pstmt.setTimestamp(2, Timestamp.valueOf(endTime));
             pstmt.setString(3, productId);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
