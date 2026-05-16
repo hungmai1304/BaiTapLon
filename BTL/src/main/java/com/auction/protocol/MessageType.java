@@ -1,21 +1,21 @@
 package com.auction.protocol;
 
 public class MessageType {
-    // Các tín hiệu liên quan đến Đăng nhập
+    // Các tín hiệu liên quan đến đăng nhập
     public static final String LOGIN_REQUEST = "LOGIN_REQUEST";
     public static final String LOGIN_RESPONSE = "LOGIN_RESPONSE";
 
-
+    // Các tín hiệu liên quan đến đăng ký
     public static final String REGISTER_REQUEST = "REGISTER_REQUEST";
     public static final String REGISTER_RESPONSE = "REGISTER_RESPONSE";
-
 
     // Yêu cầu lấy danh sách sản phẩm của shop (AVAILABLE/SOLD...)
     public static final String GET_SHOP_PRODUCTS_REQUEST  = "GET_SHOP_PRODUCTS_REQUEST";
     public static final String GET_SHOP_PRODUCTS_RESPONSE = "GET_SHOP_PRODUCTS_RESPONSE";
 
-    public static final String IMPORT_PRODUCT_REQUEST ="IMPORT_PRODUCT_REQUEST";
-    public static final String IMPORT_PRODUCT_RESPONSE ="IMPORT_PRODUCT_RESPONSE";
+    // Nhập sản phẩm vào kho của Shop
+    public static final String IMPORT_PRODUCT_REQUEST = "IMPORT_PRODUCT_REQUEST";
+    public static final String IMPORT_PRODUCT_RESPONSE = "IMPORT_PRODUCT_RESPONSE";
 
     // Shop bấm nút đăng bán món hàng mới lên sàn
     public static final String SELL_PRODUCT_REQUEST = "SELL_PRODUCT_REQUEST";
@@ -25,12 +25,17 @@ public class MessageType {
     public static final String EDIT_PRODUCT_REQUEST = "EDIT_PRODUCT_REQUEST";
     public static final String EDIT_PRODUCT_RESPONSE = "EDIT_PRODUCT_RESPONSE";
 
-    // Server thông báo với client(Dùng sau khi có người vừa đăng bán thành công)
+    // Server thông báo với client (Dùng sau khi có người vừa đăng bán thành công)
     public static final String UPDATE_AUCTION_LIST_RESPONSE = "UPDATE_AUCTION_LIST_RESPONSE";
 
-
+    // Hệ thống lắng nghe thời gian (TikTok Listener)
     public static final String TIK_TOK_LISTENER_REQUEST = "TIK_TOK_LISTENER_REQUEST";
     public static final String TIK_TOK_LISTENER_RESPONSE = "TIK_TOK_LISTENER_RESPONSE";
+
+    // Ngắt hệ thống lắng nghe thời gian
+    public static final String STOP_TIK_TOK_LISTENER_REQUEST = "STOP_TIK_TOK_LISTENER_REQUEST";
+    public static final String STOP_TIK_TOK_LISTENER_RESPONSE = "STOP_TIK_TOK_LISTENER_RESPONSE";
+
     // 1. Client xin danh sách các phiên đấu giá đang diễn ra
     public static final String GET_ACTIVE_AUCTIONS_REQUEST = "GET_ACTIVE_AUCTIONS_REQUEST";
     public static final String GET_ACTIVE_AUCTIONS_RESPONSE = "GET_ACTIVE_AUCTIONS_RESPONSE";
@@ -42,12 +47,33 @@ public class MessageType {
     public static final String PLACE_BID_REQUEST = "PLACE_BID_REQUEST";
     public static final String PLACE_BID_RESPONSE = "PLACE_BID_RESPONSE";
 
-    // 4. Server broadcast cho cả sàn biết vừa có giá mới (Đúng chuẩn Giao kèo 2 của Hùng)
+    // 4. Server broadcast cho cả sàn biết vừa có giá mới
     public static final String BROADCAST_NEW_BID = "BROADCAST_NEW_BID";
 
+    // =========================================================================
+    // 🆕 CÁC TÍN HIỆU ĐƯỢC THÊM MỚI (VÍ TRÚC VÀ GIAO DỊCH TÀI KHOẢN)
+    // =========================================================================
 
-    // 3. Client gửi lệnh xin ra giá (Bid)
-    public static final String STOP_TIK_TOK_LISTENER_REQUEST= "STOP_TIK_TOK_LISTENER_REQUEST";
-    public static final String STOP_TIK_TOK_LISTENER_RESPONSE = "STOP_TIK_TOK_LISTENER_RESPONSE";
+    // Tín hiệu xử lý nạp tiền (Deposit)
+    public static final String DEPOSIT_REQUEST = "DEPOSIT_REQUEST";
+    public static final String DEPOSIT_RESPONSE = "DEPOSIT_RESPONSE";
+
+    // Tín hiệu xử lý rút tiền (Withdraw)
+    public static final String WITHDRAW_REQUEST = "WITHDRAW_REQUEST";
+    public static final String WITHDRAW_RESPONSE = "WITHDRAW_RESPONSE";
+
+    // Tín hiệu đồng bộ số dư tài khoản (Ví dụ: Trả ví về khi vừa đăng nhập xong)
+    public static final String GET_BALANCE_REQUEST = "GET_BALANCE_REQUEST";
+    public static final String GET_BALANCE_RESPONSE = "GET_BALANCE_RESPONSE";
+
+    // =========================================================================
+    // 🆕 CÁC TÍN HIỆU DỰ PHÒNG CHO LOGIC KẾT THÚC ĐẤU GIÁ
+    // =========================================================================
+
+    // Server thông báo phiên đấu giá đã kết thúc thành công (Có người thắng) hoặc thất bại (Không ai mua)
+    public static final String AUCTION_ENDED_BROADCAST = "AUCTION_ENDED_BROADCAST";
+
+    // Người thắng cuộc vào nhận sản phẩm và hệ thống tự động trừ tiền trong ví
+    public static final String CLAIM_PRIZE_REQUEST = "CLAIM_PRIZE_REQUEST";
+    public static final String CLAIM_PRIZE_RESPONSE = "CLAIM_PRIZE_RESPONSE";
 }
-    // (Sau này làm tính năng gì thì cứ khai báo thêm vào đây)

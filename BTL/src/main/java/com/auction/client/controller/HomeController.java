@@ -4,6 +4,7 @@ import com.auction.client.network.ClientMessageDispatcher;
 import com.auction.client.network.MessageListener;
 import com.auction.client.network.NetworkClient;
 
+import com.auction.client.utils.NavigationService;
 import javafx.event.ActionEvent;
 import com.auction.common.model.product.ProductStatus;
 import com.auction.protocol.MessageType;
@@ -45,6 +46,7 @@ public class HomeController implements Initializable {
         try {
             SomeGlobal.setHomeController(this);
             loadMainView();
+            NavigationService.setTopView("/com/auction/client/view/topView.fxml");
         } catch (IOException e) {
             e.printStackTrace();
         }

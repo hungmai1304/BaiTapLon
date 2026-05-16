@@ -7,7 +7,6 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
@@ -58,12 +57,9 @@
                               </HBox>
                               <HBox alignment="CENTER_LEFT" spacing="20.0">
                                  <children>
-                                    <Label text="0" textFill="WHITE">
+                                    <Label fx:id="balance_amount" text="0" textFill="WHITE">
                                        <font><Font size="80.0" /></font>
                                     </Label>
-                                    <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
-                                       <image><Image url="@dollar-symbol.png" /></image>
-                                    </ImageView>
                                  </children>
                                  <padding><Insets left="50.0" /></padding>
                               </HBox>
@@ -115,21 +111,17 @@
                                  </rowConstraints>
                                  <children>
                                     <Label styleClass="h1" text="Amount :" textFill="WHITE" />
-                                    <TextField prefHeight="50.0" promptText="Enter deposit amount" GridPane.columnIndex="1" />
-                                    <Button mnemonicParsing="false" styleClass="btn-transparent" GridPane.columnIndex="2">
+                                    <TextField fx:id="depositAmountField" prefHeight="50.0" promptText="Enter deposit amount" GridPane.columnIndex="1" />
+                                    <Button mnemonicParsing="false" onAction="#handleConfirmDeposit" styleClass="btn-transparent" GridPane.columnIndex="2">
                                        <graphic>
                                           <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
                                              <image><Image url="@arrow.png" /></image>
                                           </ImageView>
                                        </graphic>
                                     </Button>
-                                    <Label styleClass="h1" text="State :" textFill="WHITE" GridPane.rowIndex="1" />
                                     <HBox alignment="CENTER_LEFT" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                                        <children>
                                           <Label fx:id="state_withdraw1" styleClass="h1" textFill="WHITE" />
-                                          <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
-                                             <image><Image url="@cancel.png" /></image>
-                                          </ImageView>
                                        </children>
                                     </HBox>
                                  </children>
@@ -156,21 +148,17 @@
                                  </rowConstraints>
                                  <children>
                                     <Label styleClass="h1" text="Amount :" textFill="WHITE" />
-                                    <TextField prefHeight="50.0" promptText="Enter withdraw amount" GridPane.columnIndex="1" />
-                                    <Button mnemonicParsing="false" styleClass="btn-transparent" GridPane.columnIndex="2">
+                                    <TextField fx:id="withdrawAmountField" prefHeight="50.0" promptText="Enter withdraw amount" GridPane.columnIndex="1" />
+                                    <Button mnemonicParsing="false" onAction="#handleConfirmWithdraw" styleClass="btn-transparent" GridPane.columnIndex="2">
                                        <graphic>
                                           <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
                                              <image><Image url="@arrow.png" /></image>
                                           </ImageView>
                                        </graphic>
                                     </Button>
-                                    <Label styleClass="h1" text="State :" textFill="WHITE" GridPane.rowIndex="1" />
                                     <HBox alignment="CENTER_LEFT" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                                        <children>
                                           <Label fx:id="state_withdraw" styleClass="h1" textFill="WHITE" />
-                                          <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
-                                             <image><Image url="@cancel.png" /></image>
-                                          </ImageView>
                                        </children>
                                     </HBox>
                                  </children>
