@@ -149,7 +149,7 @@ public class ProductDao {
             // Tính toán thời gian y hệt như trên RAM
             java.time.LocalDateTime now = java.time.LocalDateTime.now();
             java.time.LocalDateTime startTime = now.plusSeconds(30); // Chờ 30p
-            java.time.LocalDateTime endTime = startTime.plusSeconds(10); // Đấu 10p , test thì giây cho nhanh
+            java.time.LocalDateTime endTime = startTime.plusSeconds(15); // Đấu 10p , test thì giây cho nhanh
 
             pstmt.setTimestamp(1, Timestamp.valueOf(startTime));
             pstmt.setTimestamp(2, Timestamp.valueOf(endTime));
