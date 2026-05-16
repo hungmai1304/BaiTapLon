@@ -54,7 +54,7 @@ public class BiddingController {
             updateLeaderUI(currentAuctionData.getLeaderName(), currentAuctionData.getCurrentPrice());
         } else {
             lblNotification.setStyle("-fx-text-fill: #e74c3c;");
-            lblNotification.setText("⚠️ Lỗi: Không tìm thấy thông tin phiên đấu giá!");
+            lblNotification.setText("Lỗi: Không tìm thấy thông tin phiên đấu giá!");
         }
 
         if (priceSeries.getName() == null) {
@@ -69,14 +69,14 @@ public class BiddingController {
             // 1. KIỂM TRA DỮ LIỆU CỐT LÕI (Tránh lỗi văng đỏ lòm do null)
             if (currentAuctionData == null || currentAuctionData.getItem() == null) {
                 lblNotification.setStyle("-fx-text-fill: #e74c3c;");
-                lblNotification.setText("⚠️ Lỗi dữ liệu! Vui lòng quay lại màn hình trước.");
+                lblNotification.setText("Lỗi dữ liệu! Vui lòng quay lại màn hình trước.");
                 return;
             }
 
             String input = txtBidAmount.getText().trim();
             if (input.isEmpty()) {
                 lblNotification.setStyle("-fx-text-fill: #e74c3c;");
-                lblNotification.setText("⚠️ Vui lòng nhập giá tiền!");
+                lblNotification.setText("Vui lòng nhập giá tiền!");
                 return;
             }
 
@@ -88,13 +88,13 @@ public class BiddingController {
             // 2. KIỂM TRA LOGIC ĐẤU GIÁ
             if (bidAmount <= currentPrice) {
                 lblNotification.setStyle("-fx-text-fill: #e74c3c;");
-                lblNotification.setText("⚠️ Giá phải cao hơn giá hiện hành!");
+                lblNotification.setText("Giá phải cao hơn giá hiện hành!");
                 return;
             }
 
             if ((bidAmount - currentPrice) % stepPrice != 0) {
                 lblNotification.setStyle("-fx-text-fill: #e74c3c;");
-                lblNotification.setText("⚠️ Sai bước giá! Phải tăng theo bội số của " + String.format("%,.0fđ", stepPrice));
+                lblNotification.setText("Sai bước giá! Phải tăng theo bội số của " + String.format("%,.0fđ", stepPrice));
                 return;
             }
 
@@ -104,17 +104,17 @@ public class BiddingController {
 
             // THÔNG BÁO THÀNH CÔNG (Đã đổi màu xanh và nội dung như Hùng muốn)
             lblNotification.setStyle("-fx-text-fill: #2ecc71;");
-            lblNotification.setText("✅ Đặt giá thành công! Đang chờ hệ thống ghi nhận...");
+            lblNotification.setText("Đặt giá thành công! Đang chờ hệ thống ghi nhận...");
 
             txtBidAmount.clear();
 
         } catch (NumberFormatException e) {
             lblNotification.setStyle("-fx-text-fill: #e74c3c;");
-            lblNotification.setText("⚠️ Vui lòng nhập con số hợp lệ!");
+            lblNotification.setText("Vui lòng nhập con số hợp lệ!");
         } catch (Exception e) {
             // Đây là nơi bắt các lỗi kết nối thật sự
             lblNotification.setStyle("-fx-text-fill: #e74c3c;");
-            lblNotification.setText("⚠️ Lỗi hệ thống: " + e.getMessage());
+            lblNotification.setText("Lỗi hệ thống: " + e.getMessage());
             e.printStackTrace();
         }
     }

@@ -14,14 +14,14 @@ public class SellProductClientHandler implements IClientHandler {
     public void handle(Response response) {
         Platform.runLater(() -> {
             if ("SUCCESS".equalsIgnoreCase(response.getStatus())) {
-                System.out.println("✅ [Client] Đã đưa sản phẩm lên sàn thành công!");
+                System.out.println("[Client] Đã đưa sản phẩm lên sàn thành công!");
                 System.out.println("   Message: " + response.getMessage());
 
                 // TODO: Refresh lại UI - reload danh sách shop
                 RequestSender.send(MessageType.GET_SHOP_PRODUCTS_REQUEST, null);
 
             } else {
-                System.err.println("❌ [Client] Lỗi khi lên sàn: " + response.getMessage());
+                System.err.println("[Client] Lỗi khi lên sàn: " + response.getMessage());
             }
         });
     }

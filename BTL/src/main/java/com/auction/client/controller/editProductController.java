@@ -195,4 +195,37 @@ public class editProductController {
         uploadLabel.setVisible(true);
         selectedImageBase64 = null;
     }
+    @FXML
+    public void handleDeleteProduct(ActionEvent event) {
+        if (originalProduct == null) {
+            successLabel.setVisible(true);
+            successLabel.setManaged(true);
+            successLabel.setText("Lỗi: Không tìm thấy sản phẩm!");
+            successLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
+
+        RequestSender.sendDeleteProductRequest(originalProduct.getId());
+
+        // Hiện thông báo xóa thành công
+        successLabel.setVisible(true);
+        successLabel.setManaged(true);
+        successLabel.setText("Đã xóa sản phẩm thành công!");
+        successLabel.setStyle("-fx-text-fill: #4caf50;");
+
+        // Xóa form
+        deleteAllClicked(null);
+
+        new Thread(() -> {
+            try {
+                Thread.sleep(5000);
+                javafx.application.Platform.runLater(() -> {
+                    successLabel.setVisible(false);
+                    successLabel.setManaged(false);
+                });
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
 }

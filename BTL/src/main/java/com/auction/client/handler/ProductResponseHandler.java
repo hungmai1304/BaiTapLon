@@ -34,7 +34,7 @@ public class ProductResponseHandler implements IClientHandler {
                 }
             }
         } else {
-            System.err.println("❌ Lỗi từ Server: " + response.getMessage());
+            System.err.println("Lỗi từ Server: " + response.getMessage());
         }
     }
 }

@@ -89,6 +89,12 @@
                                         <Font size="21.0" />
                                     </font>
                                 </Button>
+                                <Button onAction="#handleDeleteProduct" styleClass="btn-cancel" text="Xóa sản phẩm"
+                                        style="-fx-background-color: #e74c3c; -fx-text-fill: white;">
+                                    <font>
+                                        <Font size="21.0" />
+                                    </font>
+                                </Button>
                                 <Button onAction="#editProductClicked" styleClass="btn-submit" text="Lưu thay đổi" />
                             </children>
                         </HBox>

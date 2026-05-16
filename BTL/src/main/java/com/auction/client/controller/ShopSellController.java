@@ -52,7 +52,7 @@ public class ShopSellController {
             protected void updateItem(Double item, boolean empty) {
                 super.updateItem(item, empty);
                 setAlignment(javafx.geometry.Pos.CENTER);
-                setText(empty || item == null ? null : String.format("%,.0f?", item));
+                setText(empty || item == null ? null : String.format("%,.0f", item));
             }
         });
         colPrice.setCellValueFactory(new PropertyValueFactory<>("startPrice"));

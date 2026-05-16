@@ -48,7 +48,7 @@ public class AuctionManager {
                 .collect(Collectors.toList());
 
         if (availableProducts.isEmpty()) {
-            System.out.println("[AuctionManager] ⚠️ Không còn sản phẩm nào để đấu giá!");
+            System.out.println("[AuctionManager] Không còn sản phẩm nào để đấu giá!");
             return null;
         }
 
@@ -64,8 +64,8 @@ public class AuctionManager {
         // 4. Lưu vào ServerContext
         context.setCurrentProduct(selectedProduct);
 
-        System.out.println("🔴 [AuctionManager] Sản phẩm lên sàn: " + selectedProduct.getName());
-        System.out.println("   ⏰ Kết thúc lúc: " + selectedProduct.getEndTime());
+        System.out.println("[AuctionManager] Sản phẩm lên sàn: " + selectedProduct.getName());
+        System.out.println("[AuctionManager] Kết thúc lúc: " + selectedProduct.getEndTime());
 
         // 5. Broadcast cho tất cả client
         broadcastNewAuction(selectedProduct);
@@ -98,7 +98,7 @@ public class AuctionManager {
             }
         }
 
-        System.out.println("📡 [AuctionManager] Đã broadcast sản phẩm mới cho " +
+        System.out.println("[AuctionManager] Đã broadcast sản phẩm mới cho " +
                 context.getServer().getConnections().size() + " client!");
     }
 
@@ -114,11 +114,11 @@ public class AuctionManager {
         // Đổi status → SOLD (hoặc CANCELLED nếu không ai đấu)
         if (product.getCurrentPrice() > product.getStartPrice()) {
             product.setStatus(ProductStatus.SOLD);
-            System.out.println("✅ [AuctionManager] Sản phẩm " + product.getName() +
+            System.out.println("[AuctionManager] Sản phẩm " + product.getName() +
                     " đã BÁN với giá: " + product.getCurrentPrice());
         } else {
             product.setStatus(ProductStatus.CANCELLED);
-            System.out.println("❌ [AuctionManager] Sản phẩm " + product.getName() +
+            System.out.println("[AuctionManager] Sản phẩm " + product.getName() +
                     " KHÔNG CÓ AI ĐẤU GIÁ → Hủy bỏ");
         }
 
@@ -150,7 +150,7 @@ public class AuctionManager {
             }
         }
 
-        System.out.println("📡 [AuctionManager] Đã broadcast kết thúc phiên!");
+        System.out.println("[AuctionManager] Đã broadcast kết thúc phiên!");
     }
 
     /**
@@ -159,11 +159,11 @@ public class AuctionManager {
     private void scheduleNextAuction() {
         new Thread(() -> {
             try {
-                System.out.println("⏳ [AuctionManager] Chờ 10 giây trước khi chọn sản phẩm mới...");
+                System.out.println("[AuctionManager] Chờ 10 giây trước khi chọn sản phẩm mới...");
                 Thread.sleep(10000); // 10 giây
                 pickNextProduct();
             } catch (InterruptedException e) {
-                System.err.println("❌ [AuctionManager] Lỗi khi lên lịch: " + e.getMessage());
+                System.err.println("[AuctionManager] Lỗi khi lên lịch: " + e.getMessage());
             }
         }).start();
     }
@@ -182,7 +182,7 @@ public class AuctionManager {
                 current.getStatus() == ProductStatus.ON_AUCTION &&
                 LocalDateTime.now().isAfter(current.getEndTime())) {
 
-            System.out.println("⏰ [AuctionManager] Phiên đấu giá HẾT GIỜ!");
+            System.out.println("[AuctionManager] Phiên đấu giá HẾT GIỜ!");
             endAuction(current);
         }
     }

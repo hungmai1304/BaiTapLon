@@ -2,20 +2,37 @@ package com.auction.server.handler;
 
 import com.auction.protocol.MessageType;
 import com.auction.common.model.product.Product;
+import com.auction.common.model.product.ProductStatus;
 import com.auction.common.model.auction.Auction;
 import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.dao.ProductDao;
 import com.auction.server.model.ServerContext;
+import com.google.gson.*;
+import java.time.format.DateTimeFormatter;
+
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 import java.util.Map;
 import java.util.List;
 import java.time.LocalDateTime; // import để tính giờ
 import java.util.Random; //  import để random ID
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @CommandMap(value = MessageType.SELL_PRODUCT_REQUEST)
 public class SellProductHandler implements IMessageHandler {
+    // TẠO MỘT BỘ ĐẾM GIỜ CHẠY NGẦM ĐỘC LẬP (Không làm đơ logic cũ)
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
+
+    //  TẠO SAFEGSON (Chuyên trị lỗi thời gian)
+    private static final Gson safeGson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
+                    new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
+            .registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, typeOfT, context) ->
+                    LocalDateTime.parse(json.getAsString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+            .create();
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -58,24 +75,66 @@ public class SellProductHandler implements IMessageHandler {
                     context.addAuction(newAuction);
                 }
 
+                // PHẦN MỚI THÊM: HẸN GIỜ TỰ ĐỘNG CHUYỂN TRẠNG THÁI
+                // =========================================================
+                long delayToActive = 30; // Chờ 30p để bắt đầu
+                long delayToCompleted = 40; // Tổng 40p để kết thúc
+
+                // Hẹn giờ 1: MỞ BÁT (PENDING -> ACTIVE)
+                scheduler.schedule(() -> {
+                    Auction auctionToStart = context.getAuctionByProductId(productId);
+                    if (auctionToStart != null && "PENDING".equals(auctionToStart.getStatus())) {
+                        auctionToStart.setStatus("ACTIVE");
+                        context.updateAuction(auctionToStart);
+                        System.out.println(" [Timer] SP " + productId + " đã lên sàn ĐẤU GIÁ!");
+                    }
+                }, delayToActive, TimeUnit.SECONDS); // ⚠️ LÚC TEST ĐỔI THÀNH TimeUnit.SECONDS
+
+                /// Hẹn giờ 2: KHÓA SỔ VÀ TRẢ ĐỒ VỀ KHO (ACTIVE -> COMPLETED)
+                scheduler.schedule(() -> {
+                    Auction auctionToEnd = context.getAuctionByProductId(productId);
+                    if (auctionToEnd != null && !"COMPLETED".equals(auctionToEnd.getStatus())) {
+
+                        // A. Chốt phiên đấu giá
+                        auctionToEnd.setStatus("COMPLETED");
+                        context.updateAuction(auctionToEnd);
+
+                        // B. Kéo sản phẩm về trạng thái có sẵn để "My Shop" bình thường lại
+                        Product p = context.getProductById(productId);
+                        if (p != null) {
+                            p.setStatus(ProductStatus.AVAILABLE);
+                            
+                            p.setStartTime(null);
+                            p.setEndTime(null);
+
+                            ProductDao.getInstance().editProduct(p); // Lưu xuống DB (Lúc này DB sẽ nhận 2 cái null an toàn)
+                            context.updateProduct(p); // Cập nhật RAM
+
+                            // C. Gọi lại hàm Broadcast CŨ của anh để báo Client tải lại My Shop
+                            broadcastNewList(context, safeGson);
+                        }
+                        System.out.println("[Timer] SP " + productId + " đã HẾT GIỜ. Trả về kho!");
+                    }
+                }, delayToCompleted, TimeUnit.SECONDS); // ⚠ LÚC TEST ĐỔI THÀNH TimeUnit.SECONDS
+
                 // 3. Phản hồi cho thằng Seller
                 Response response = new Response(MessageType.SELL_PRODUCT_RESPONSE, "SUCCESS", "Đã đưa sản phẩm lên sàn đấu giá!");
-                conn.send(gson.toJson(response));
+                conn.send(safeGson.toJson(response));
 
                 System.out.println("-> [SellProduct] Thành công: ID " + productId);
 
                 // 4. Phát loa thông báo cho tất cả mọi người
-                broadcastNewList(context, gson);
+                broadcastNewList(context, safeGson);
                 // 5. Phát loa thông báo phiên đấu giá mới (Dành cho giao diện đấu giá sắp làm)
-                broadcastNewAuctionSession(context, gson);
+                broadcastNewAuctionSession(context, safeGson);
 
             } else {
-                sendError(conn, gson, "Lỗi khi cập nhật trạng thái lên Database!");
+                sendError(conn, safeGson, "Lỗi khi cập nhật trạng thái lên Database!");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            sendError(conn, gson, "Lỗi hệ thống: " + e.getMessage());
+            sendError(conn, safeGson, "Lỗi hệ thống: " + e.getMessage());
         }
     }
 
@@ -89,7 +148,7 @@ public class SellProductHandler implements IMessageHandler {
         Response updateRes = new Response(MessageType.UPDATE_AUCTION_LIST_RESPONSE, "SUCCESS", "Sàn vừa có món mới!");
         updateRes.getData().put("productList", listToSend);
 
-        String message = gson.toJson(updateRes);
+        String message = safeGson.toJson(updateRes);
 
         // Gửi cho tất cả mọi người đang online
         for (WebSocket client : context.getConnectedClients()) {
@@ -112,7 +171,7 @@ public class SellProductHandler implements IMessageHandler {
         Response updateRes = new Response("UPDATE_ACTIVE_AUCTIONS_RESPONSE", "SUCCESS", "Có phiên đấu giá mới được lên lịch!");
         updateRes.getData().put("auctionList", activeAuctions);
 
-        String message = gson.toJson(updateRes);
+        String message = safeGson.toJson(updateRes);
         for (WebSocket client : context.getConnectedClients()) {
             if (client.isOpen()) {
                 client.send(message);
@@ -123,6 +182,6 @@ public class SellProductHandler implements IMessageHandler {
 
     private void sendError(WebSocket conn, Gson gson, String msg) {
         Response response = new Response(MessageType.SELL_PRODUCT_RESPONSE, "ERROR", msg);
-        conn.send(gson.toJson(response));
+        conn.send(safeGson.toJson(response));
     }
 }

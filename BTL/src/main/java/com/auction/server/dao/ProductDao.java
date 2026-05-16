@@ -57,7 +57,8 @@ public class ProductDao {
             pstmt.setDouble(8, product.getStepPrice());
             pstmt.setString(9, product.getStatus().toString());
             pstmt.setString(10, (product.getOwner() != null) ? product.getOwner().getId() : null);
-            pstmt.setTimestamp(11, Timestamp.valueOf(product.getTimeCreated()));
+
+            pstmt.setTimestamp(11, (product.getTimeCreated() != null) ? Timestamp.valueOf(product.getTimeCreated()) : null);
 
             // Thêm 2 tham số mới (Kiểm tra null để tránh crash)
             pstmt.setTimestamp(12, (product.getStartTime() != null) ? Timestamp.valueOf(product.getStartTime()) : null);
@@ -106,7 +107,7 @@ public class ProductDao {
             pstmt.setDouble(7, product.getStepPrice());
             pstmt.setString(8, product.getStatus().toString());
             pstmt.setString(9, (product.getOwner() != null) ? product.getOwner().getId() : null);
-            pstmt.setTimestamp(10, Timestamp.valueOf(product.getTimeCreated()));
+            pstmt.setTimestamp(10, (product.getTimeCreated() != null) ? Timestamp.valueOf(product.getTimeCreated()) : null);
 
             // Thêm 2 tham số mới
             pstmt.setTimestamp(11, (product.getStartTime() != null) ? Timestamp.valueOf(product.getStartTime()) : null);
@@ -144,8 +145,14 @@ public class ProductDao {
         String sql = "UPDATE products SET status = 'ON_AUCTION', start_time = ?, end_time = ? WHERE id = ?";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setTimestamp(1, Timestamp.valueOf(java.time.LocalDateTime.now()));
-            pstmt.setTimestamp(2, Timestamp.valueOf(java.time.LocalDateTime.of(2099, 12, 31, 23, 59, 59)));
+
+            // Tính toán thời gian y hệt như trên RAM
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            java.time.LocalDateTime startTime = now.plusSeconds(30); // Chờ 30p
+            java.time.LocalDateTime endTime = startTime.plusSeconds(10); // Đấu 10p , test thì giây cho nhanh
+
+            pstmt.setTimestamp(1, Timestamp.valueOf(startTime));
+            pstmt.setTimestamp(2, Timestamp.valueOf(endTime));
             pstmt.setString(3, productId);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -208,7 +215,7 @@ public class ProductDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Lỗi khi lấy sản phẩm theo email: " + e.getMessage());
+            System.err.println("Lỗi khi lấy sản phẩm theo email: " + e.getMessage());
             e.printStackTrace();
         }
         return productList;

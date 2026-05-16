@@ -28,7 +28,7 @@ public class UserDao {
     public boolean insertBidder(String email, String password, String name, String id, Timestamp timeCreated, double balance) {
         // Check trùng email trước khi insert
         if (getUserByEmail(email) != null) {
-            System.err.println("❌ Lỗi: Email " + email + " đã tồn tại!");
+            System.err.println("[UserDao]Lỗi: Email " + email + " đã tồn tại!");
             return false;
         }
 
@@ -46,7 +46,7 @@ public class UserDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("❌ Lỗi insert Bidder: " + e.getMessage());
+            System.err.println("[UserDao] Lỗi insert Bidder: " + e.getMessage());
             return false;
         }
     }
@@ -55,7 +55,7 @@ public class UserDao {
     public boolean insertSeller(String email, String password, String name, String id, Timestamp timeCreated, String shopName, double balance) {
         // Check trùng email trước khi insert
         if (getUserByEmail(email) != null) {
-            System.err.println("❌ Lỗi: Email " + email + " đã tồn tại!");
+            System.err.println("[UserDao] Lỗi: Email " + email + " đã tồn tại!");
             return false;
         }
 
@@ -74,7 +74,7 @@ public class UserDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("❌ Lỗi insert Seller: " + e.getMessage());
+            System.err.println("[UserDao] Lỗi insert Seller: " + e.getMessage());
             return false;
         }
     }
@@ -91,7 +91,7 @@ public class UserDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Lỗi getUserByEmail: " + e.getMessage());
+            System.err.println("[UserDao] Lỗi getUserByEmail: " + e.getMessage());
         }
         return null;
     }
@@ -110,7 +110,7 @@ public class UserDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi authenticate: " + e.getMessage());
+            System.err.println("[UserDao] Lỗi authenticate: " + e.getMessage());
         }
         return null;
     }
@@ -156,7 +156,7 @@ public class UserDao {
                 if (rs.next()) return mapResultSetToUser(rs);
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi findById: " + e.getMessage());
+            System.err.println("[UserDao] Lỗi findById: " + e.getMessage());
         }
         return null;
     }

@@ -70,7 +70,7 @@ public class BotBiddingController {
             String stepInput = txtBotPriceStep.getText().trim();
 
             if (maxInput.isEmpty() || stepInput.isEmpty()) {
-                lblBotNotification.setText("⚠️ Vui lòng nhập đầy đủ!");
+                lblBotNotification.setText("Vui lòng nhập đầy đủ!");
                 return;
             }
 
@@ -79,7 +79,7 @@ public class BotBiddingController {
 
             if (currentAuction != null) {
                 if (maxPrice <= currentAuction.getCurrentPrice()) {
-                    lblBotNotification.setText("❌ Giá tối đa phải cao hơn giá hiện tại!");
+                    lblBotNotification.setText("Giá tối đa phải cao hơn giá hiện tại!");
                     return;
                 }
 
@@ -98,10 +98,10 @@ public class BotBiddingController {
                         email
                 );
 
-                lblBotNotification.setText("✅ Đã đăng ký Bot thành công!");
+                lblBotNotification.setText("Đã đăng ký Bot thành công!");
             }
         } catch (NumberFormatException e) {
-            lblBotNotification.setText("❌ Giá phải là số!");
+            lblBotNotification.setText("Giá phải là số!");
         }
     }
 

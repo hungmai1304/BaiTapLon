@@ -32,7 +32,7 @@ public class BroadcastBidHandler implements IClientHandler {
             }
 
         } catch (Exception e) {
-            System.err.println("❌ Lỗi khi bóc tách Broadcast: " + e.getMessage());
+            System.err.println("Lỗi khi bóc tách Broadcast: " + e.getMessage());
         }
     }
 }

@@ -115,20 +115,20 @@ public class AuctionWebSocketServer extends WebSocketServer {
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        System.out.println("🚪 Client thoát: " + (conn != null ? conn.getRemoteSocketAddress() : "Unknown"));
+        System.out.println("Client thoát: " + (conn != null ? conn.getRemoteSocketAddress() : "Unknown"));
         broadcast("{\"type\":\"USER_COUNT_UPDATE\", \"count\":" + getConnections().size() + "}");
         ServerContext.getInstance().removeUser(conn);
     }
 
     @Override
     public void onError(WebSocket conn, Exception ex) {
-        System.err.println("⚠ WebSocket Error:");
+        System.err.println("[WebSocket] WebSocket Error:");
         ex.printStackTrace();
     }
 
     @Override
     public void onStart() {
-        System.out.println("🚀 WebSocket Server đã sẵn sàng!");
+        System.out.println("[WebSocketServer] WebSocket Server đã sẵn sàng!");
     }
 
     public void shutdown() {
@@ -137,7 +137,7 @@ public class AuctionWebSocketServer extends WebSocketServer {
         }
         try {
             this.stop();
-            System.out.println("🛑 [Server] WebSocket Server đã dừng!");
+            System.out.println("[WebSocketServer] WebSocket Server đã dừng!");
         } catch (Exception e) {
             e.printStackTrace();
         }
