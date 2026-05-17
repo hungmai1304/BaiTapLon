@@ -104,18 +104,18 @@ public class UserDao {
     }
 
     public User authenticate(String email, String password) {
-        String sql = "SELECT * FROM users WHERE email = ? AND password = ?";
+        String sql = "SELECT * FROM users WHERE email = ?";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, email);
-            pstmt.setString(2, password);
 
             try (ResultSet rs = pstmt.executeQuery()) {
-                String storedHash = rs.getString("password");
+                rs.next();
+                String hashedPassword = rs.getString("password");
 
                 // 2. Kiểm tra mật khẩu (Client gửi lên plaintext vs DB đã hash)
-                if (BCrypt.checkpw(password, storedHash)) {
+                if (BCrypt.checkpw(password, hashedPassword)) {
                     return mapResultSetToUser(rs);
                 }
             }
