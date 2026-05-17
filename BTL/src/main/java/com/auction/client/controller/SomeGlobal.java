@@ -7,7 +7,7 @@ public class SomeGlobal {
     private static User currentUser;
     private static MainController mainController;
     private static ShopSellController shopSellController;
-    private static User currentUser;
+
 
     // --- THÊM BIẾN VÀ HÀM CHO BANK CONTROLLER TẠI ĐÂY ---
     private static BankController bankController;
@@ -20,7 +20,7 @@ public class SomeGlobal {
         return bankController;
     }
     // -----------------------------------------------------
-    private static ShopSellController shopSellController;
+
 
     public static void setHomeController(HomeController controller) {
         homeController = controller;
@@ -55,15 +55,9 @@ public class SomeGlobal {
         return mainController;
     }
 
-    public static void setMainController(MainController controller) {
-        mainController = controller;
-    }
 
-    public static ShopSellController getShopSellController() {
-        return shopSellController;
-    }
 
-    public static void setShopSellController(ShopSellController controller) {
-        shopSellController = controller;
-    }
+
+
+
 }
