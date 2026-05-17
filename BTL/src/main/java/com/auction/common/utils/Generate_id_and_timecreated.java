@@ -5,6 +5,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 public class Generate_id_and_timecreated {
 
@@ -18,29 +19,21 @@ public class Generate_id_and_timecreated {
         return LocalDateTime.now(); // Trả về đối tượng thời gian hiện tại
     }
 
-    // 2. Hàm Hash chuỗi thời gian thành một mã ID (Sử dụng SHA-256)
-    public static String hashTimestampToId(String timestamp) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] encodedHash = digest.digest(timestamp.getBytes(StandardCharsets.UTF_8));
+    // 2. Hàm sinh ID ngẫu nhiên bảo mật (Sử dụng UUID)
+    // Thay thế logic hash timestamp cũ vì nó dễ bị đoán trước (Security Issue #6)
+    public static String generateRandomId() {
+        return UUID.randomUUID().toString().substring(0, 12).toUpperCase();
+    }
 
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : encodedHash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
-                hexString.append(hex);
-            }
-            // Trả về 12 ký tự đầu cho gọn hoặc toàn bộ chuỗi hash
-            return hexString.toString().substring(0, 12).toUpperCase();
-        } catch (NoSuchAlgorithmException e) {
-            return "ID_ERROR_" + System.currentTimeMillis();
-        }
+    // Giữ lại hàm này để không làm hỏng code cũ, nhưng bên trong dùng UUID
+    public static String hashTimestampToId(String timestamp) {
+        return generateRandomId();
     }
 
     // 3. Hàm tiện ích: Trả về một mảng String [ID, Time] để dùng ngay
     public static String[] generateFullInfo() {
         String time = getCurrentTimestamp();
-        String id = hashTimestampToId(time + System.nanoTime()); // Thêm nanoTime để tránh trùng lặp tuyệt đối
+        String id = generateRandomId();
         return new String[]{id, time};
     }
 }
