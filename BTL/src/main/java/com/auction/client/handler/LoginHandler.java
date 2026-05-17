@@ -19,6 +19,7 @@ public class LoginHandler implements IClientHandler {
 
     @Override
     public void handle(Response response) {
+        LoginController controller = ControllerRegistry.get("LoginController");
         if (response == null) return;
 
         if ("SUCCESS".equalsIgnoreCase(response.getStatus())) {
@@ -51,7 +52,7 @@ public class LoginHandler implements IClientHandler {
                 RequestSender.send(MessageType.GET_SHOP_PRODUCTS_REQUEST, null);
                 ControllerRegistry.unregister("LoginController");
             } else {
-                LoginController controller = ControllerRegistry.get("LoginController");
+
                 if (controller != null) {
                     String errorMsg = (response.getMessage() != null && !response.getMessage().isBlank())
                             ? response.getMessage()
@@ -59,6 +60,8 @@ public class LoginHandler implements IClientHandler {
                     controller.updateAnnouncement(errorMsg);
                 }
             }
+        }else {
+            controller.updateAnnouncement(response.getMessage());
         }
     }
 }

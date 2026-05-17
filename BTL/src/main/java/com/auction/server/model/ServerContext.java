@@ -1,14 +1,16 @@
 package com.auction.server.model;
 
+import com.auction.common.utils.LocalDateTimeAdapter;
 import com.auction.protocol.Response;
 import com.auction.server.AuctionWebSocketServer;
 import com.auction.common.model.product.Product;
 import com.auction.common.model.auction.Auction;
 import com.auction.protocol.MessageType;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import org.java_websocket.WebSocket;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,10 +18,15 @@ public class ServerContext {
 
     private static ServerContext instance;
     private AuctionWebSocketServer server;
-    private Product currentProduct;
+
 
     // Sử dụng Gson chung để tối ưu hiệu năng khi broadcast
-    private final Gson gson = new Gson();
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
+                    new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
+            .registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, typeOfT, context) ->
+                    LocalDateTime.parse(json.getAsString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+            .create();
 
     // Quản lý User Online
     private final Map<String, WebSocket> onlineUsers = new ConcurrentHashMap<>();
@@ -28,7 +35,7 @@ public class ServerContext {
     private final List<Auction> activeAuctions = Collections.synchronizedList(new ArrayList<>());
 
     // Danh sách sản phẩm trên RAM
-    private final List<Product> productList = Collections.synchronizedList(new ArrayList<>());
+//    private final List<Product> productList = Collections.synchronizedList(new ArrayList<>());
 
     // Danh sách những người đăng ký nhận tin TikTok (Listener)
     private final Set<WebSocket> tiktokListeners = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -42,54 +49,53 @@ public class ServerContext {
         return instance;
     }
 
-    public void initData(AuctionWebSocketServer server, Product currentProduct) {
+    public void initData(AuctionWebSocketServer server) {
         this.server = server;
-        this.currentProduct = currentProduct;
+
     }
 
     // --- Getter/Setter cơ bản ---
     public AuctionWebSocketServer getServer() { return server; }
-    public Product getCurrentProduct() { return currentProduct; }
-    public void setCurrentProduct(Product product) { this.currentProduct = product; }
+
 
     // --- Quản lý danh sách sản phẩm ---
-    public List<Product> getProductList() { return productList; }
-
-    public void addProduct(Product product) {
-        if (product != null) {
-            productList.add(product);
-            System.out.println("[ServerContext] Đã thêm sản phẩm vào RAM: " + product.getName());
-        }
-    }
-
-    public void removeProduct(String productId) {
-        productList.removeIf(p -> p.getId().equals(productId));
-        System.out.println("[ServerContext] Đã xóa sản phẩm khỏi RAM: " + productId);
-    }
-
-    public Product getProductById(String productId) {
-        synchronized (productList) {
-            return productList.stream()
-                    .filter(p -> p.getId().equals(productId))
-                    .findFirst()
-                    .orElse(null);
-        }
-    }
-
-    public void updateProduct(Product updatedProduct) {
-        if (updatedProduct == null || updatedProduct.getId() == null) return;
-        synchronized (productList) {
-            boolean found = false;
-            for (int i = 0; i < productList.size(); i++) {
-                if (productList.get(i).getId().equals(updatedProduct.getId())) {
-                    productList.set(i, updatedProduct);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) addProduct(updatedProduct);
-        }
-    }
+//    public List<Product> getProductList() { return productList; }
+//
+//    public void addProduct(Product product) {
+//        if (product != null) {
+//            productList.add(product);
+//            System.out.println("[ServerContext] Đã thêm sản phẩm vào RAM: " + product.getName());
+//        }
+//    }
+//
+//    public void removeProduct(String productId) {
+//        productList.removeIf(p -> p.getId().equals(productId));
+//        System.out.println("[ServerContext] Đã xóa sản phẩm khỏi RAM: " + productId);
+//    }
+//
+//    public Product getProductById(String productId) {
+//        synchronized (productList) {
+//            return productList.stream()
+//                    .filter(p -> p.getId().equals(productId))
+//                    .findFirst()
+//                    .orElse(null);
+//        }
+//    }
+//
+//    public void updateProduct(Product updatedProduct) {
+//        if (updatedProduct == null || updatedProduct.getId() == null) return;
+//        synchronized (productList) {
+//            boolean found = false;
+//            for (int i = 0; i < productList.size(); i++) {
+//                if (productList.get(i).getId().equals(updatedProduct.getId())) {
+//                    productList.set(i, updatedProduct);
+//                    found = true;
+//                    break;
+//                }
+//            }
+//            if (!found) addProduct(updatedProduct);
+//        }
+//    }
 
     // --- Quản lý Phiên đấu giá (Có Broadcast) ---
     public List<Auction> getActiveAuctions() { return activeAuctions; }
@@ -128,7 +134,7 @@ public class ServerContext {
         if (productId == null) return null;
         synchronized (activeAuctions) {
             return activeAuctions.stream()
-                    .filter(a -> a.getItem() != null && productId.equals(a.getItem().getId()))
+                    .filter(a -> a.getProduct() != null && productId.equals(a.getProduct().getId()))
                     .findFirst()
                     .orElse(null);
         }

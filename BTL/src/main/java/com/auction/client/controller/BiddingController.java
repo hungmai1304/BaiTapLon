@@ -43,8 +43,8 @@ public class BiddingController {
         currentAuctionData = ClientContext.getInstance().getCurrentAuction();
 
         // KIỂM TRA DỮ LIỆU: Nếu TikTokController chưa lưu Auction vào Context, ta báo lỗi luôn
-        if (currentAuctionData != null && currentAuctionData.getItem() != null) {
-            Product p = (Product) currentAuctionData.getItem();
+        if (currentAuctionData != null && currentAuctionData.getProduct() != null) {
+            Product p = (Product) currentAuctionData.getProduct();
 
             lblProductName.setText("Tên sản phẩm: " + p.getName());
             lblStartPrice.setText("Giá khởi điểm: " + String.format("%,.0fđ", p.getStartPrice()));
@@ -67,7 +67,7 @@ public class BiddingController {
     public void handlePlaceBidForAuction(ActionEvent event) {
         try {
             // 1. KIỂM TRA DỮ LIỆU CỐT LÕI (Tránh lỗi văng đỏ lòm do null)
-            if (currentAuctionData == null || currentAuctionData.getItem() == null) {
+            if (currentAuctionData == null || currentAuctionData.getProduct() == null) {
                 lblNotification.setStyle("-fx-text-fill: #e74c3c;");
                 lblNotification.setText("Lỗi dữ liệu! Vui lòng quay lại màn hình trước.");
                 return;
@@ -82,7 +82,7 @@ public class BiddingController {
 
             double bidAmount = Double.parseDouble(input);
             double currentPrice = currentAuctionData.getCurrentPrice();
-            Product p = (Product) currentAuctionData.getItem();
+            Product p = (Product) currentAuctionData.getProduct();
             double stepPrice = p.getStepPrice();
 
             // 2. KIỂM TRA LOGIC ĐẤU GIÁ

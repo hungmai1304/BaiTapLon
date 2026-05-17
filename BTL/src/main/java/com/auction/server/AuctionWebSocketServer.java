@@ -42,52 +42,15 @@ public class AuctionWebSocketServer extends WebSocketServer {
 
         // Khởi tạo ServerContext
         ServerContext context = ServerContext.getInstance();
-        context.initData(this, null);
+        context.initData(this);
 
-        // Tạo data mẫu
-        initSampleProducts();
+
 
         // Truyền gson đã cấu hình vào dispatcher
         dispatcher = new MessageDispatcher(gson, context);
     }
 
-    private void initSampleProducts() {
-        ServerContext context = ServerContext.getInstance();
 
-        Product p1 = new Product();
-        p1.setId("P001");
-        p1.setName("Laptop Gaming Asus ROG");
-        p1.setCategory("Điện Tử");
-        p1.setStartPrice(20000000);
-        p1.setCurrentPrice(20000000);
-        p1.setStepPrice(500000);
-        p1.setStatus(ProductStatus.ON_AUCTION);
-        // Nếu class Product có trường LocalDateTime, nó sẽ không còn bị lỗi nữa
-
-        Product p2 = new Product();
-        p2.setId("P002");
-        p2.setName("Mô hình Iron Man 1:1");
-        p2.setCategory("Sưu Tầm");
-        p2.setStartPrice(5000000);
-        p2.setCurrentPrice(5000000);
-        p2.setStepPrice(100000);
-        p2.setStatus(ProductStatus.ON_AUCTION);
-
-        Product p3 = new Product();
-        p3.setId("P003");
-        p3.setName("iPhone 16 Pro Max");
-        p3.setCategory("Điện Thoại");
-        p3.setStartPrice(30000000);
-        p3.setCurrentPrice(30000000);
-        p3.setStepPrice(1000000);
-        p3.setStatus(ProductStatus.ON_AUCTION);
-
-        context.addProduct(p1);
-        context.addProduct(p2);
-        context.addProduct(p3);
-
-        System.out.println("✔ [Server] Đã tạo " + context.getProductList().size() + " sản phẩm mẫu!");
-    }
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
