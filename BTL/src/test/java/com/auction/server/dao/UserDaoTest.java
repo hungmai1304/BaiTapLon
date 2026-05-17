@@ -34,15 +34,24 @@ public class UserDaoTest {
         try (MockedStatic<Db> mockedDb = mockStatic(Db.class)) {
             mockedDb.when(Db::getConnection).thenReturn(mockConnection);
             when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
+            
+            // Mock cho getUserByEmail (được gọi bên trong insertBidder)
+            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
+            when(mockResultSet.next()).thenReturn(false); // Email chưa tồn tại
+
             when(mockPreparedStatement.executeUpdate()).thenReturn(1);
 
             String rawPassword = "mySecretPassword123";
-            userDao.insertBidder("test@email.com", rawPassword, "Test User", "U001", Timestamp.valueOf(LocalDateTime.now()));
+            double balance = 500.0;
+            userDao.insertBidder("test@email.com", rawPassword, "Test User", "U001", Timestamp.valueOf(LocalDateTime.now()), balance);
 
-            // Verify that the password sent to PreparedStatement is NOT the raw password
+            // Verify that the password sent to PreparedStatement is NOT the raw password (index 3)
             verify(mockPreparedStatement).setString(eq(3), argThat(hashed -> 
                 BCrypt.checkpw(rawPassword, hashed)
             ));
+
+            // Verify that the balance is set (index 6)
+            verify(mockPreparedStatement).setDouble(eq(6), eq(balance));
         }
     }
 
