@@ -56,8 +56,8 @@ public class SellProductHandler implements IMessageHandler {
                     int auctionId = Math.abs(new Random().nextInt()); // Tạo ID tự động
 
                     LocalDateTime now = LocalDateTime.now();
-                    LocalDateTime startTime = now.plusMinutes(30);
-                    LocalDateTime endTime = startTime.plusMinutes(15);
+                    LocalDateTime startTime = now.plusSeconds(30);
+                    LocalDateTime endTime = startTime.plusSeconds(15);
 
                     // Đóng gói thành Phiên Đấu Giá
                     Auction newAuction = new Auction(
