@@ -5,6 +5,7 @@ import com.auction.common.model.user.Bidder;
 import com.auction.common.model.user.Seller;
 import com.auction.common.model.user.User;
 import com.auction.server.db.Db;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -39,9 +40,12 @@ public class UserDao {
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
+            // Mã hóa mật khẩu trước khi lưu
+            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+
             pstmt.setString(1, id);
             pstmt.setString(2, email);
-            pstmt.setString(3, password);
+            pstmt.setString(3, hashedPassword);
             pstmt.setString(4, name);
             pstmt.setTimestamp(5, timeCreated);
             pstmt.setString(6, role);    // Thiết lập role động (ví dụ: "BIDDER", "ADMIN_REQUEST", ...)
@@ -67,9 +71,12 @@ public class UserDao {
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
+            // Mã hóa mật khẩu trước khi lưu
+            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+
             pstmt.setString(1, id);
             pstmt.setString(2, email);
-            pstmt.setString(3, password);
+            pstmt.setString(3, hashedPassword);
             pstmt.setString(4, name);
             pstmt.setTimestamp(5, timeCreated);
             pstmt.setString(6, shopName);
@@ -100,15 +107,18 @@ public class UserDao {
     }
 
     public User authenticate(String email, String password) {
-        String sql = "SELECT * FROM users WHERE email = ? AND password = ?";
+        String sql = "SELECT * FROM users WHERE email = ?";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, email);
-            pstmt.setString(2, password);
 
             try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
+                rs.next();
+                String hashedPassword = rs.getString("password");
+
+                // 2. Kiểm tra mật khẩu (Client gửi lên plaintext vs DB đã hash)
+                if (BCrypt.checkpw(password, hashedPassword)) {
                     return mapResultSetToUser(rs);
                 }
             }

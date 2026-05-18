@@ -25,7 +25,7 @@ public class MainController {
     @FXML private Label shop_number_product;
     @FXML private Label about_you_name;
     @FXML private Label balance_main;
-
+    @FXML private AnchorPane shopAnchorPane;
 
     @FXML
     public void initialize() {
@@ -33,6 +33,12 @@ public class MainController {
         SomeGlobal.setMainController(this);
 
         if (user != null && HI_USER_NAME != null) {
+            if (user instanceof com.auction.common.model.user.Bidder) {
+                if (shopAnchorPane != null) {
+                    shopAnchorPane.setVisible(false);
+                }
+            }
+
             String username = user.getUsername();
             about_you_name.setText(username);
             LocalTime now = LocalTime.now();

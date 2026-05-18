@@ -24,7 +24,16 @@ public class LoginHandler implements IClientHandler {
 
         if ("SUCCESS".equalsIgnoreCase(response.getStatus())) {
             if (response.getData() != null) {
-                User user = new User();
+                String role = (String) response.getData().get("role");
+                User user;
+                if ("SELLER".equalsIgnoreCase(role)) {
+                    user = new com.auction.common.model.user.Seller();
+                    if (response.getData().containsKey("shopName")) {
+                        ((com.auction.common.model.user.Seller) user).setShopName((String) response.getData().get("shopName"));
+                    }
+                } else {
+                    user = new com.auction.common.model.user.Bidder();
+                }
                 user.setEmail((String) response.getData().get("email"));
                 user.setUsername((String) response.getData().get("name"));
                 user.setId((String) response.getData().get("id"));

@@ -124,7 +124,7 @@
                <GridPane.margin><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></GridPane.margin>
             </AnchorPane>
 
-            <AnchorPane onMouseClicked="#handleShopClicked" stylesheets="@style.css" GridPane.rowIndex="2">
+            <AnchorPane fx:id="shopAnchorPane" onMouseClicked="#handleShopClicked" stylesheets="@style.css" GridPane.rowIndex="2">
                <children>
                   <VBox alignment="CENTER" spacing="15.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
