@@ -106,7 +106,7 @@ public class LoginController {
         // Trước khi rời sang màn hình Register, hãy hủy đăng ký chính mình
         ControllerRegistry.unregister("LoginController");
 
-        NavigationService.navigate("/com/auction/client/view/register.fxml", "Đăng ký tài khoản", true);
+        NavigationService.navigate("/com/auction/client/view/register.fxml", "Đăng ký tài khoản", false);
     }
 
     /**

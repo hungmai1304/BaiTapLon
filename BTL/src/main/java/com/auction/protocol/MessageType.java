@@ -9,6 +9,16 @@ public class MessageType {
     public static final String REGISTER_REQUEST = "REGISTER_REQUEST";
     public static final String REGISTER_RESPONSE = "REGISTER_RESPONSE";
 
+    // dang xuat khoi the gioi
+    public static final String LOGOUT_REQUEST = "LOGOUT_REQUEST";
+//    public static final String REGISTER_RESPONSE = "REGISTER_RESPONSE";
+
+
+    //admin login
+
+    public static final String ADMIN_LOGIN_RESPONSE="ADMIN_LOGIN_RESPONSE";
+
+
     // Yêu cầu lấy danh sách sản phẩm của shop (AVAILABLE/SOLD...)
     public static final String GET_SHOP_PRODUCTS_REQUEST  = "GET_SHOP_PRODUCTS_REQUEST";
     public static final String GET_SHOP_PRODUCTS_RESPONSE = "GET_SHOP_PRODUCTS_RESPONSE";
@@ -81,4 +91,20 @@ public class MessageType {
     public static final String DELETE_PRODUCT_REQUEST = "DELETE_PRODUCT_REQUEST";
     public static final String DELETE_PRODUCT_RESPONSE = "DELETE_PRODUCT_RESPONSE";
 
+    // deo biet tin nhan la gi
+    public static final String OTHER="OTHER";
+
+
+    // Admin quản lý danh sách người dùng online
+    public static final String GET_ONLINE_USERS_REQUEST = "ADMIN_GET_ONLINE_USERS_REQUEST";
+    public static final String GET_ONLINE_USERS_RESPONSE = "ADMIN_GET_ONLINE_USERS_RESPONSE";
+
+    public static final String ADMIN_ONLINE_AUCTIONS_LIST_REQUEST="ADMIN_ONLINE_AUCTIONS_LIST";
+    public static final String ADMIN_ONLINE_AUCTIONS_LIST_RESPONSE="ADMIN_ONLINE_AUCTIONS_LIST_RESPONSE";
+
+    public static final String GET_ADMIN_REQUEST_LIST = "GET_ADMIN_REQUEST_LIST";
+    public static final String GET_ADMIN_REQUEST_LIST_RESPONSE = "GET_ADMIN_REQUEST_LIST_RESPONSE";
+
+    public static final String ADMIN_ACCEPT_REQUEST="ADMIN_ACCEPT_REQUEST";
+    public static final String ADMIN_REJECT_REQUEST="ADMIN_REJECT_REQUEST";
 }

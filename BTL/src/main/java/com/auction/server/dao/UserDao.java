@@ -1,5 +1,6 @@
 package com.auction.server.dao;
 
+import com.auction.common.model.user.Admin;
 import com.auction.common.model.user.Bidder;
 import com.auction.common.model.user.Seller;
 import com.auction.common.model.user.User;
@@ -43,7 +44,7 @@ public class UserDao {
 
             pstmt.setString(1, id);
             pstmt.setString(2, email);
-            pstmt.setString(3, hashedPassword);
+            pstmt.setString(3, password);
             pstmt.setString(4, name);
             pstmt.setTimestamp(5, timeCreated);
             pstmt.setDouble(6, balance); // Đưa số dư vào statement
@@ -73,7 +74,7 @@ public class UserDao {
 
             pstmt.setString(1, id);
             pstmt.setString(2, email);
-            pstmt.setString(3, hashedPassword);
+            pstmt.setString(3, password);
             pstmt.setString(4, name);
             pstmt.setTimestamp(5, timeCreated);
             pstmt.setString(6, shopName);
@@ -104,20 +105,16 @@ public class UserDao {
     }
 
     public User authenticate(String email, String password) {
-        String sql = "SELECT * FROM users WHERE email = ?";
+        String sql = "SELECT * FROM users WHERE email = ? AND password = ?";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, email);
+            pstmt.setString(2, password);
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    String hashedPassword = rs.getString("password");
-
-                    // 2. Kiểm tra mật khẩu (Client gửi lên plaintext vs DB đã hash)
-                    if (BCrypt.checkpw(password, hashedPassword)) {
-                        return mapResultSetToUser(rs);
-                    }
+                    return mapResultSetToUser(rs);
                 }
             }
         } catch (SQLException e) {
@@ -256,5 +253,50 @@ public class UserDao {
             System.err.println("❌ Lỗi getBalanceByEmail: " + e.getMessage());
         }
         return 0.0;
+    }
+
+    /**
+     * Lấy danh sách người dùng dựa theo Role (Ví dụ: "ADMIN_REQUEST")
+     * @param role Tên quyền cần tìm kiếm trong DB
+     * @return Danh sách đối tượng User tìm thấy
+     */
+    public List<User> getUsersByRole(String role) {
+        List<User> userList = new ArrayList<>();
+        String sql = "SELECT * FROM users WHERE UPPER(role) = ? ORDER BY time_created DESC";
+
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, role.toUpperCase());
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    userList.add(mapResultSetToUser(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[UserDao] Lỗi trong hàm getUsersByRole: " + e.getMessage());
+        }
+        return userList;
+    }
+    /**
+     * Cập nhật Role (Quyền) của người dùng dựa trên ID
+     * @param id ID của người dùng cần cập nhật
+     * @param newRole Quyền mới muốn gán (Ví dụ: "ADMIN")
+     * @return true nếu cập nhật thành công, false nếu thất bại
+     */
+    public boolean updateUserRole(String id, String newRole) {
+        String sql = "UPDATE users SET role = ? WHERE id = ?";
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, newRole);
+            pstmt.setString(2, id);
+
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("[UserDao] Lỗi khi cập nhật role cho user ID " + id + ": " + e.getMessage());
+            return false;
+        }
     }
 }

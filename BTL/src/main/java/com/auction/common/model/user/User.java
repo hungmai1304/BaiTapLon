@@ -8,9 +8,10 @@ public class User extends BaseEntity {
     private String password;
     private String email;
 
+    // Trường role mới thêm của bạn
+    private String role;
+
     // Các thông tin thời gian chung
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
     private double balance;
 
     public User() {}
@@ -40,20 +41,13 @@ public class User extends BaseEntity {
         this.password = password;
     }
 
-    public LocalDateTime getStartTime() {
-        return startTime;
+    // --- BỔ SUNG: GETTER VÀ SETTER CHO ROLE TẠI ĐÂY ---
+    public String getRole() {
+        return role;
     }
 
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
+    public void setRole(String role) {
+        this.role = role;
     }
 
     // --- THÊM GETTER VÀ SETTER CHO BALANCE Ở ĐÂY ---

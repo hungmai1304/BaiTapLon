@@ -1,5 +1,6 @@
 package com.auction.server.service;
 
+import com.auction.common.model.auction.Auction;
 import com.auction.common.model.product.Product;
 import com.auction.common.model.product.ProductStatus;
 import com.auction.protocol.MessageType;
@@ -11,6 +12,7 @@ import com.google.gson.GsonBuilder;
 import org.java_websocket.WebSocket;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -33,61 +35,64 @@ public class AuctionManager {
         return instance;
     }
 
-    // ========== LOGIC CHỌN SẢN PHẨM LÊN ĐẤU GIÁ ==========
+    // ========== LOGIC CHỌN PHIÊN ĐẤU GIÁ LÊN SÀN ==========
 
-    /**
-     * Chọn 1 sản phẩm AVAILABLE ngẫu nhiên và đưa lên đấu giá
-     * return Product được chọn, hoặc null nếu không còn sản phẩm nào
-     */
-    public Product pickNextProduct() {
+    public Auction pickNextProduct() {
         ServerContext context = ServerContext.getInstance();
 
-        // 1. Lấy danh sách sản phẩm AVAILABLE
-        List<Product> availableProducts = context.getProductList().stream()
-                .filter(p -> p.getStatus() == ProductStatus.AVAILABLE)
+        // 1. Lọc danh sách các phiên đấu giá đang ở trạng thái PENDING từ RAM
+        List<Auction> pendingAuctions = context.getActiveAuctions().stream()
+                .filter(a -> "PENDING".equals(a.getStatus()))
                 .collect(Collectors.toList());
 
-        if (availableProducts.isEmpty()) {
-            System.out.println("[AuctionManager] Không còn sản phẩm nào để đấu giá!");
+        if (pendingAuctions.isEmpty()) {
+            System.out.println("[AuctionManager] Không còn phiên đấu giá PENDING nào để kích hoạt!");
             return null;
         }
 
-        // 2. Random chọn 1 sản phẩm
-        Product selectedProduct = availableProducts.get(random.nextInt(availableProducts.size()));
+        // 2. Chọn ngẫu nhiên 1 phiên đấu giá chuẩn bị mở
+        Auction selectedAuction = pendingAuctions.get(random.nextInt(pendingAuctions.size()));
 
-        // 3. Đổi status → ON_AUCTION
-        selectedProduct.setStatus(ProductStatus.ON_AUCTION);
-        selectedProduct.setStartTime(LocalDateTime.now());
-        // Giả sử mỗi phiên kéo dài 5 phút
-        selectedProduct.setEndTime(LocalDateTime.now().plusMinutes(30));
+        // 3. Cập nhật trạng thái của phiên đấu giá thành ACTIVE và set thời gian chạy sàn
+        selectedAuction.setStatus("ACTIVE");
+        selectedAuction.setStartTime(LocalDateTime.now());
+        selectedAuction.setEndTime(LocalDateTime.now().plusMinutes(30)); // Giả sử mỗi phiên kéo dài 30 phút
 
-        // 4. Lưu vào ServerContext
-        context.setCurrentProduct(selectedProduct);
+        // Đồng thời cập nhật trạng thái của Product nằm trong phiên đấu giá đó sang ON_AUCTION
+        if (selectedAuction.getProduct() != null) {
+            selectedAuction.getProduct().setStatus(ProductStatus.ON_AUCTION);
+        }
 
-        System.out.println("[AuctionManager] Sản phẩm lên sàn: " + selectedProduct.getName());
-        System.out.println("[AuctionManager] Kết thúc lúc: " + selectedProduct.getEndTime());
+        // 4. Đồng bộ cập nhật lại phiên đấu giá này vào ServerContext trên RAM
+        context.updateAuction(selectedAuction);
 
-        // 5. Broadcast cho tất cả client
-        broadcastNewAuction(selectedProduct);
+        System.out.println("[AuctionManager] Phiên đấu giá lên sàn ID: " + selectedAuction.getId());
+        if (selectedAuction.getProduct() != null) {
+            System.out.println("[AuctionManager] Sản phẩm lên sàn: " + selectedAuction.getProduct().getName());
+        }
+        System.out.println("[AuctionManager] Kết thúc lúc: " + selectedAuction.getEndTime());
 
-        return selectedProduct;
+        // 5. Broadcast thông báo cho tất cả client
+        broadcastNewAuction(selectedAuction);
+
+        return selectedAuction;
     }
 
     // ========== BROADCAST CHO TẤT CẢ CLIENT ==========
 
     /**
-     * Thông báo cho tất cả client về sản phẩm mới lên đấu giá
+     * Thông báo cho tất cả client về phiên đấu giá mới vừa hoạt động
      */
-    private void broadcastNewAuction(Product product) {
+    private void broadcastNewAuction(Auction auction) {
         ServerContext context = ServerContext.getInstance();
 
-        // Tạo response
+        // Tạo response chứa đối tượng đấu giá Auction vừa kích hoạt
         Response response = new Response(
                 MessageType.GET_ACTIVE_AUCTIONS_RESPONSE,
                 "SUCCESS",
-                "Sản phẩm mới lên đấu giá: " + product.getName()
+                "Có phiên đấu giá mới vừa lên sàn!"
         );
-        response.getData().put("product", product);
+        response.getData().put("auction", auction);
 
         String message = gson.toJson(response);
 
@@ -98,7 +103,7 @@ public class AuctionManager {
             }
         }
 
-        System.out.println("[AuctionManager] Đã broadcast sản phẩm mới cho " +
+        System.out.println("[AuctionManager] Đã broadcast phiên đấu giá mới cho " +
                 context.getServer().getConnections().size() + " client!");
     }
 
@@ -106,33 +111,44 @@ public class AuctionManager {
 
     /**
      * Kết thúc phiên đấu giá hiện tại
-     * @param product Sản phẩm cần kết thúc
+     * @param auction Phiên đấu giá cần kết thúc
      */
-    public void endAuction(Product product) {
-        if (product == null) return;
+    public void endAuction(Auction auction) {
+        if (auction == null) return;
 
-        // Đổi status → SOLD (hoặc CANCELLED nếu không ai đấu)
-        if (product.getCurrentPrice() > product.getStartPrice()) {
-            product.setStatus(ProductStatus.SOLD);
-            System.out.println("[AuctionManager] Sản phẩm " + product.getName() +
-                    " đã BÁN với giá: " + product.getCurrentPrice());
-        } else {
-            product.setStatus(ProductStatus.CANCELLED);
-            System.out.println("[AuctionManager] Sản phẩm " + product.getName() +
-                    " KHÔNG CÓ AI ĐẤU GIÁ → Hủy bỏ");
+        ServerContext context = ServerContext.getInstance();
+
+        // Đổi trạng thái phiên đấu giá sang COMPLETED
+        auction.setStatus("COMPLETED");
+
+        // Xử lý cập nhật trạng thái Product bên trong object Auction
+        Product product = auction.getProduct();
+        if (product != null) {
+            if (auction.getCurrentPrice() > auction.getStartPrice()) {
+                product.setStatus(ProductStatus.SOLD);
+                System.out.println("[AuctionManager] Sản phẩm " + product.getName() +
+                        " ĐÃ BÁN với giá: " + auction.getCurrentPrice());
+            } else {
+                product.setStatus(ProductStatus.CANCELLED);
+                System.out.println("[AuctionManager] Sản phẩm " + product.getName() +
+                        " KHÔNG CÓ AI ĐẤU GIÁ -> Hủy bỏ");
+            }
         }
 
-        // Broadcast kết quả
-        broadcastAuctionEnd(product);
+        // Cập nhật sự thay đổi của Auction lên RAM ServerContext
+        context.updateAuction(auction);
 
-        // Chọn sản phẩm tiếp theo (sau 10 giây)
+        // Broadcast kết quả phiên đấu giá kết thúc
+        broadcastAuctionEnd(auction);
+
+        // Chọn phiên đấu giá tiếp theo (sau 10 giây)
         scheduleNextAuction();
     }
 
     /**
      * Broadcast thông báo kết thúc phiên đấu giá
      */
-    private void broadcastAuctionEnd(Product product) {
+    private void broadcastAuctionEnd(Auction auction) {
         ServerContext context = ServerContext.getInstance();
 
         Response response = new Response(
@@ -140,7 +156,7 @@ public class AuctionManager {
                 "SUCCESS",
                 "Phiên đấu giá kết thúc!"
         );
-        response.getData().put("product", product);
+        response.getData().put("auction", auction);
 
         String message = gson.toJson(response);
 
@@ -150,16 +166,16 @@ public class AuctionManager {
             }
         }
 
-        System.out.println("[AuctionManager] Đã broadcast kết thúc phiên!");
+        System.out.println("[AuctionManager] Đã broadcast kết thúc phiên đấu giá ID: " + auction.getId());
     }
 
     /**
-     * Lên lịch chọn sản phẩm kế tiếp sau 10 giây
+     * Lên lịch chọn phiên đấu giá kế tiếp sau 10 giây
      */
     private void scheduleNextAuction() {
         new Thread(() -> {
             try {
-                System.out.println("[AuctionManager] Chờ 10 giây trước khi chọn sản phẩm mới...");
+                System.out.println("[AuctionManager] Chờ 10 giây trước khi chọn phiên đấu giá mới...");
                 Thread.sleep(10000); // 10 giây
                 pickNextProduct();
             } catch (InterruptedException e) {
@@ -171,19 +187,25 @@ public class AuctionManager {
     // ========== TỰ ĐỘNG KẾT THÚC KHI HẾT GIỜ ==========
 
     /**
-     * Kiểm tra và tự động kết thúc phiên nếu hết giờ
-     * Gọi định kỳ mỗi 1 giây từ Server
+     * Kiểm tra và tự động kết thúc tất cả các phiên đấu giá đã quá giờ chạy sàn
+     * Gọi định kỳ mỗi 1 giây từ vòng lặp Server
      */
     public void checkAndEndExpiredAuctions() {
         ServerContext context = ServerContext.getInstance();
-        Product current = context.getCurrentProduct();
+        List<Auction> activeAuctions = context.getActiveAuctions();
 
-        if (current != null &&
-                current.getStatus() == ProductStatus.ON_AUCTION &&
-                LocalDateTime.now().isAfter(current.getEndTime())) {
+        // Sử dụng một bản sao danh sách để tránh lỗi ConcurrentModificationException
+        synchronized (activeAuctions) {
+            List<Auction> runningAuctions = new ArrayList<>(activeAuctions);
+            for (Auction auction : runningAuctions) {
+                if (auction != null &&
+                        "ACTIVE".equals(auction.getStatus()) &&
+                        LocalDateTime.now().isAfter(auction.getEndTime())) {
 
-            System.out.println("[AuctionManager] Phiên đấu giá HẾT GIỜ!");
-            endAuction(current);
+                    System.out.println("[AuctionManager] Phiên đấu giá ID " + auction.getId() + " ĐÃ HẾT GIỜ!");
+                    endAuction(auction);
+                }
+            }
         }
     }
 }
