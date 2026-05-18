@@ -1,10 +1,8 @@
 package com.auction.server.model;
 
 import com.auction.common.model.user.User;
-import com.auction.common.utils.LocalDateTimeAdapter;
 import com.auction.protocol.Response;
 import com.auction.server.AuctionWebSocketServer;
-import com.auction.common.model.product.Product;
 import com.auction.common.model.auction.Auction;
 import com.auction.protocol.MessageType;
 import com.google.gson.*;
@@ -20,7 +18,6 @@ public class ServerContext {
     private static ServerContext instance;
     private AuctionWebSocketServer server;
 
-
     // Sử dụng Gson chung để tối ưu hiệu năng khi broadcast
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
@@ -29,17 +26,14 @@ public class ServerContext {
                     LocalDateTime.parse(json.getAsString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME))
             .create();
 
-    // Quản lý User Online
+    // 1. Quản lý User Online (Key: String đại diện email/id, Value: WebSocket)
     private final Map<String, WebSocket> onlineUsers = new ConcurrentHashMap<>();
 
-    // viet them:danh sach User dang online
-    // viet them : getOnlineUserDangOnline, add(User), remove(User)
+    // 2. Quản lý thông tin User kết hợp với kết nối WebSocket tương ứng (Dạng Object)
+    private final Map<WebSocket, User> onlineUserObjects = new ConcurrentHashMap<>();
 
-    // Danh sách phiên đấu giá
+    // Danh sách phiên đấu giá đang diễn ra trên RAM
     private final List<Auction> activeAuctions = Collections.synchronizedList(new ArrayList<>());
-
-    // Danh sách sản phẩm trên RAM
-//    private final List<Product> productList = Collections.synchronizedList(new ArrayList<>());
 
     // Danh sách những người đăng ký nhận tin TikTok (Listener)
     private final Set<WebSocket> tiktokListeners = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -55,14 +49,10 @@ public class ServerContext {
 
     public void initData(AuctionWebSocketServer server) {
         this.server = server;
-
     }
 
     // --- Getter/Setter cơ bản ---
     public AuctionWebSocketServer getServer() { return server; }
-
-
-
 
     // --- Quản lý Phiên đấu giá (Có Broadcast) ---
     public List<Auction> getActiveAuctions() { return activeAuctions; }
@@ -145,7 +135,7 @@ public class ServerContext {
         }
     }
 
-    // --- Quản lý User Connection ---
+    // --- Quản lý User Connection (Dạng chuỗi ID/Email) ---
     public void addOnlineUser(String userId, WebSocket conn) {
         onlineUsers.put(userId, conn);
         System.out.println("[ServerContext] User [" + userId + "] đã online!");
@@ -169,11 +159,12 @@ public class ServerContext {
         return onlineUsers.values();
     }
 
-    // Thêm Map này để quản lý thông tin User kết hợp với kết nối WebSocket tương ứng
-    private final Map<WebSocket, User> onlineUserObjects = new ConcurrentHashMap<>();
 
-// --- QUẢN LÝ DANH SÁCH USER DẠNG OBJECT ---
+    // --- QUẢN LÝ DANH SÁCH USER DẠNG OBJECT (Bổ sung theo yêu cầu) ---
 
+    /**
+     * Thêm đối tượng User online vào RAM ứng với kết nối mạng
+     */
     public void addOnlineUserObject(WebSocket conn, User user) {
         if (conn != null && user != null) {
             onlineUserObjects.put(conn, user);
@@ -182,6 +173,9 @@ public class ServerContext {
         }
     }
 
+    /**
+     * Xóa đối tượng User ra khỏi RAM khi ngắt kết nối mạng dựa trên WebSocket
+     */
     public void removeOnlineUserObject(WebSocket conn) {
         if (conn != null && onlineUserObjects.containsKey(conn)) {
             User removedUser = onlineUserObjects.remove(conn);
@@ -190,8 +184,56 @@ public class ServerContext {
         }
     }
 
+    /**
+     * Lấy danh sách toàn bộ đối tượng User đang trực tuyến dưới dạng List công khai
+     */
     public List<User> getOnlineUserList() {
         return new ArrayList<>(onlineUserObjects.values());
+    }
+
+    /**
+     * Tìm kiếm đối tượng thông tin User dựa trên kết nối mạng WebSocket hiện tại
+     */
+    public User getUserByConnObject(WebSocket conn) {
+        if (conn == null) return null;
+        return onlineUserObjects.get(conn);
+    }
+
+    /**
+     * VIẾT THÊM: Xóa một User đang online dựa vào Email, dọn dẹp sạch sẽ ở CẢ 2 DANH SÁCH QUẢN LÝ
+     * @param email Email của tài khoản người dùng cần xóa trạng thái online
+     */
+    public void removeOnlineUserByEmail(String email) {
+        if (email == null || email.trim().isEmpty()) return;
+
+        WebSocket connToRemove = null;
+
+        // 1. Kiểm tra và xóa trong bản đồ onlineUsers (Trường hợp Key lưu trữ chính là Email)
+        if (onlineUsers.containsKey(email)) {
+            connToRemove = onlineUsers.remove(email);
+        } else {
+            // Trường hợp Key của onlineUsers lưu trữ bằng userId/username khác, ta sẽ quét tìm trong danh sách Object
+            for (Map.Entry<WebSocket, User> entry : onlineUserObjects.entrySet()) {
+                if (entry.getValue() != null && email.equalsIgnoreCase(entry.getValue().getEmail())) {
+                    connToRemove = entry.getKey();
+                    break;
+                }
+            }
+            if (connToRemove != null) {
+                // Xóa giá trị kết nối tương ứng ra khỏi map onlineUsers chính
+                onlineUsers.values().remove(connToRemove);
+            }
+        }
+
+        // 2. Xóa khỏi bản đồ đối tượng onlineUserObjects và các dịch vụ lắng nghe
+        if (connToRemove != null) {
+            onlineUserObjects.remove(connToRemove);
+            removeTikTokListener(connToRemove); // Dọn dẹp luôn các bộ lắng nghe TikTok nếu có
+            System.out.println("[ServerContext] Đã xóa hoàn toàn User có email [" + email + "] khỏi cả 2 danh sách online.");
+
+            // 3. Phát tín hiệu cập nhật (Broadcast) đồng bộ danh sách mới về cho tất cả Admin đang bật máy Client
+            broadcastOnlineUsersToAdmins();
+        }
     }
 
     /**
@@ -203,7 +245,7 @@ public class ServerContext {
         response.getData().put("userList", getOnlineUserList());
         String jsonResponse = gson.toJson(response);
 
-        // Duyệt qua tất cả các kết nối đang có trên Server
+        // Duyệt qua tất cả các kết nối đang có trên Server để lọc Admin nhận tin
         onlineUsers.forEach((email, conn) -> {
             if (conn != null && conn.isOpen() && email.toLowerCase().endsWith("@admin.com")) {
                 conn.send(jsonResponse);
@@ -211,5 +253,4 @@ public class ServerContext {
             }
         });
     }
-
 }

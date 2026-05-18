@@ -1,6 +1,6 @@
 package com.auction.server.handler;
 
-import com.auction.common.model.user.Admin; // Import class Admin của bạn
+import com.auction.common.model.user.Admin;
 import com.auction.common.model.user.Bidder;
 import com.auction.common.model.user.Seller;
 import com.auction.common.model.user.User;
@@ -29,24 +29,21 @@ public class LoginHandler implements IMessageHandler {
             if (email != null && email.toLowerCase().endsWith("@admin.com")) {
                 System.out.println("[LoginHandler] Phát hiện định dạng Email Admin. Tiến hành xác thực...");
 
-                // 1. Kiểm tra email và mật khẩu dưới Database
                 User maybeAdmin = UserDao.getInstance().authenticate(email, password);
 
-                // Kiểm tra xem tài khoản có tồn tại và thực sự có Role/Class là Admin hay không
+                // Kiểm tra bằng instanceof để chắc chắn class khởi tạo là Admin độc quyền
                 if (maybeAdmin instanceof Admin) {
                     Admin admin = (Admin) maybeAdmin;
 
-                    // 2. Cho Admin online trong ServerContext dưới dạng một User thông thường
                     context.addOnlineUser(email, conn);
+                    context.addOnlineUserObject(conn, admin);
 
-                    // 3. Đóng gói tin nhắn trả về ADMIN_LOGIN_RESPONSE
                     Response response = new Response(
                             MessageType.ADMIN_LOGIN_RESPONSE,
                             "SUCCESS",
                             "Admin đăng nhập thành công!"
                     );
 
-                    // 4. Đóng gói thông tin dữ liệu chuyển về Client
                     response.getData().put("id", admin.getId());
                     response.getData().put("email", admin.getEmail());
                     response.getData().put("name", admin.getUsername());
@@ -54,12 +51,11 @@ public class LoginHandler implements IMessageHandler {
 
                     conn.send(gson.toJson(response));
                     System.out.println("[LoginHandler] Admin [" + admin.getUsername() + "] đã vào hệ thống.");
-                    return; // Kết thúc hàm, không chạy xuống logic User thường ở dưới nữa
+                    return;
                 } else {
-                    // Nếu chứa đuôi @admin.com nhưng sai mật khẩu hoặc phân quyền trong DB không phải Admin
                     System.out.println("[LoginHandler] Xác thực Admin thất bại!");
                     Response response = new Response(
-                            MessageType.ADMIN_LOGIN_RESPONSE, // Hoặc dùng chung LOGIN_RESPONSE tùy thiết kế hệ thống
+                            MessageType.ADMIN_LOGIN_RESPONSE,
                             "ERROR",
                             "Tài khoản Admin không hợp lệ hoặc sai mật khẩu!"
                     );
@@ -68,16 +64,11 @@ public class LoginHandler implements IMessageHandler {
                 }
             }
 
-
-            // --- XỬ LÝ USER THƯỜNG QUA DATABASE ---
-            // 1. Kiểm tra đăng nhập từ Database
+            // --- XỬ LÝ USER THƯỜNG / ADMIN_REQUEST QUA DATABASE ---
             User loginUser = UserDao.getInstance().authenticate(email, password);
 
             if (loginUser != null) {
-                // --- ĐĂNG NHẬP THÀNH CÔNG ---
                 context.addOnlineUser(email, conn);
-
-                // VIẾT THÊM: Lưu thông tin đối tượng User vào RAM và tự động thông báo tới Admin
                 context.addOnlineUserObject(conn, loginUser);
 
                 Response response = new Response(
@@ -86,24 +77,23 @@ public class LoginHandler implements IMessageHandler {
                         "Đăng nhập thành công!"
                 );
 
-                // 2. Nhặt dữ liệu chung
+                // 1. Nhặt dữ liệu chung
                 response.getData().put("id", loginUser.getId());
                 response.getData().put("email", loginUser.getEmail());
                 response.getData().put("name", loginUser.getUsername());
 
-                // 3. Kiểm tra Role bằng instanceof
+                // ĐỒNG BỘ MỚI: Lấy trực tiếp role từ thuộc tính của đối tượng thay vì đoán qua instanceof
+                response.getData().put("role", loginUser.getRole());
+
+                // 2. Chỉ dùng instanceof để bổ sung các thuộc tính mở rộng chuyên biệt (như shopName)
                 if (loginUser instanceof Seller) {
-                    response.getData().put("role", "SELLER");
                     response.getData().put("shopName", ((Seller) loginUser).getShopName());
-                } else if (loginUser instanceof Bidder) {
-                    response.getData().put("role", "BIDDER");
                 }
 
                 conn.send(gson.toJson(response));
-                System.out.println("[LoginHandler] User [" + loginUser.getUsername() + "] đã vào hệ thống.");
+                System.out.println("[LoginHandler] User [" + loginUser.getUsername() + "] với vai trò [" + loginUser.getRole() + "] đã vào hệ thống.");
 
             } else {
-                // --- ĐĂNG NHẬP THẤT BẠI ---
                 Response response = new Response(
                         MessageType.LOGIN_RESPONSE,
                         "ERROR",
