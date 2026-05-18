@@ -27,7 +27,7 @@ public class NetworkClient {
         if (webSocketClient != null
                 && webSocketClient.isOpen()) {
 
-            System.out.println("[Network] Đã được kết nối tới server.");
+            System.out.println("[Network] ?� ???c k?t n?i t?i server.");
 
             return;
         }
@@ -44,21 +44,21 @@ public class NetworkClient {
                 ) {
 
                     System.out.println(
-                            "[Network] Đã kết nối tới server!"
+                            "[Network] ?� k?t n?i t?i server!"
                     );
                 }
 
                 @Override
                 public void onMessage(String message) {
-//                    // 1. Debug thông minh:
-//                    // Nếu tin nhắn quá dài (thường là có chứa ảnh), chỉ in 200 ký tự đầu để xem Type và Status
+//                    // 1. Debug th�ng minh:
+//                    // N?u tin nh?n qu� d�i (th??ng l� c� ch?a ?nh), ch? in 200 k� t? ??u ?? xem Type v� Status
 //                    if (message != null && message.length() > 200) {
-//                        System.out.println("📩 [Từ Server] (Gói tin lớn): " + message.substring(0, 200) + "... [Tổng: " + message.length() + " ký tự]");
+//                        System.out.println("? [T? Server] (G�i tin l?n): " + message.substring(0, 200) + "... [T?ng: " + message.length() + " k� t?]");
 //                    } else {
-//                        System.out.println("📩 [Từ Server]: " + message);
+//                        System.out.println("? [T? Server]: " + message);
 //                    }
 
-                    // 2. Vẫn dispatch bình thường để xử lý logic
+                    // 2. V?n dispatch b�nh th??ng ?? x? l� logic
                     ClientMessageDispatcher.dispatch(message);
                 }
 
@@ -69,7 +69,7 @@ public class NetworkClient {
                         boolean remote
                 ) {
 
-                    System.out.println("[Network] Mất kết nối");
+                    System.out.println("[Network] M?t k?t n?i");
 
                     System.out.println(
                             "Code: " + code
@@ -84,7 +84,7 @@ public class NetworkClient {
                 public void onError(Exception ex) {
 
                     System.err.println(
-                            "[Network] Lỗi mạng:"
+                            "[Network] L?i m?ng:"
                     );
 
                     ex.printStackTrace();
@@ -92,13 +92,13 @@ public class NetworkClient {
             };
 
             System.out.println(
-                    "[Network] Đang kết nối tới server..."
+                    "[Network] ?ang k?t n?i t?i server..."
             );
 
             webSocketClient.connectBlocking();
 
             System.out.println(
-                    "[Network] Kết nối hoàn tất."
+                    "[Network] K?t n?i ho�n t?t."
             );
 
         } catch (Exception e) {
@@ -111,15 +111,15 @@ public class NetworkClient {
         if (webSocketClient != null && webSocketClient.isOpen()) {
             webSocketClient.send(command);
 
-            // Debug thông minh: Nếu gói tin quá dài thì chỉ in độ dài thôi
+            // Debug th�ng minh: N?u g�i tin qu� d�i th� ch? in ?? d�i th�i
             if (command.length() > 200) {
-                System.out.println("[Network] Đã gửi gói tin lớn (Size: " + command.length() + " chars)");
+                System.out.println("[Network] ?� g?i g�i tin l?n (Size: " + command.length() + " chars)");
             } else {
-                System.out.println("[Network] Đã gửi: " + command);
+                System.out.println("[Network] ?� g?i: " + command);
             }
 
         } else {
-            System.err.println("[Network] Chưa kết nối mạng!");
+            System.err.println("[Network] Ch?a k?t n?i m?ng!");
         }
     }
 
@@ -129,7 +129,7 @@ public class NetworkClient {
                 && webSocketClient.isOpen();
     }
 
-    // Hàm để các màn hình khác gắn tai nghe vào
+    // H�m ?? c�c m�n h�nh kh�c g?n tai nghe v�o
     public static void setListener(MessageListener listener) {
         currentListener = listener;
     }

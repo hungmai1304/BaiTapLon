@@ -53,8 +53,8 @@ public class TikTokAuctionController {
      */
     public void updateUI(Auction auction) {
         Platform.runLater(() -> {
-            if (auction != null && auction.getItem() instanceof Product) {
-                Product product = (Product) auction.getItem();
+            if (auction != null && auction.getProduct() instanceof Product) {
+                Product product = (Product) auction.getProduct();
                 name.setText(product.getName());
                 // Giá hiển thị là giá hiện tại của phiên (Current Price)
                 price.setText(String.format("%,.0f VNĐ", auction.getCurrentPrice()));

@@ -1,14 +1,17 @@
 package com.auction.server.model;
 
+import com.auction.common.model.user.User;
+import com.auction.common.utils.LocalDateTimeAdapter;
 import com.auction.protocol.Response;
 import com.auction.server.AuctionWebSocketServer;
 import com.auction.common.model.product.Product;
 import com.auction.common.model.auction.Auction;
 import com.auction.protocol.MessageType;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import org.java_websocket.WebSocket;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,19 +19,27 @@ public class ServerContext {
 
     private static ServerContext instance;
     private AuctionWebSocketServer server;
-    private Product currentProduct;
+
 
     // Sử dụng Gson chung để tối ưu hiệu năng khi broadcast
-    private final Gson gson = new Gson();
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
+                    new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
+            .registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, typeOfT, context) ->
+                    LocalDateTime.parse(json.getAsString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+            .create();
 
     // Quản lý User Online
     private final Map<String, WebSocket> onlineUsers = new ConcurrentHashMap<>();
+
+    // viet them:danh sach User dang online
+    // viet them : getOnlineUserDangOnline, add(User), remove(User)
 
     // Danh sách phiên đấu giá
     private final List<Auction> activeAuctions = Collections.synchronizedList(new ArrayList<>());
 
     // Danh sách sản phẩm trên RAM
-    private final List<Product> productList = Collections.synchronizedList(new ArrayList<>());
+//    private final List<Product> productList = Collections.synchronizedList(new ArrayList<>());
 
     // Danh sách những người đăng ký nhận tin TikTok (Listener)
     private final Set<WebSocket> tiktokListeners = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -42,54 +53,16 @@ public class ServerContext {
         return instance;
     }
 
-    public void initData(AuctionWebSocketServer server, Product currentProduct) {
+    public void initData(AuctionWebSocketServer server) {
         this.server = server;
-        this.currentProduct = currentProduct;
+
     }
 
     // --- Getter/Setter cơ bản ---
     public AuctionWebSocketServer getServer() { return server; }
-    public Product getCurrentProduct() { return currentProduct; }
-    public void setCurrentProduct(Product product) { this.currentProduct = product; }
 
-    // --- Quản lý danh sách sản phẩm ---
-    public List<Product> getProductList() { return productList; }
 
-    public void addProduct(Product product) {
-        if (product != null) {
-            productList.add(product);
-            System.out.println("[ServerContext] Đã thêm sản phẩm vào RAM: " + product.getName());
-        }
-    }
 
-    public void removeProduct(String productId) {
-        productList.removeIf(p -> p.getId().equals(productId));
-        System.out.println("[ServerContext] Đã xóa sản phẩm khỏi RAM: " + productId);
-    }
-
-    public Product getProductById(String productId) {
-        synchronized (productList) {
-            return productList.stream()
-                    .filter(p -> p.getId().equals(productId))
-                    .findFirst()
-                    .orElse(null);
-        }
-    }
-
-    public void updateProduct(Product updatedProduct) {
-        if (updatedProduct == null || updatedProduct.getId() == null) return;
-        synchronized (productList) {
-            boolean found = false;
-            for (int i = 0; i < productList.size(); i++) {
-                if (productList.get(i).getId().equals(updatedProduct.getId())) {
-                    productList.set(i, updatedProduct);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) addProduct(updatedProduct);
-        }
-    }
 
     // --- Quản lý Phiên đấu giá (Có Broadcast) ---
     public List<Auction> getActiveAuctions() { return activeAuctions; }
@@ -128,7 +101,7 @@ public class ServerContext {
         if (productId == null) return null;
         synchronized (activeAuctions) {
             return activeAuctions.stream()
-                    .filter(a -> a.getItem() != null && productId.equals(a.getItem().getId()))
+                    .filter(a -> a.getProduct() != null && productId.equals(a.getProduct().getId()))
                     .findFirst()
                     .orElse(null);
         }
@@ -194,6 +167,49 @@ public class ServerContext {
 
     public Collection<WebSocket> getConnectedClients() {
         return onlineUsers.values();
+    }
+
+    // Thêm Map này để quản lý thông tin User kết hợp với kết nối WebSocket tương ứng
+    private final Map<WebSocket, User> onlineUserObjects = new ConcurrentHashMap<>();
+
+// --- QUẢN LÝ DANH SÁCH USER DẠNG OBJECT ---
+
+    public void addOnlineUserObject(WebSocket conn, User user) {
+        if (conn != null && user != null) {
+            onlineUserObjects.put(conn, user);
+            System.out.println("[ServerContext] Lưu trữ thông tin đối tượng User: " + user.getUsername());
+            broadcastOnlineUsersToAdmins(); // Tự động đồng bộ tới Admin khi có người vào
+        }
+    }
+
+    public void removeOnlineUserObject(WebSocket conn) {
+        if (conn != null && onlineUserObjects.containsKey(conn)) {
+            User removedUser = onlineUserObjects.remove(conn);
+            System.out.println("[ServerContext] Đã xóa đối tượng User khỏi RAM: " + (removedUser != null ? removedUser.getUsername() : "Ẩn danh"));
+            broadcastOnlineUsersToAdmins(); // Tự động đồng bộ tới Admin khi có người ra
+        }
+    }
+
+    public List<User> getOnlineUserList() {
+        return new ArrayList<>(onlineUserObjects.values());
+    }
+
+    /**
+     * Hàm Broadcast gửi danh sách toàn bộ người dùng đang online tới tất cả các kết nối là ADMIN
+     */
+    public void broadcastOnlineUsersToAdmins() {
+        // Tạo gói tin Response đồng bộ danh sách người dùng online
+        Response response = new Response(MessageType.GET_ONLINE_USERS_RESPONSE, "SUCCESS", "Cập nhật danh sách user online.");
+        response.getData().put("userList", getOnlineUserList());
+        String jsonResponse = gson.toJson(response);
+
+        // Duyệt qua tất cả các kết nối đang có trên Server
+        onlineUsers.forEach((email, conn) -> {
+            if (conn != null && conn.isOpen() && email.toLowerCase().endsWith("@admin.com")) {
+                conn.send(jsonResponse);
+                System.out.println("[ServerContext] Đã đẩy danh sách Online Users tới Admin: " + email);
+            }
+        });
     }
 
 }

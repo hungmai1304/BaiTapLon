@@ -1,5 +1,6 @@
 package com.auction.server.dao;
 
+import com.auction.common.model.user.Admin;
 import com.auction.common.model.user.Bidder;
 import com.auction.common.model.user.Seller;
 import com.auction.common.model.user.User;
@@ -25,15 +26,16 @@ public class UserDao {
     }
 
     // 1. CẬP NHẬT: Thêm tham số double balance và đưa vào câu lệnh INSERT
-    public boolean insertBidder(String email, String password, String name, String id, Timestamp timeCreated, double balance) {
+    // CẬP NHẬT: Cho phép truyền tham số role động thay vì cố định 'BIDDER'
+    public boolean insertBidder(String email, String password, String name, String id, Timestamp timeCreated, double balance, String role) {
         // Check trùng email trước khi insert
         if (getUserByEmail(email) != null) {
-            System.err.println("[UserDao]Lỗi: Email " + email + " đã tồn tại!");
+            System.err.println("[UserDao] Lỗi: Email " + email + " đã tồn tại!");
             return false;
         }
 
-        // Thêm cột balance vào SQL INSERT
-        String sql = "INSERT INTO users (id, email, password, name, time_created, role, balance) VALUES (?, ?, ?, ?, ?, 'BIDDER', ?)";
+        // Thay đổi 'BIDDER' thành ? trong SQL INSERT để nhận role từ tham số truyền vào
+        String sql = "INSERT INTO users (id, email, password, name, time_created, role, balance) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -42,11 +44,12 @@ public class UserDao {
             pstmt.setString(3, password);
             pstmt.setString(4, name);
             pstmt.setTimestamp(5, timeCreated);
-            pstmt.setDouble(6, balance); // Đưa số dư vào statement
+            pstmt.setString(6, role);    // Thiết lập role động (ví dụ: "BIDDER", "ADMIN_REQUEST", ...)
+            pstmt.setDouble(7, balance); // Đưa số dư vào statement
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("[UserDao] Lỗi insert Bidder: " + e.getMessage());
+            System.err.println("[UserDao] Lỗi insert với role " + role + ": " + e.getMessage());
             return false;
         }
     }
@@ -120,7 +123,10 @@ public class UserDao {
         User user;
         String role = rs.getString("role");
 
-        if ("SELLER".equalsIgnoreCase(role)) {
+        // Thêm nhánh kiểm tra role ADMIN để khởi tạo đúng Class Admin
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            user = new Admin();
+        } else if ("SELLER".equalsIgnoreCase(role)) {
             Seller seller = new Seller();
             seller.setShopName(rs.getString("shop_name"));
             user = seller;
@@ -138,7 +144,7 @@ public class UserDao {
         // --- THÊM DÒNG NÀY ĐỂ ĐỌC SỐ DƯ ---
         user.setBalance(rs.getDouble("balance"));
 
-        // FIX DỨT ĐIỂM Ở ĐÂY: Dùng getTimestamp để JDBC tự parse LocalDateTime
+        // FIX TRIỆT ĐỂ TẠI ĐÂY: Dùng getTimestamp để JDBC tự parse LocalDateTime
         Timestamp ts = rs.getTimestamp("time_created");
         if (ts != null) {
             user.setTimeCreated(ts.toLocalDateTime());

@@ -34,9 +34,9 @@ public class ImportProductRequestHandler implements IMessageHandler {
             String jsonData = gson.toJson(data);
             Product product = gson.fromJson(jsonData, Product.class);
 
-            // --- SỬA Ở ĐÂY: KHỞI TẠO ID TRƯỚC ĐỂ LÀM TÊN FILE TRÊN CLOUDINARY ---
+            // --- KHỞI TẠO ID TRƯỚC ĐỂ LÀM TÊN FILE TRÊN CLOUDINARY ---
             if (product.getId() == null || product.getId().trim().isEmpty()) {
-                // Tạo một ID duy nhất, ví dụ cắt ngắn bớt cho tên file Cloudinary đỡ dài (tùy chọn)
+                // Tạo một ID duy nhất, cắt ngắn bớt cho tên file Cloudinary đỡ dài
                 String generatedId = UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
                 product.setId(generatedId);
             }
@@ -68,16 +68,14 @@ public class ImportProductRequestHandler implements IMessageHandler {
             // Giải phóng RAM (Xóa chuỗi Base64 đi vì đã có link URL, không cần lưu vào DB)
             product.setImageBase64(null);
 
-            // 5. Lưu vào Database và Context
+            // 5. Lưu vào Database (Bỏ hoàn toàn bước lưu vào RAM Context)
             boolean isSaved = ProductDao.getInstance().saveProduct(product);
 
             if (isSaved) {
-                context.addProduct(product);
-
-                // Gửi phản hồi thành công
+                // Gửi phản hồi thành công trực tiếp cho client
                 Response response = new Response(MessageType.IMPORT_PRODUCT_RESPONSE, "SUCCESS", "Sản phẩm đã được lưu!");
                 conn.send(gson.toJson(response));
-                System.out.println("[Server] Import thành công SP: " + product.getName() + " | ID: " + product.getId());
+                System.out.println("[Server] Import thành công SP và lưu Database: " + product.getName() + " | ID: " + product.getId());
             } else {
                 sendError(conn, gson, "Lỗi lưu Database.");
             }

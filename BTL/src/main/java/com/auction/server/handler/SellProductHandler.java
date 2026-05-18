@@ -1,5 +1,6 @@
 package com.auction.server.handler;
 
+import com.auction.common.model.product.Item;
 import com.auction.protocol.MessageType;
 import com.auction.common.model.product.Product;
 import com.auction.common.model.product.ProductStatus;
@@ -15,18 +16,19 @@ import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 import java.util.Map;
 import java.util.List;
-import java.time.LocalDateTime; // import để tính giờ
-import java.util.Random; //  import để random ID
+import java.time.LocalDateTime;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @CommandMap(value = MessageType.SELL_PRODUCT_REQUEST)
 public class SellProductHandler implements IMessageHandler {
-    // TẠO MỘT BỘ ĐẾM GIỜ CHẠY NGẦM ĐỘC LẬP (Không làm đơ logic cũ)
+
+    // TẠO MỘT BỘ ĐẾM GIỜ CHẠY NGẦM ĐỘC LẬP
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
-    //  TẠO SAFEGSON (Chuyên trị lỗi thời gian)
+    // TẠO SAFEGSON (Chuyên xử lý thời gian LocalDateTime)
     private static final Gson safeGson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
                     new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
@@ -40,26 +42,26 @@ public class SellProductHandler implements IMessageHandler {
             String productId = (String) data.get("id");
 
             if (productId == null || productId.isEmpty()) {
-                sendError(conn, gson, "Không tìm thấy mã sản phẩm để lên sàn!");
+                sendError(conn, safeGson, "Không tìm thấy mã sản phẩm để lên sàn!");
                 return;
             }
 
-            // 1. Cập nhật trạng thái trong Database
+            // 1. Cập nhật trạng thái sản phẩm trong Database thành đang đem bán đấu giá
             boolean isSold = ProductDao.getInstance().sellProduct(productId);
 
             if (isSold) {
-                // 2. Cập nhật RAM: Lấy bản mới nhất từ DB
+                // 2. Lấy bản mới nhất của Product từ DB lên để đóng gói vào Auction
                 Product updatedProduct = ProductDao.getInstance().getProductById(productId);
+
                 if (updatedProduct != null) {
-                    context.updateProduct(updatedProduct);
-                    //  BẮT ĐẦU LOGIC TẠO PHIÊN ĐẤU GIÁ
-                    int auctionId = Math.abs(new Random().nextInt()); // Tạo ID tự động
+                    // BẮT ĐẦU LOGIC TẠO PHIÊN ĐẤU GIÁ
+                    int auctionId = Math.abs(new Random().nextInt()); // Tạo ID tự động cho phiên
 
                     LocalDateTime now = LocalDateTime.now();
                     LocalDateTime startTime = now.plusSeconds(30);
                     LocalDateTime endTime = startTime.plusSeconds(15);
 
-                    // Đóng gói thành Phiên Đấu Giá
+                    // Đóng gói thành Phiên Đấu Giá (Gắn product trực tiếp vào đây)
                     Auction newAuction = new Auction(
                             auctionId,
                             updatedProduct,
@@ -71,61 +73,58 @@ public class SellProductHandler implements IMessageHandler {
                     );
                     newAuction.setStatus("PENDING");
 
-                    // Cất vào kho chứa Auction trên RAM
+                    // Cất thẳng vào kho chứa Auction trên RAM (Bỏ qua lưu product độc lập trên RAM)
                     context.addAuction(newAuction);
                 }
 
-                // PHẦN MỚI THÊM: HẸN GIỜ TỰ ĐỘNG CHUYỂN TRẠNG THÁI
+                // PHẦN HẸN GIỜ TỰ ĐỘNG CHUYỂN TRẠNG THÁI PHIÊN ĐẤU GIÁ
                 // =========================================================
-                long delayToActive = 30; // Chờ 30p để bắt đầu
-                long delayToCompleted = 45; // Tổng 45p để kết thúc
+                long delayToActive = 30;    // Chờ 30s để bắt đầu (Lúc TEST đổi từ phút thành giây)
+                long delayToCompleted = 45; // Tổng 45s để kết thúc
 
-                // Hẹn giờ 1: MỞ BÁT (PENDING -> ACTIVE)
+                // Hẹn giờ 1: MỞ BÁT PHIÊN ĐẤU GIÁ (PENDING -> ACTIVE)
                 scheduler.schedule(() -> {
                     Auction auctionToStart = context.getAuctionByProductId(productId);
                     if (auctionToStart != null && "PENDING".equals(auctionToStart.getStatus())) {
                         auctionToStart.setStatus("ACTIVE");
-                        context.updateAuction(auctionToStart);
-                        System.out.println(" [Timer] SP " + productId + " đã lên sàn ĐẤU GIÁ!");
+                        context.updateAuction(auctionToStart); // Hàm này tự động broadcast update danh sách phiên
+                        System.out.println(" [Timer] SP " + productId + " ĐÃ LÊN SÀN ĐẤU GIÁ!");
                     }
-                }, delayToActive, TimeUnit.SECONDS); // ⚠️ LÚC TEST ĐỔI THÀNH TimeUnit.SECONDS
+                }, delayToActive, TimeUnit.SECONDS);
 
-                /// Hẹn giờ 2: KHÓA SỔ VÀ TRẢ ĐỒ VỀ KHO (ACTIVE -> COMPLETED)
+                // Hẹn giờ 2: KHÓA SỔ PHIÊN ĐẤU GIÁ & HẠ SẢN PHẨM (ACTIVE -> COMPLETED)
                 scheduler.schedule(() -> {
                     Auction auctionToEnd = context.getAuctionByProductId(productId);
                     if (auctionToEnd != null && !"COMPLETED".equals(auctionToEnd.getStatus())) {
 
-                        // A. Chốt phiên đấu giá
+                        // A. Chốt phiên đấu giá thành COMPLETED trên RAM
                         auctionToEnd.setStatus("COMPLETED");
                         context.updateAuction(auctionToEnd);
 
-                        // B. Kéo sản phẩm về trạng thái có sẵn để "My Shop" bình thường lại
-                        Product p = context.getProductById(productId);
+                        // B. Lấy thông tin sản phẩm gắn liền trong phiên để khôi phục trạng thái dưới DB
+                        Product p = auctionToEnd.getProduct();
                         if (p != null) {
                             p.setStatus(ProductStatus.AVAILABLE);
-                            
                             p.setStartTime(null);
                             p.setEndTime(null);
 
-                            ProductDao.getInstance().editProduct(p); // Lưu xuống DB (Lúc này DB sẽ nhận 2 cái null an toàn)
-                            context.updateProduct(p); // Cập nhật RAM
-
-                            // C. Gọi lại hàm Broadcast CŨ của anh để báo Client tải lại My Shop
-                            broadcastNewList(context, safeGson);
+                            // Lưu trực tiếp xuống Database. Do RAM không giữ productList nữa nên không cần update RAM cho Product.
+                            ProductDao.getInstance().editProduct(p);
                         }
-                        System.out.println("[Timer] SP " + productId + " đã HẾT GIỜ. Trả về kho!");
-                    }
-                }, delayToCompleted, TimeUnit.SECONDS); // ⚠ LÚC TEST ĐỔI THÀNH TimeUnit.SECONDS
 
-                // 3. Phản hồi cho thằng Seller
+                        // C. Thông báo danh sách phiên đấu giá mới nhất (Đã cập nhật trạng thái COMPLETED) cho Client
+                        broadcastNewAuctionSession(context, safeGson);
+                        System.out.println("[Timer] SP " + productId + " ĐÃ HẾT GIỜ. Phiên kết thúc!");
+                    }
+                }, delayToCompleted, TimeUnit.SECONDS);
+
+                // 3. Phản hồi thành công cho Seller đang gửi request
                 Response response = new Response(MessageType.SELL_PRODUCT_RESPONSE, "SUCCESS", "Đã đưa sản phẩm lên sàn đấu giá!");
                 conn.send(safeGson.toJson(response));
 
                 System.out.println("-> [SellProduct] Thành công: ID " + productId);
 
-                // 4. Phát loa thông báo cho tất cả mọi người
-                broadcastNewList(context, safeGson);
-                // 5. Phát loa thông báo phiên đấu giá mới (Dành cho giao diện đấu giá sắp làm)
+                // 4. Phát loa thông báo danh sách phiên đấu giá mới (chứa phiên PENDING vừa tạo) cho toàn bộ Client đang online
                 broadcastNewAuctionSession(context, safeGson);
 
             } else {
@@ -138,37 +137,11 @@ public class SellProductHandler implements IMessageHandler {
         }
     }
 
-    private void broadcastNewList(ServerContext context, Gson gson) {
-        // Lấy danh sách sản phẩm từ RAM
-        List<Product> listToSend = context.getProductList();
-
-        // --- BỎ HẾT CÁI VÒNG LẶP ĐỌC FILE Ở ĐÂY ---
-        // Vì imagePath đã là link URL rồi, Client chỉ việc cầm link đó mà hiển thị thôi.
-
-        Response updateRes = new Response(MessageType.UPDATE_AUCTION_LIST_RESPONSE, "SUCCESS", "Sàn vừa có món mới!");
-        updateRes.getData().put("productList", listToSend);
-
-        String message = safeGson.toJson(updateRes);
-
-        // Gửi cho tất cả mọi người đang online
-        for (WebSocket client : context.getConnectedClients()) {
-            if (client.isOpen()) {
-                client.send(message);
-            }
-        }
-
-        // --- BỎ LUÔN CÁI BƯỚC set null Base64 giải phóng RAM ---
-        // Vì nãy giờ mình có nạp cái gì nặng vào đâu mà cần giải phóng.
-        System.out.println("-> [Broadcast] Đã cập nhật danh sách đấu giá mới cho tất cả Client qua URL Cloudinary.");
-    }
-
-
-    //  HÀM NÀY ĐỂ BÁO CÁO DANH SÁCH AUCTION MỚI
+    // HÀM PHÁT LOA ĐỂ BÁO CÁO DANH SÁCH AUCTION MỚI NHẤT
     private void broadcastNewAuctionSession(ServerContext context, Gson gson) {
         List<Auction> activeAuctions = context.getActiveAuctions();
 
-        // Dùng một MessageType tên khác (UPDATE_ACTIVE_AUCTIONS_RESPONSE) để tránh đụng chạm
-        Response updateRes = new Response("UPDATE_ACTIVE_AUCTIONS_RESPONSE", "SUCCESS", "Có phiên đấu giá mới được lên lịch!");
+        Response updateRes = new Response(MessageType.GET_ACTIVE_AUCTIONS_RESPONSE, "SUCCESS", "Có phiên đấu giá mới được cập nhật!");
         updateRes.getData().put("auctionList", activeAuctions);
 
         String message = safeGson.toJson(updateRes);
@@ -177,7 +150,7 @@ public class SellProductHandler implements IMessageHandler {
                 client.send(message);
             }
         }
-        System.out.println("-> [Broadcast MỚI] Đã phát sóng danh sách Phiên Đấu Giá.");
+        System.out.println("-> [Broadcast] Đã phát sóng danh sách Phiên Đấu Giá mới tới toàn bộ Client.");
     }
 
     private void sendError(WebSocket conn, Gson gson, String msg) {

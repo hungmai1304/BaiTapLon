@@ -27,6 +27,12 @@ public class RegisterHandler implements IMessageHandler {
             String password = (String) data.get("password");
             String role = (String) data.get("role");
 
+            // --- ĐOẠN XỬ LÝ CHECK ADMIN MỚI THÊM VÀO ---
+            if (isAdminEmail(email)) {
+                role = "ADMIN_REQUEST";
+            }
+            // -------------------------------------------
+
             // 2. Tạo ID và TimeCreated
             LocalDateTime now = Generate_id_and_timecreated.getCurrentTimestamp2();
             String id = Generate_id_and_timecreated.hashTimestampToId(now.toString());
@@ -45,12 +51,10 @@ public class RegisterHandler implements IMessageHandler {
                     sendError(conn, gson, "Người bán phải có tên Shop!");
                     return;
                 }
-                // ĐÃ SỬA: Thêm tham số initialBalance vào đây
                 isSuccess = UserDao.getInstance().insertSeller(email, password, name, id, sqlTimestamp, shopName, initialBalance);
             } else {
-                // Nếu là Bidder
-                // ĐÃ SỬA: Thêm tham số initialBalance vào đây
-                isSuccess = UserDao.getInstance().insertBidder(email, password, name, id, sqlTimestamp, initialBalance);
+                // Nhánh này xử lý chung cho cả "BIDDER" và "ADMIN_REQUEST" nhờ tham số role động vừa thêm
+                isSuccess = UserDao.getInstance().insertBidder(email, password, name, id, sqlTimestamp, initialBalance, role);
             }
 
             // 4. Trả về kết quả
@@ -61,7 +65,7 @@ public class RegisterHandler implements IMessageHandler {
                         "Đăng ký thành công! Chào mừng " + name
                 );
                 conn.send(gson.toJson(response));
-                System.out.println("[RegisterHandler] Đăng ký thành công cho: " + email);
+                System.out.println("[RegisterHandler] Đăng ký thành công cho: " + email + " với role: " + role);
             } else {
                 sendError(conn, gson, "Đăng ký thất bại! Email có thể đã tồn tại.");
             }
@@ -75,5 +79,15 @@ public class RegisterHandler implements IMessageHandler {
     private void sendError(WebSocket conn, Gson gson, String msg) {
         Response response = new Response(MessageType.REGISTER_RESPONSE, "ERROR", msg);
         conn.send(gson.toJson(response));
+    }
+
+    /**
+     * Hàm helper check email admin phục vụ riêng cho Handler này
+     */
+    private boolean isAdminEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return false;
+        }
+        return email.trim().toLowerCase().endsWith("@admin.com");
     }
 }

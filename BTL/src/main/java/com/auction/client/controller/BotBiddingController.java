@@ -36,8 +36,8 @@ public class BotBiddingController {
         // Lấy Auction hiện tại từ danh sách duy nhất
         currentAuction = ClientContext.getInstance().getCurrentAuction();
 
-        if (currentAuction != null && currentAuction.getItem() instanceof Product) {
-            Product product = (Product) currentAuction.getItem();
+        if (currentAuction != null && currentAuction.getProduct() instanceof Product) {
+            Product product = (Product) currentAuction.getProduct();
 
             lblProductName.setText("Tên sản phẩm: " + product.getName());
             lblStartPrice.setText("Giá khởi điểm: " + String.format("%,.0f VNĐ", product.getStartPrice()));
