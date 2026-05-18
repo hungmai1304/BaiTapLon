@@ -9,12 +9,21 @@ import com.auction.server.model.ServerContext;
 import com.auction.server.service.FileService;
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
+import com.google.gson.*;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.Map;
 
 @CommandMap(value = MessageType.EDIT_PRODUCT_REQUEST)
 public class EditProductHandler implements IMessageHandler {
+    private static final Gson safeGson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
+                    new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
+            .registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, typeOfT, context) ->
+                    LocalDateTime.parse(json.getAsString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+            .create();
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -87,7 +96,7 @@ public class EditProductHandler implements IMessageHandler {
                 // Đặt trực tiếp danh sách sản phẩm vừa cập nhật vào Map data để hiển thị lại UI "My Shop"
                 response.getData().put("products", updatedList);
 
-                conn.send(gson.toJson(response));
+                conn.send(safeGson.toJson(response));
                 System.out.println("[EditProduct] Đã sửa thành công dưới DB và gửi lại danh sách Shop cho user: " + userEmail);
 
             } else {
@@ -102,6 +111,6 @@ public class EditProductHandler implements IMessageHandler {
 
     private void sendError(WebSocket conn, Gson gson, String msg) {
         Response response = new Response(MessageType.EDIT_PRODUCT_RESPONSE, "ERROR", msg);
-        conn.send(gson.toJson(response));
+        conn.send(safeGson.toJson(response));
     }
 }
