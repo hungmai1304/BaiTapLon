@@ -111,12 +111,13 @@ public class UserDao {
             pstmt.setString(1, email);
 
             try (ResultSet rs = pstmt.executeQuery()) {
-                rs.next();
-                String hashedPassword = rs.getString("password");
+                if (rs.next()) {
+                    String hashedPassword = rs.getString("password");
 
-                // 2. Kiểm tra mật khẩu (Client gửi lên plaintext vs DB đã hash)
-                if (BCrypt.checkpw(password, hashedPassword)) {
-                    return mapResultSetToUser(rs);
+                    // 2. Kiểm tra mật khẩu (Client gửi lên plaintext vs DB đã hash)
+                    if (BCrypt.checkpw(password, hashedPassword)) {
+                        return mapResultSetToUser(rs);
+                    }
                 }
             }
         } catch (SQLException e) {
