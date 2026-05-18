@@ -49,8 +49,12 @@ public class EditProductHandler implements IMessageHandler {
                 return;
             }
 
-            // Kiểm tra quyền sở hữu: Email người sửa phải là chủ sản phẩm
-            if (!productToEdit.getOwner().getEmail().equals(userEmail)) {
+            // ĐÃ FIX: Kiểm tra quyền sở hữu an toàn (Không bị lỗi Null)
+            List<Product> myProducts = ProductDao.getInstance().getProductsByUserEmail(userEmail);
+            boolean isMyProduct = myProducts.stream().anyMatch(p -> p.getId().equals(productId));
+
+            if (!isMyProduct) {
+                // Thêm chữ "gson," vào đây là hết lỗi!
                 sendError(conn, gson, "Bạn không có quyền sửa sản phẩm này!");
                 return;
             }

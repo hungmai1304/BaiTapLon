@@ -9,7 +9,6 @@ import com.auction.server.model.ServerContext;
 import com.google.gson.*;
 
 import org.java_websocket.WebSocket;
-import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -18,7 +17,6 @@ import java.util.Map;
 @CommandMap(value = MessageType.DELETE_PRODUCT_REQUEST)
 public class DeleteProductHandler implements IMessageHandler {
 
-    // BỌC THÉP GSON ĐỂ KHÔNG BỊ LỖI THỜI GIAN KHI GỬI DANH SÁCH VỀ CLIENT
     private static final Gson safeGson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
                     new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
@@ -29,7 +27,7 @@ public class DeleteProductHandler implements IMessageHandler {
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson defaultGson, ServerContext context) {
         try {
-            // 1. Lấy Email người dùng để lấy đúng danh sách Shop của người đó
+            // 1. Kiểm tra đăng nhập
             String userEmail = context.getUserByConn(conn);
             if (userEmail == null) {
                 conn.send(safeGson.toJson(new Response(MessageType.DELETE_PRODUCT_RESPONSE, "ERROR", "Bạn chưa đăng nhập!")));
@@ -43,20 +41,32 @@ public class DeleteProductHandler implements IMessageHandler {
                 return;
             }
 
-            // 3. XÓA THẲNG XUỐNG DATABASE
+            // KIỂM TRA QUYỀN SỞ HỮU TRƯỚC KHI XÓA
+            // Lấy chính xác danh sách sản phẩm hợp pháp thuộc về Email này từ DB qua lệnh JOIN SQL
+            List<Product> myProducts = ProductDao.getInstance().getProductsByUserEmail(userEmail);
+
+            // Quét xem cái ID muốn xóa có nằm trong danh sách sở hữu của ông này không
+            boolean isMyProduct = myProducts.stream().anyMatch(p -> p.getId().equals(productId));
+
+            if (!isMyProduct) {
+                conn.send(safeGson.toJson(new Response(MessageType.DELETE_PRODUCT_RESPONSE, "ERROR", "Bạn không có quyền xóa sản phẩm này!")));
+                System.out.println(" [CẢNH BÁO BẢO MẬT] User " + userEmail + " cố tình xóa trái phép sản phẩm ID: " + productId);
+                return;
+            }
+            // =================================================================
+
+            // 3. Vượt qua vòng bảo mật -> Tiến hành xóa thẳng dưới DB
             boolean isDeleted = ProductDao.getInstance().deleteProduct(productId);
 
             if (isDeleted) {
-
-                // 4. Lấy lại danh sách mới nhất từ DB
+                // 4. Lấy lại danh sách mới sạch sẽ sau khi xóa để Client vẽ lại giao diện
                 List<Product> updatedList = ProductDao.getInstance().getProductsByUserEmail(userEmail);
 
-                // 5. Đóng gói và gửi về cho Client
                 Response response = new Response(MessageType.DELETE_PRODUCT_RESPONSE, "SUCCESS", "Đã xóa sản phẩm!");
                 response.getData().put("products", updatedList);
 
                 conn.send(safeGson.toJson(response));
-                System.out.println("[DeleteProduct] Đã xóa DB thành công ID: " + productId);
+                System.out.println("[DeleteProduct] Đã xóa DB thành công ID: " + productId + " bởi " + userEmail);
             } else {
                 conn.send(safeGson.toJson(new Response(MessageType.DELETE_PRODUCT_RESPONSE, "ERROR", "Không thể xóa trong Database!")));
             }
