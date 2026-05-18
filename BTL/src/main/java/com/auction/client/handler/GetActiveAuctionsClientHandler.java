@@ -6,17 +6,26 @@ import com.auction.client.utils.ClientContext;
 import com.auction.client.utils.ControllerRegistry;
 import com.auction.client.controller.TikTokAuctionController;
 import com.auction.common.model.auction.Auction;
+import com.auction.common.utils.LocalDateTimeAdapter;
 import com.auction.protocol.Response;
-import com.google.gson.Gson;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import javafx.application.Platform;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @ResponseHandler(type = "GET_ACTIVE_AUCTIONS_RESPONSE")
 public class GetActiveAuctionsClientHandler implements IClientHandler {
 
-    private Gson gson = new Gson();
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
+                    new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
+            .registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, typeOfT, context) ->
+                    LocalDateTime.parse(json.getAsString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+            .create();
+
 
     @Override
     public void handle(Response response) {

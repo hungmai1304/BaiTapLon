@@ -6,7 +6,7 @@ public class ServerLauncher {
 
         try {
 
-            // Render cấp port qua biến môi trường
+            // Render c?p port qua bi?n m�i tr??ng
             String portStr = System.getenv("PORT");
 
             int port;
@@ -20,7 +20,7 @@ public class ServerLauncher {
 //            port=10000;
 
             System.out.println("================================");
-            System.out.println("[ServerLauncher] SERVER ĐẤU GIÁ ĐANG KHỞI ĐỘNG");
+            System.out.println("[ServerLauncher] SERVER ??U GI� ?ANG KH?I ??NG");
             System.out.println("PORT: " + port);
             System.out.println("================================");
 
@@ -29,10 +29,10 @@ public class ServerLauncher {
 
             server.start();
 
-            System.out.println("[ServerLauncher] Server đã start.");
-            System.out.println("[ServerLauncher] Đang chờ client kết nối...");
+            System.out.println("[ServerLauncher] Server ?� start.");
+            System.out.println("[ServerLauncher] ?ang ch? client k?t n?i...");
 
-            // GIỮ SERVER SỐNG TRÊN RENDER
+            // GI? SERVER S?NG TR�N RENDER
             Thread.currentThread().join();
 
         } catch (Exception e) {

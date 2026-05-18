@@ -220,4 +220,17 @@ public class ProductDao {
         }
         return productList;
     }
+
+    // 7. XÓA SẢN PHẨM KHỎI DATABASE
+    public boolean deleteProduct(String productId) {
+        String sql = "DELETE FROM products WHERE id = ?";
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, productId);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("[ProductDao] Lỗi xóa sản phẩm: " + e.getMessage());
+            return false;
+        }
+    }
 }
