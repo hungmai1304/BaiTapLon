@@ -24,11 +24,15 @@ class GenerateIdAndTimeCreatedTest {
     @Test
     void testHashTimestampToId() {
         String timestamp = "2026-05-14 10:00:00";
-        String id = Generate_id_and_timecreated.hashTimestampToId(timestamp);
-        assertNotNull(id);
-        assertEquals(12, id.length());
-        // Hash should be consistent
-        assertEquals(id, Generate_id_and_timecreated.hashTimestampToId(timestamp));
+        String id1 = Generate_id_and_timecreated.hashTimestampToId(timestamp);
+        String id2 = Generate_id_and_timecreated.hashTimestampToId(timestamp);
+        
+        assertNotNull(id1);
+        assertNotNull(id2);
+        assertEquals(12, id1.length());
+        assertEquals(12, id2.length());
+        // Now IDs are random, so they should be different even for same input
+        assertNotEquals(id1, id2);
     }
 
     @Test

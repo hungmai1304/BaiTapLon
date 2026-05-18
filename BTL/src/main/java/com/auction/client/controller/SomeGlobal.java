@@ -7,6 +7,9 @@ public class SomeGlobal {
     private static MainController mainController;
     private static ShopSellController shopSellController;
     private static User currentUser;
+
+    // --- THÊM BIẾN VÀ HÀM CHO BANK CONTROLLER TẠI ĐÂY ---
+
     private static BankController bankController;
 
     // --- BIẾN VÀ HÀM CHO ADMIN CONTROLLER TẠI ĐÂY ---
@@ -38,6 +41,7 @@ public class SomeGlobal {
         return bankController;
     }
 
+
     public static void setHomeController(HomeController controller) {
         homeController = controller;
     }
@@ -54,6 +58,7 @@ public class SomeGlobal {
         shopSellController = controller;
     }
 
+
     public static User getCurrentUser() {
         return currentUser;
     }
@@ -69,4 +74,10 @@ public class SomeGlobal {
     public static MainController getMainController() {
         return mainController;
     }
+
+
+
+
+
+
 }
