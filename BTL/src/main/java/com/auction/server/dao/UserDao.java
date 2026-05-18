@@ -44,7 +44,7 @@ public class UserDao {
 
             pstmt.setString(1, id);
             pstmt.setString(2, email);
-            pstmt.setString(3, password);
+            pstmt.setString(3, hashedPassword);
             pstmt.setString(4, name);
             pstmt.setTimestamp(5, timeCreated);
             pstmt.setDouble(6, balance); // Đưa số dư vào statement
@@ -74,7 +74,7 @@ public class UserDao {
 
             pstmt.setString(1, id);
             pstmt.setString(2, email);
-            pstmt.setString(3, password);
+            pstmt.setString(3, hashedPassword);
             pstmt.setString(4, name);
             pstmt.setTimestamp(5, timeCreated);
             pstmt.setString(6, shopName);
@@ -105,20 +105,9 @@ public class UserDao {
     }
 
     public User authenticate(String email, String password) {
-        String sql = "SELECT * FROM users WHERE email = ? AND password = ?";
-        try (Connection conn = Db.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, email);
-            pstmt.setString(2, password);
-
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToUser(rs);
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("[UserDao] Lỗi authenticate: " + e.getMessage());
+        User user = getUserByEmail(email);
+        if (user != null && BCrypt.checkpw(password, user.getPassword())) {
+            return user;
         }
         return null;
     }
@@ -134,10 +123,13 @@ public class UserDao {
             user = seller;
         } else if ("BIDDER".equalsIgnoreCase(role)) {
             user = new Bidder();
+        } else if ("ADMIN".equalsIgnoreCase(role)) {
+            user = new Admin();
         } else {
             user = new User();
         }
 
+        user.setRole(role);
         user.setId(rs.getString("id"));
         user.setEmail(rs.getString("email"));
         user.setPassword(rs.getString("password"));

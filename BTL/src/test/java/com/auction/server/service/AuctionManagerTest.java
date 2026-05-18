@@ -1,5 +1,6 @@
 package com.auction.server.service;
 
+import com.auction.common.model.auction.Auction;
 import com.auction.common.model.product.Product;
 import com.auction.common.model.product.ProductStatus;
 import com.auction.server.AuctionWebSocketServer;
@@ -28,20 +29,19 @@ class AuctionManagerTest {
         serverContext = ServerContext.getInstance();
         mockServer = mock(AuctionWebSocketServer.class);
 
-        // Clear existing products in singleton context
-        serverContext.getProductList().clear();
-        serverContext.setCurrentProduct(null);
+        // Clear existing auctions in singleton context
+        serverContext.getActiveAuctions().clear();
         
         // Mock the server in context
-        serverContext.initData(mockServer, null);
+        serverContext.initData(mockServer);
         
         // Mock connections to avoid NPE during broadcast
         when(mockServer.getConnections()).thenReturn(new HashSet<>());
     }
 
     @Test
-    void testPickNextProduct_NoAvailableProducts() {
-        Product picked = auctionManager.pickNextProduct();
+    void testPickNextProduct_NoAvailableAuctions() {
+        Auction picked = auctionManager.pickNextProduct();
         assertNull(picked);
     }
 
@@ -51,14 +51,20 @@ class AuctionManagerTest {
         p1.setId("1");
         p1.setName("Test Product");
         p1.setStatus(ProductStatus.AVAILABLE);
-        serverContext.addProduct(p1);
+        
+        Auction a1 = new Auction();
+        a1.setId(1);
+        a1.setProduct(p1);
+        a1.setStatus("PENDING");
+        
+        serverContext.addAuction(a1);
 
-        Product picked = auctionManager.pickNextProduct();
+        Auction picked = auctionManager.pickNextProduct();
 
         assertNotNull(picked);
-        assertEquals("1", picked.getId());
-        assertEquals(ProductStatus.ON_AUCTION, picked.getStatus());
-        assertEquals(picked, serverContext.getCurrentProduct());
+        assertEquals(1, picked.getId());
+        assertEquals("ACTIVE", picked.getStatus());
+        assertEquals(ProductStatus.ON_AUCTION, picked.getProduct().getStatus());
         assertNotNull(picked.getStartTime());
         assertNotNull(picked.getEndTime());
         
@@ -71,11 +77,18 @@ class AuctionManagerTest {
         p1.setId("1");
         p1.setName("Test Product");
         p1.setStartPrice(100);
-        p1.setCurrentPrice(150); // Price increased
         p1.setStatus(ProductStatus.ON_AUCTION);
+        
+        Auction a1 = new Auction();
+        a1.setId(1);
+        a1.setProduct(p1);
+        a1.setStartPrice(100);
+        a1.setCurrentPrice(150); // Price increased
+        a1.setStatus("ACTIVE");
 
-        auctionManager.endAuction(p1);
+        auctionManager.endAuction(a1);
 
+        assertEquals("COMPLETED", a1.getStatus());
         assertEquals(ProductStatus.SOLD, p1.getStatus());
         verify(mockServer, atLeastOnce()).getConnections();
     }
@@ -86,11 +99,18 @@ class AuctionManagerTest {
         p1.setId("1");
         p1.setName("Test Product");
         p1.setStartPrice(100);
-        p1.setCurrentPrice(100); // No price increase
         p1.setStatus(ProductStatus.ON_AUCTION);
+        
+        Auction a1 = new Auction();
+        a1.setId(1);
+        a1.setProduct(p1);
+        a1.setStartPrice(100);
+        a1.setCurrentPrice(100); // No price increase
+        a1.setStatus("ACTIVE");
 
-        auctionManager.endAuction(p1);
+        auctionManager.endAuction(a1);
 
+        assertEquals("COMPLETED", a1.getStatus());
         assertEquals(ProductStatus.CANCELLED, p1.getStatus());
         verify(mockServer, atLeastOnce()).getConnections();
     }
