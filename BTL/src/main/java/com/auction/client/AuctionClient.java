@@ -2,6 +2,7 @@ package com.auction.client;
 
 import com.auction.client.network.NetworkClient;
 
+import com.auction.client.utils.AdminContext;
 import com.auction.client.utils.NavigationService;
 import javafx.application.Application;
 
@@ -30,6 +31,7 @@ public class AuctionClient extends Application {
         //-----------------------------------------------------------------------------------
         stage.setOnCloseRequest(event -> {
             System.out.println("Đang đóng ứng dụng...");
+            AdminContext.getInstance().clear();
             Platform.exit(); // Dừng JavaFX Runtime
             System.exit(0);  // Khai tử hoàn toàn Process (Dùng khi có thread ngầm cứng đầu)
         });

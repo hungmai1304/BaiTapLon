@@ -102,6 +102,9 @@ public class MessageType {
     public static final String ADMIN_ONLINE_AUCTIONS_LIST_REQUEST="ADMIN_ONLINE_AUCTIONS_LIST";
     public static final String ADMIN_ONLINE_AUCTIONS_LIST_RESPONSE="ADMIN_ONLINE_AUCTIONS_LIST_RESPONSE";
 
+    public static final String GET_ADMIN_REQUEST_LIST = "GET_ADMIN_REQUEST_LIST";
+    public static final String GET_ADMIN_REQUEST_LIST_RESPONSE = "GET_ADMIN_REQUEST_LIST_RESPONSE";
 
-
+    public static final String ADMIN_ACCEPT_REQUEST="ADMIN_ACCEPT_REQUEST";
+    public static final String ADMIN_REJECT_REQUEST="ADMIN_REJECT_REQUEST";
 }

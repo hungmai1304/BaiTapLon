@@ -120,35 +120,29 @@ public class UserDao {
 
     // 3. CẬP NHẬT: Lấy dữ liệu balance từ DB gán ngược lại cho Object User
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
-        User user;
         String role = rs.getString("role");
+        User user;
 
-        // Thêm nhánh kiểm tra role ADMIN để khởi tạo đúng Class Admin
+        // 1. Khởi tạo đối tượng theo Class con (nếu có logic đặc trưng)
         if ("ADMIN".equalsIgnoreCase(role)) {
-            user = new Admin();
+            user = new com.auction.common.model.user.Admin();
         } else if ("SELLER".equalsIgnoreCase(role)) {
-            Seller seller = new Seller();
-            seller.setShopName(rs.getString("shop_name"));
-            user = seller;
+            user = new com.auction.common.model.user.Seller();
+            ((com.auction.common.model.user.Seller) user).setShopName(rs.getString("shop_name"));
         } else if ("BIDDER".equalsIgnoreCase(role)) {
-            user = new Bidder();
+            user = new com.auction.common.model.user.Bidder();
         } else {
+            // Đối với "ADMIN_REQUEST", nó sẽ được khởi tạo như một thực thể User tiêu chuẩn
             user = new User();
         }
 
+        // 2. Đổ toàn bộ dữ liệu chung từ DB vào Object (Lúc này setRole() đã hoàn toàn hợp lệ)
         user.setId(rs.getString("id"));
         user.setEmail(rs.getString("email"));
         user.setPassword(rs.getString("password"));
         user.setUsername(rs.getString("name"));
-
-        // --- THÊM DÒNG NÀY ĐỂ ĐỌC SỐ DƯ ---
+        user.setRole(role);
         user.setBalance(rs.getDouble("balance"));
-
-        // FIX TRIỆT ĐỂ TẠI ĐÂY: Dùng getTimestamp để JDBC tự parse LocalDateTime
-        Timestamp ts = rs.getTimestamp("time_created");
-        if (ts != null) {
-            user.setTimeCreated(ts.toLocalDateTime());
-        }
 
         return user;
     }
@@ -251,5 +245,50 @@ public class UserDao {
             System.err.println("❌ Lỗi getBalanceByEmail: " + e.getMessage());
         }
         return 0.0;
+    }
+
+    /**
+     * Lấy danh sách người dùng dựa theo Role (Ví dụ: "ADMIN_REQUEST")
+     * @param role Tên quyền cần tìm kiếm trong DB
+     * @return Danh sách đối tượng User tìm thấy
+     */
+    public List<User> getUsersByRole(String role) {
+        List<User> userList = new ArrayList<>();
+        String sql = "SELECT * FROM users WHERE UPPER(role) = ? ORDER BY time_created DESC";
+
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, role.toUpperCase());
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    userList.add(mapResultSetToUser(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[UserDao] Lỗi trong hàm getUsersByRole: " + e.getMessage());
+        }
+        return userList;
+    }
+    /**
+     * Cập nhật Role (Quyền) của người dùng dựa trên ID
+     * @param id ID của người dùng cần cập nhật
+     * @param newRole Quyền mới muốn gán (Ví dụ: "ADMIN")
+     * @return true nếu cập nhật thành công, false nếu thất bại
+     */
+    public boolean updateUserRole(String id, String newRole) {
+        String sql = "UPDATE users SET role = ? WHERE id = ?";
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, newRole);
+            pstmt.setString(2, id);
+
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("[UserDao] Lỗi khi cập nhật role cho user ID " + id + ": " + e.getMessage());
+            return false;
+        }
     }
 }

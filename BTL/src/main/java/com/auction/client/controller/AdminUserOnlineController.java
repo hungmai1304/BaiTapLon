@@ -1,5 +1,6 @@
 package com.auction.client.controller;
 
+import com.auction.client.network.RequestSender;
 import com.auction.client.utils.AdminContext;
 import com.auction.common.model.user.User;
 import javafx.beans.property.SimpleStringProperty;
@@ -49,7 +50,8 @@ public class AdminUserOnlineController implements Initializable {
 
         // 3. Logic cột Trạng thái (Vì danh sách này lấy từ AdminContext.onlineUsers nên mặc định là Online)
         colStatus.setCellValueFactory(cellData -> new SimpleStringProperty("Trực tuyến"));
-        // Bạn có thể custom CSS chữ màu xanh lá cây cho sinh động bằng CellFactory nếu muốn:
+
+        // Cấu hình CSS chỉ màu xanh lá cây cho sinh động bằng CellFactory:
         colStatus.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -74,7 +76,7 @@ public class AdminUserOnlineController implements Initializable {
     }
 
     /**
-     * Hàm cấu hình sinh các nút chức năng (ví dụ: nút Kick/Khóa) trên từng dòng của cột Thao tác
+     * Hàm cấu hình sinh các nút chức năng đăng xuất từ xa trên từng dòng của cột Thao tác
      */
     private void setupActionColumn() {
         Callback<TableColumn<User, Void>, TableCell<User, Void>> cellFactory = new Callback<>() {
@@ -90,10 +92,15 @@ public class AdminUserOnlineController implements Initializable {
                         // Xử lý sự kiện khi Admin bấm nút này trên một hàng bất kỳ
                         btnKick.setOnAction(event -> {
                             User selectedUser = getTableView().getItems().get(getIndex());
-                            System.out.println("Admin yêu cầu xử lý người dùng: " + selectedUser.getEmail());
 
-                            // Gửi request Kick/Khóa lên Server nếu hệ thống của bạn có tính năng này
-                            // RequestSender.send(MessageType.ADMIN_KICK_USER_REQUEST, selectedUser.getId());
+                            if (selectedUser != null && selectedUser.getEmail() != null) {
+                                String email = selectedUser.getEmail();
+                                System.out.println("[AdminUserOnlineController] Admin yêu cầu đăng xuất tài khoản: " + email);
+
+                                // Gửi gói tin yêu cầu kick/đăng xuất user này lên Server qua WebSocket
+                                // Lưu ý: Đồng bộ chuỗi lệnh "ADMIN_LOUGOUT_COMMAND" khớp với Handler xử lý trên Server
+                                RequestSender.send("ADMIN_LOGOUT_COMMAND", email);
+                            }
                         });
                     }
 
