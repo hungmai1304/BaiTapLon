@@ -50,8 +50,10 @@ public class MessageDispatcher {
                 String type = request.getType().trim().toUpperCase();
 
                 // 1. Kiểm tra xem đây có phải là lệnh ngoại lệ (không cần login) không
+                // Sửa lại đoạn kiểm tra lệnh ngoại lệ này trong MessageDispatcher.java
                 boolean isAuthRequest = type.equals(MessageType.LOGIN_REQUEST)
                         || type.equals(MessageType.REGISTER_REQUEST);
+
 
                 // 2. Kiểm tra trạng thái Online của kết nối
                 String userId = context.getUserByConn(conn);

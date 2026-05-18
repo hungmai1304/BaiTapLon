@@ -9,8 +9,7 @@ public class User extends BaseEntity {
     private String email;
 
     // Các thông tin thời gian chung
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+
     private double balance;
 
     public User() {}
@@ -40,21 +39,7 @@ public class User extends BaseEntity {
         this.password = password;
     }
 
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
 
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
-    }
 
     // --- THÊM GETTER VÀ SETTER CHO BALANCE Ở ĐÂY ---
     public double getBalance() {

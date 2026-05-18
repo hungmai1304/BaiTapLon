@@ -1,7 +1,5 @@
 package com.auction.server;
 
-import com.auction.common.model.product.Product;
-import com.auction.common.model.product.ProductStatus;
 import com.auction.server.model.ServerContext;
 import com.google.gson.*; // Thay đổi để dùng GsonBuilder
 
@@ -79,8 +77,16 @@ public class AuctionWebSocketServer extends WebSocketServer {
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         System.out.println("Client thoát: " + (conn != null ? conn.getRemoteSocketAddress() : "Unknown"));
+
+        // Gửi số lượng kết nối thô còn lại phòng hờ hệ thống đo tải
         broadcast("{\"type\":\"USER_COUNT_UPDATE\", \"count\":" + getConnections().size() + "}");
+
+        // 1. Xóa thông tin chuỗi email map với Connection
         ServerContext.getInstance().removeUser(conn);
+
+        // VIẾT THÊM: Xóa object người dùng ra khỏi danh sách quản lý Online RAM
+        // Hàm này bên trong ServerContext đã tích hợp sẵn lệnh broadcastOnlineUsersToAdmins() để làm mới UI Admin
+        ServerContext.getInstance().removeOnlineUserObject(conn);
     }
 
     @Override
@@ -92,6 +98,7 @@ public class AuctionWebSocketServer extends WebSocketServer {
     @Override
     public void onStart() {
         System.out.println("[WebSocketServer] WebSocket Server đã sẵn sàng!");
+
     }
 
     public void shutdown() {

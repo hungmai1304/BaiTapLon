@@ -1,6 +1,8 @@
 package com.auction.client.controller;
 
+import com.auction.client.network.RequestSender;
 import com.auction.client.utils.NavigationService;
+import com.auction.protocol.MessageType;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -24,6 +26,7 @@ public class SettingsController {
         prStage.setMaximized(false);
         prStage.setScene(scene_login);
         prStage.show();
+        RequestSender.send(MessageType.LOGOUT_REQUEST,null);
     }
     @FXML
     public void handleTerms(ActionEvent event) throws IOException {
