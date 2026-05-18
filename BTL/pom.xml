@@ -128,6 +128,9 @@
 					<options>
 						<option>--add-opens</option>
 						<option>java.base/jdk.internal.reflect=ALL-UNNAMED</option>
+						<option>-Dglass.win.uiScale=100%</option>
+						<option>-Dprism.allowhidpi=false</option>
+						<option>-Dsun.java2d.uiScale=1.0</option>
 					</options>
 				</configuration>
 			</plugin>
