@@ -27,6 +27,7 @@ public class SettingsController {
         prStage.setScene(scene_login);
         prStage.show();
         RequestSender.send(MessageType.LOGOUT_REQUEST,null);
+
     }
     @FXML
     public void handleTerms(ActionEvent event) throws IOException {

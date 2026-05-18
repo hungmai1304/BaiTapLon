@@ -9,15 +9,14 @@ import java.util.List;
 public class AdminContext {
     private static AdminContext instance;
 
-    // Danh sách ObservableList quản lý danh sách người dùng đang online trên giao diện Admin
+    // 1. Danh sách người dùng trực tuyến
     private final ObservableList<User> onlineUsers = FXCollections.observableArrayList();
 
-    // Private constructor để chặn khởi tạo từ bên ngoài (Singleton)
+    // 2. BỔ SUNG: Danh sách các tài khoản đang trong hàng chờ duyệt làm Admin
+    private final ObservableList<User> adminRequests = FXCollections.observableArrayList();
+
     private AdminContext() {}
 
-    /**
-     * Lấy instance duy nhất của AdminContext (Thread-safe)
-     */
     public static synchronized AdminContext getInstance() {
         if (instance == null) {
             instance = new AdminContext();
@@ -26,15 +25,8 @@ public class AdminContext {
     }
 
     // --- QUẢN LÝ DANH SÁCH USER ONLINE ---
-
-    /**
-     * Thay thế toàn bộ danh sách người dùng online hiện tại bằng danh sách mới nhận từ Server.
-     * Hỗ trợ tự động kiểm tra Thread để tránh lỗi xung đột giao diện JavaFX.
-     * * @param users Danh sách User mới thu thập từ hệ thống
-     */
     public void setOnlineUsers(List<User> users) {
         if (users == null) return;
-
         if (Platform.isFxApplicationThread()) {
             this.onlineUsers.setAll(users);
         } else {
@@ -42,54 +34,45 @@ public class AdminContext {
         }
     }
 
-    /**
-     * Lấy danh sách ObservableList phục vụ cho việc gán/bind trực tiếp vào các component UI như TableView, ListView
-     */
     public ObservableList<User> getOnlineUsers() {
         return onlineUsers;
     }
 
-//    /**
-//     * Thêm một người dùng mới vào danh sách khi họ vừa kết nối thành công (Real-time update)
-//     */
-//    public void addOnlineUser(User user) {
-//        if (user == null) return;
-//
-//        if (Platform.isFxApplicationThread()) {
-//            this.onlineUsers.add(user);
-//        } else {
-//            Platform.runLater(() -> this.onlineUsers.add(user));
-//        }
-//    }
+
+    // --- BỔ SUNG: QUẢN LÝ DANH SÁCH CHỜ DUYỆT ADMIN ---
 
     /**
-     * Xóa một người dùng khỏi danh sách khi họ ngắt kết nối/đăng xuất khỏi hệ thống
+     * Thay thế toàn bộ danh sách tài khoản chờ duyệt bằng danh sách mới nhận về từ Server.
+     * @param requests Danh sách User có role ADMIN_REQUEST nhận được từ gói tin phản hồi
      */
-    public void removeOnlineUser(User user) {
-        if (user == null) return;
+    public void setAdminRequests(List<User> requests) {
+        if (requests == null) return;
 
         if (Platform.isFxApplicationThread()) {
-            this.onlineUsers.remove(user);
+            this.adminRequests.setAll(requests);
         } else {
-            Platform.runLater(() -> this.onlineUsers.remove(user));
+            Platform.runLater(() -> this.adminRequests.setAll(requests));
         }
     }
 
     /**
-     * Trả về số lượng người dùng đang hoạt động trong hệ thống
+     * Lấy danh sách tài khoản chờ duyệt phục vụ cho TableView (ép trực tiếp vào UI components)
      */
-    public int getOnlineUserCount() {
-        return onlineUsers.size();
+    public ObservableList<User> getAdminRequests() {
+        return adminRequests;
     }
 
-    /**
-     * Làm sạch toàn bộ dữ liệu lưu trữ khi Admin đăng xuất
-     */
+
+    // --- HÀM CLEAR KHI ĐĂNG XUẤT ---
     public void clear() {
         if (Platform.isFxApplicationThread()) {
             onlineUsers.clear();
+            adminRequests.clear(); // Làm sạch cả danh sách chờ duyệt
         } else {
-            Platform.runLater(onlineUsers::clear);
+            Platform.runLater(() -> {
+                onlineUsers.clear();
+                adminRequests.clear();
+            });
         }
     }
 }

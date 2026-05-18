@@ -1,12 +1,17 @@
 package com.auction.client.controller;
 
+import com.auction.client.network.RequestSender;
+import com.auction.protocol.MessageType;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
@@ -19,10 +24,8 @@ public class AdminMainController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        // Giả định đối tượng quản lý toàn cục lớp của bạn
         SomeGlobal.setAdminMainController(this);
-
-        // Sử dụng runLater để đẩy việc nạp giao diện con xuống cuối hàng đợi Event Queue,
-        // Đảm bảo mainBorderPane đã được inject xong hoàn toàn, tránh tuyệt đối lỗi NullPointerException
         Platform.runLater(() -> {
             loadCenterView("/com/auction/client/view/adminOnlineUser.fxml");
         });
@@ -64,6 +67,21 @@ public class AdminMainController implements Initializable {
     }
 
     /**
+     * Sự kiện khi nhấn vào nút duyệt yêu cầu cấp quyền Admin ("More Admin")
+     */
+    @FXML
+    private void handleMoreAdmin(ActionEvent event) {
+        System.out.println("Chuyển sang màn hình duyệt danh sách xin làm Admin");
+
+        // 1. Tải giao diện bảng duyệt lên vùng hiển thị trung tâm trước
+        loadCenterView("/com/auction/client/view/acceptAdmin.fxml");
+
+        // 2. Gửi gói tin request "GET_ADMIN_REQUEST_LIST" lên Server qua WebSocket
+        System.out.println("[Client] Đang gửi yêu cầu GET_ADMIN_REQUEST_LIST lên server qua WebSocket...");
+        RequestSender.send(MessageType.GET_ADMIN_REQUEST_LIST, null);
+    }
+
+    /**
      * Hàm dùng chung để load và đẩy view con vào khu vực Center của BorderPane
      */
     public void loadCenterView(String fxmlPath) {
@@ -75,7 +93,7 @@ public class AdminMainController implements Initializable {
         try {
             URL fxmlUrl = getClass().getResource(fxmlPath);
             if (fxmlUrl == null) {
-                System.err.println("[LỖI] Không tìm thấy tệp FXML tại đường dẫn: " + fxmlPath);
+                System.err.println("[LỖI] Không tìm thấy tập tin FXML tại đường dẫn: " + fxmlPath);
                 return;
             }
 
@@ -90,5 +108,27 @@ public class AdminMainController implements Initializable {
             System.err.println("[LỖI] Gặp sự cố khi nạp giao diện con: " + fxmlPath);
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Sự kiện khi nhấn vào nút đăng xuất, chuyển hướng về màn hình Login và hủy session trên Server
+     */
+    @FXML
+    public void handleLogout(ActionEvent event) throws IOException {
+        // Tải file giao diện đăng nhập
+        Parent loader = FXMLLoader.load(getClass().getResource("/com/auction/client/view/login.fxml"));
+        Scene scene_login = new Scene(loader);
+
+        // Lấy cửa sổ gốc hiện tại thông qua event nguồn bấm nút
+        Stage prStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+        // Tắt chế độ phóng to toàn màn hình nếu cần thiết, đặt lại scene đăng nhập và hiển thị
+        prStage.setMaximized(false);
+        prStage.setScene(scene_login);
+        prStage.show();
+
+        // Đồng thời gửi yêu cầu đăng xuất lên Server xóa Session kết nối
+        System.out.println("[AdminMainController] Đang gửi yêu cầu đăng xuất LOGOUT_REQUEST lên server...");
+        RequestSender.send(MessageType.LOGOUT_REQUEST, null);
     }
 }

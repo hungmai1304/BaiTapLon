@@ -8,8 +8,10 @@ public class User extends BaseEntity {
     private String password;
     private String email;
 
-    // Các thông tin thời gian chung
+    // Trường role mới thêm của bạn
+    private String role;
 
+    // Các thông tin thời gian chung
     private double balance;
 
     public User() {}
@@ -39,7 +41,14 @@ public class User extends BaseEntity {
         this.password = password;
     }
 
+    // --- BỔ SUNG: GETTER VÀ SETTER CHO ROLE TẠI ĐÂY ---
+    public String getRole() {
+        return role;
+    }
 
+    public void setRole(String role) {
+        this.role = role;
+    }
 
     // --- THÊM GETTER VÀ SETTER CHO BALANCE Ở ĐÂY ---
     public double getBalance() {
