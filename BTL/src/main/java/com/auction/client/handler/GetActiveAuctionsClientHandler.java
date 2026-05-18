@@ -41,7 +41,7 @@ public class GetActiveAuctionsClientHandler implements IClientHandler {
                 java.lang.reflect.Type listType = new TypeToken<List<Auction>>(){}.getType();
                 List<Auction> auctionList = gson.fromJson(jsonString, listType);
 
-                if (auctionList != null && !auctionList.isEmpty()) {
+                if (auctionList != null) {
                     // 3. Cập nhật vào danh sách QUẢN LÝ MỚI (Duy nhất) trong ClientContext
                     ClientContext.getInstance().setAuctionList(auctionList);
 
@@ -49,8 +49,18 @@ public class GetActiveAuctionsClientHandler implements IClientHandler {
                     Platform.runLater(() -> {
                         TikTokAuctionController tiktokCtrl = (TikTokAuctionController) ControllerRegistry.get("TikTokAuctionController");
                         if (tiktokCtrl != null) {
-                            // Dùng renderCurrentAuction để nó tự lấy con trỏ currentIndex mới nhất
                             tiktokCtrl.renderCurrentAuction();
+                        }
+
+                        // 5. Cập nhật giao diện Search (Mới)
+                        Object searchCtrl = ControllerRegistry.get("SearchController");
+                        if (searchCtrl != null) {
+                            try {
+                                // Sử dụng reflection để gọi nếu chưa import class SearchController hoặc dùng casting nếu đã tạo
+                                searchCtrl.getClass().getMethod("renderResults", List.class).invoke(searchCtrl, auctionList);
+                            } catch (Exception e) {
+                                System.err.println("[Handler] Lỗi gọi renderResults ở SearchController: " + e.getMessage());
+                            }
                         }
                     });
                 }

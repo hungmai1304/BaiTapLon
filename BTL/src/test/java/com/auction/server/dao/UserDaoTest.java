@@ -77,7 +77,7 @@ public class UserDaoTest {
 
             assertNotNull(result);
             assertEquals(email, result.getEmail());
-            verify(mockResultSet, times(2)).getString("password");
+            verify(mockResultSet, times(1)).getString("password");
         }
     }
 

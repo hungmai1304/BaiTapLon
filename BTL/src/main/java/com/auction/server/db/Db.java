@@ -10,9 +10,9 @@ public class Db {
 
 	public static Connection getConnection() {
 		try {
-			// Ch? t?o k?t n?i m?i n?u ch?a c� ho?c ?� b? ?�ng
+			// Chỉ tạo kết nối mới nếu chưa có hoặc đã bị đóng
 			if (connection == null || connection.isClosed()) {
-				// T?i c�c bi?n t? file .env
+				// Tải các biến từ file .env
 				Dotenv dotenv =  Dotenv
 						.configure()
 						.ignoreIfMissing()
@@ -21,19 +21,19 @@ public class Db {
 				String DB_USER = dotenv.get("DB_USER");
 				String DB_PASSWORD = dotenv.get("DB_PASSWORD");
 
-				// ??ng k� Driver PostgreSQL
+				// Đăng ký Driver PostgreSQL
 				Class.forName("org.postgresql.Driver");
 
-				// M? k?t n?i
+				// Mở kết nối
 				connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-				System.out.println("K?t n?i Database Render th�nh c�ng!");
+				System.out.println("Kết nối Database Render thành công!");
 			}
 		} catch (ClassNotFoundException e) {
-			System.err.println("Kh�ng t�m th?y Driver PostgreSQL. Ki?m tra l?i pom.xml!");
+			System.err.println("Không tìm thấy Driver PostgreSQL. Kiểm tra lại pom.xml!");
 		} catch (SQLException e) {
-			System.err.println("L?i k?t n?i Database: " + e.getMessage());
+			System.err.println("Lỗi kết nối Database: " + e.getMessage());
 		} catch (Exception e) {
-			System.err.println("L?i kh�ng x�c ??nh ho?c kh�ng t�m th?y file .env: " + e.getMessage());
+			System.err.println("Lỗi không xác định hoặc không tìm thấy file .env: " + e.getMessage());
 		}
 
 		return connection;

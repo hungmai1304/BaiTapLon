@@ -9,8 +9,8 @@ public class NetworkClient {
 
     // Production
 //    private static final String SERVER_URL ="ws://f95392e43d88892f-58-186-123-109.serveousercontent.com";
-    private static final String SERVER_URL ="wss://baitaplon-qegw.onrender.com";
-//    private static final String SERVER_URL = "ws://localhost:10000";
+//    private static final String SERVER_URL ="wss://baitaplon-qegw.onrender.com";
+    private static final String SERVER_URL = "ws://localhost:10000";
 
 
     // Local
@@ -27,7 +27,7 @@ public class NetworkClient {
         if (webSocketClient != null
                 && webSocketClient.isOpen()) {
 
-            System.out.println("[Network] ?� ???c k?t n?i t?i server.");
+            System.out.println("? ?� ???c k?t n?i t?i server.");
 
             return;
         }
@@ -44,7 +44,7 @@ public class NetworkClient {
                 ) {
 
                     System.out.println(
-                            "[Network] ?� k?t n?i t?i server!"
+                            "? ?� k?t n?i t?i server!"
                     );
                 }
 
@@ -69,7 +69,7 @@ public class NetworkClient {
                         boolean remote
                 ) {
 
-                    System.out.println("[Network] M?t k?t n?i");
+                    System.out.println("? M?t k?t n?i");
 
                     System.out.println(
                             "Code: " + code
@@ -84,7 +84,7 @@ public class NetworkClient {
                 public void onError(Exception ex) {
 
                     System.err.println(
-                            "[Network] L?i m?ng:"
+                            "? L?i m?ng:"
                     );
 
                     ex.printStackTrace();
@@ -92,13 +92,13 @@ public class NetworkClient {
             };
 
             System.out.println(
-                    "[Network] ?ang k?t n?i t?i server..."
+                    "? ?ang k?t n?i t?i server..."
             );
 
             webSocketClient.connectBlocking();
 
             System.out.println(
-                    "[Network] K?t n?i ho�n t?t."
+                    "? K?t n?i ho�n t?t."
             );
 
         } catch (Exception e) {
@@ -113,13 +113,13 @@ public class NetworkClient {
 
             // Debug th�ng minh: N?u g�i tin qu� d�i th� ch? in ?? d�i th�i
             if (command.length() > 200) {
-                System.out.println("[Network] ?� g?i g�i tin l?n (Size: " + command.length() + " chars)");
+                System.out.println("? [Client] ?� g?i g�i tin l?n (Size: " + command.length() + " chars)");
             } else {
-                System.out.println("[Network] ?� g?i: " + command);
+                System.out.println("? [Client] ?� g?i: " + command);
             }
 
         } else {
-            System.err.println("[Network] Ch?a k?t n?i m?ng!");
+            System.err.println("? Ch?a k?t n?i m?ng!");
         }
     }
 

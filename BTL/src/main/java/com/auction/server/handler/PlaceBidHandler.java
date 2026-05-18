@@ -21,11 +21,25 @@ public class PlaceBidHandler implements IMessageHandler {
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
         try {
             String productId = (String) data.get("productId");
-            double bidAmount = ((Number) data.get("bidAmount")).doubleValue();
-            String userEmail = (String) data.get("userEmail");
+            
+            // Xử lý an toàn: Lấy bidAmount với kiểm tra null để tránh NullPointerException
+            Object bidAmountObj = data.get("bidAmount");
+            if (bidAmountObj == null) {
+                sendError(conn, gson, "Lỗi: Không tìm thấy mức giá đặt (bidAmount)!");
+                return;
+            }
+            double bidAmount = ((Number) bidAmountObj).doubleValue();
 
-            if (productId == null || userEmail == null) {
-                sendError(conn, gson, "Lỗi: Dữ liệu gửi lên bị thiếu (productId hoặc userEmail)!");
+            // BẢO MẬT: Lấy email trực tiếp từ session của kết nối thay vì tin tưởng Client
+            String userEmail = context.getUserByConn(conn);
+
+            if (userEmail == null) {
+                sendError(conn, gson, "Lỗi bảo mật: Bạn chưa đăng nhập hoặc phiên làm việc không hợp lệ!");
+                return;
+            }
+
+            if (productId == null) {
+                sendError(conn, gson, "Lỗi: Thiếu ID sản phẩm (productId)!");
                 return;
             }
 
