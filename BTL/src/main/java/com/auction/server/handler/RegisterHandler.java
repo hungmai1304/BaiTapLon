@@ -41,9 +41,12 @@ public class RegisterHandler implements IMessageHandler {
             // Số dư mặc định ban đầu khi đăng ký tài khoản mới là 0.0
             double initialBalance = 0.0;
 
+            // VIẾT THÊM: Khởi tạo trạng thái mặc định của tài khoản là "NORMAL"
+            String initialStatus = "NORMAL";
+
             boolean isSuccess = false;
 
-            // 3. LOGIC PHÂN LOẠI ĐĂNG KÝ
+            // 3. LOGIC PHÂN LOẠI ĐĂNG KÝ (Đồng bộ thêm tham số initialStatus vào DAO)
             if ("SELLER".equalsIgnoreCase(role)) {
                 // Nếu là Seller, lấy thêm shopName
                 String shopName = (String) data.get("shopName");
@@ -51,13 +54,15 @@ public class RegisterHandler implements IMessageHandler {
                     sendError(conn, gson, "Người bán phải có tên Shop!");
                     return;
                 }
-                isSuccess = UserDao.getInstance().insertSeller(email, password, name, id, sqlTimestamp, shopName, initialBalance);
+                // Thêm tham số initialStatus vào cuối hàm insertSeller
+                isSuccess = UserDao.getInstance().insertSeller(email, password, name, id, sqlTimestamp, shopName, initialBalance, initialStatus);
             } else {
-                // Nhánh này xử lý chung cho cả "BIDDER" và "ADMIN_REQUEST" nhờ tham số role động vừa thêm
-                isSuccess = UserDao.getInstance().insertBidder(email, password, name, id, sqlTimestamp, initialBalance,role);
+                // Nhánh này xử lý chung cho cả "BIDDER" và "ADMIN_REQUEST" như tham số role động vừa thêm
+                // Thêm tham số initialStatus vào cuối hàm insertBidder
+                isSuccess = UserDao.getInstance().insertBidder(email, password, name, id, sqlTimestamp, initialBalance, role, initialStatus);
             }
 
-            // 4. Trả về kết quả
+            // 4. Trở về kết quả
             if (isSuccess) {
                 Response response = new Response(
                         MessageType.REGISTER_RESPONSE,
@@ -65,7 +70,7 @@ public class RegisterHandler implements IMessageHandler {
                         "Đăng ký thành công! Chào mừng " + name
                 );
                 conn.send(gson.toJson(response));
-                System.out.println("[RegisterHandler] Đăng ký thành công cho: " + email + " với role: " + role);
+                System.out.println("[RegisterHandler] Đăng ký thành công cho: " + email + " với role: " + role + " | Status: " + initialStatus);
             } else {
                 sendError(conn, gson, "Đăng ký thất bại! Email có thể đã tồn tại.");
             }

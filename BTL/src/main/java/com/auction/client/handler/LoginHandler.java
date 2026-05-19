@@ -11,6 +11,7 @@ import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
 import com.auction.common.model.user.User;
 import com.auction.client.controller.SomeGlobal;
+import javafx.application.Platform;
 
 import static com.auction.client.utils.NavigationService.navigate;
 
@@ -24,6 +25,17 @@ public class LoginHandler implements IClientHandler {
 
         if ("SUCCESS".equalsIgnoreCase(response.getStatus())) {
             if (response.getData() != null) {
+                // VIẾT THÊM: Đọc trạng thái tài khoản từ Server gửi về trước để kiểm tra ban/lock
+                String status = (String) response.getData().get("status");
+
+                // Nếu tài khoản bị BANNED thì chặn ngay lập tức, hiển thị thông báo lỗi và không cho vào App
+                if ("BANNED".equalsIgnoreCase(status)) {
+                    if (controller != null) {
+                        Platform.runLater(() -> controller.updateAnnouncement("Tài khoản của bạn đã bị Admin khóa (BANNED)!"));
+                    }
+                    return;
+                }
+
                 String role = (String) response.getData().get("role");
                 User user;
                 if ("SELLER".equalsIgnoreCase(role)) {
@@ -38,9 +50,11 @@ public class LoginHandler implements IClientHandler {
                 user.setUsername((String) response.getData().get("name"));
                 user.setId((String) response.getData().get("id"));
 
+                // VIẾT THÊM: Gán trạng thái vào đối tượng User cục bộ của Client
+                user.setStatus(status != null ? status : "NORMAL");
 
                 // gui yeu cau lay so du tai khoan user
-                RequestSender.send(MessageType.GET_BALANCE_REQUEST,null);
+                RequestSender.send(MessageType.GET_BALANCE_REQUEST, null);
                 // ĐỌC THÊM GIÁ TRỊ BALANCE TỪ SERVER TRẢ VỀ KHI ĐĂNG NHẬP THÀNH CÔNG
                 if (response.getData().containsKey("balance")) {
                     double balance = ((Number) response.getData().get("balance")).doubleValue();
@@ -61,7 +75,6 @@ public class LoginHandler implements IClientHandler {
                 RequestSender.send(MessageType.GET_SHOP_PRODUCTS_REQUEST, null);
                 ControllerRegistry.unregister("LoginController");
             } else {
-
                 if (controller != null) {
                     String errorMsg = (response.getMessage() != null && !response.getMessage().isBlank())
                             ? response.getMessage()
@@ -69,8 +82,10 @@ public class LoginHandler implements IClientHandler {
                     controller.updateAnnouncement(errorMsg);
                 }
             }
-        }else {
-            controller.updateAnnouncement(response.getMessage());
+        } else {
+            if (controller != null) {
+                controller.updateAnnouncement(response.getMessage());
+            }
         }
     }
 }

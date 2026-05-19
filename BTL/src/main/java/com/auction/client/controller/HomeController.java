@@ -65,27 +65,15 @@ public class HomeController implements Initializable {
      */
     public void refreshMenuVisibility() {
         User currentUser = SomeGlobal.getCurrentUser();
+        String role = (currentUser != null && currentUser.getRole() != null) ? currentUser.getRole().trim() : "";
 
-        if (currentUser != null && currentUser.getRole() != null) {
-            // Sử dụng .trim() để triệt tiêu mọi khoảng trắng lỗi ("ADMIN " -> "ADMIN")
-            String role = currentUser.getRole().trim();
-
-            System.out.println("[DEBUG - HomeController] Quyền hệ thống nhận diện được: '" + role + "'");
-
-            if ("ADMIN".equalsIgnoreCase(role)) {
-                System.out.println("[DEBUG - HomeController] Khớp quyền ADMIN -> Đang hiển thị nút.");
-                backToAdmin.setVisible(true);
-                backToAdmin.setManaged(true);
-            } else {
-                System.out.println("[DEBUG - HomeController] Không phải ADMIN -> Ẩn nút.");
-                backToAdmin.setVisible(false);
-                backToAdmin.setManaged(false);
-            }
-        } else {
-            // Nếu bị Null, tạm thời cho hiển thị TRUE để bạn có thể tương tác test tính năng luôn
-            System.out.println("[WARNING - HomeController] CurrentUser hoặc Role bị NULL! Ép buộc hiển thị nút để TEST.");
+        if ("ADMIN".equalsIgnoreCase(role)) {
             backToAdmin.setVisible(true);
             backToAdmin.setManaged(true);
+        } else {
+            System.out.println("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
+            backToAdmin.setVisible(false);
+            backToAdmin.setManaged(false);
         }
     }
 

@@ -160,7 +160,7 @@ public class ServerContext {
     }
 
 
-    // --- QUẢN LÝ DANH SÁCH USER DẠNG OBJECT (Bổ sung theo yêu cầu) ---
+    // --- QUẢN LÝ DANH SÁCH USER DẠNG OBJECT ---
 
     /**
      * Thêm đối tượng User online vào RAM ứng với kết nối mạng
@@ -168,7 +168,7 @@ public class ServerContext {
     public void addOnlineUserObject(WebSocket conn, User user) {
         if (conn != null && user != null) {
             onlineUserObjects.put(conn, user);
-            System.out.println("[ServerContext] Lưu trữ thông tin đối tượng User: " + user.getUsername());
+            System.out.println("[ServerContext] Lưu trữ thông tin đối tượng User: " + user.getUsername() + " | Trạng thái: " + user.getStatus());
             broadcastOnlineUsersToAdmins(); // Tự động đồng bộ tới Admin khi có người vào
         }
     }
@@ -200,7 +200,25 @@ public class ServerContext {
     }
 
     /**
-     * VIẾT THÊM: Xóa một User đang online dựa vào Email, dọn dẹp sạch sẽ ở CẢ 2 DANH SÁCH QUẢN LÝ
+     * VIẾT THÊM: Cập nhật trạng thái (status) trực tiếp trên RAM cho một User dựa theo Email.
+     * Hàm này cực kỳ hữu ích khi Admin ra lệnh BAN/LOCK tài khoản, trạng thái sẽ đổi ngay lập tức trên RAM
+     * trước khi hệ thống ngắt kết nối hoặc gửi danh sách cập nhật về giao diện JavaFX của Admin.
+     */
+    public void updateUserStatusInRam(String email, String newStatus) {
+        if (email == null || email.trim().isEmpty()) return;
+
+        for (User user : onlineUserObjects.values()) {
+            if (user != null && email.equalsIgnoreCase(user.getEmail())) {
+                user.setStatus(newStatus);
+                System.out.println("[ServerContext] Đã cập nhật trạng thái của User [" + email + "] trên RAM thành: " + newStatus);
+                broadcastOnlineUsersToAdmins(); // Đồng bộ ngay lập tức bảng danh sách của Admin Client
+                break;
+            }
+        }
+    }
+
+    /**
+     * Xóa một User đang online dựa vào Email, dọn dẹp sạch sẽ ở CẢ 2 DANH SÁCH QUẢN LÝ
      * @param email Email của tài khoản người dùng cần xóa trạng thái online
      */
     public void removeOnlineUserByEmail(String email) {
@@ -252,5 +270,9 @@ public class ServerContext {
                 System.out.println("[ServerContext] Đã đẩy danh sách Online Users tới Admin: " + email);
             }
         });
+    }
+
+    public Map<WebSocket, User> getOnlineUserObjects() {
+        return this.onlineUserObjects;
     }
 }

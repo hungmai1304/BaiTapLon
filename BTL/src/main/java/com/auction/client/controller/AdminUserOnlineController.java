@@ -11,6 +11,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.Callback;
 
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 public class AdminUserOnlineController implements Initializable {
@@ -33,10 +35,15 @@ public class AdminUserOnlineController implements Initializable {
     @FXML
     private TableColumn<User, Void> colAction; // Cột chứa nút thao tác công cụ
 
+
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         // Đăng ký bộ điều khiển vào Registry / Global nếu cần thiết
         SomeGlobal.setAdminUserOnlineController(this);
+
+        // Gọi hàm kiểm tra phân quyền người dùng
+        checkRolePermission();
 
         // 1. Ánh xạ các cột cơ bản dựa vào Model User
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -51,7 +58,7 @@ public class AdminUserOnlineController implements Initializable {
         // 3. Logic cột Trạng thái (Vì danh sách này lấy từ AdminContext.onlineUsers nên mặc định là Online)
         colStatus.setCellValueFactory(cellData -> new SimpleStringProperty("Trực tuyến"));
 
-        // Cấu hình CSS chỉ màu xanh lá cây cho sinh động bằng CellFactory:
+        // Cấu hình CSS chữ màu xanh lá cây cho sinh động bằng CellFactory:
         colStatus.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -72,12 +79,24 @@ public class AdminUserOnlineController implements Initializable {
         // 5. Liên kết dữ liệu trực tiếp với AdminContext
         userTable.setItems(AdminContext.getInstance().getOnlineUsers());
 
-        System.out.println("[AdminUserOnlineController] Đã map chuẩn xác các fx:id từ file FXML của bạn.");
+        System.out.println("[AdminUserOnlineController] Đã map chính xác các fx:id từ file FXML của bạn.");
     }
 
     /**
-     * Hàm cấu hình sinh các nút chức năng đăng xuất từ xa trên từng dòng của cột Thao tác
+     * Hàm kiểm tra phân quyền của người dùng hiện tại để ẩn/hiện nút quay lại giao diện Admin
      */
+    private boolean checkRolePermission() {
+        User currentUser = SomeGlobal.getCurrentUser();
+        String role = (currentUser != null && currentUser.getRole() != null) ? currentUser.getRole().trim() : "";
+
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            return true;
+        } else {
+
+            return false;
+        }
+    }
+
     /**
      * Hàm cấu hình sinh các nút chức năng (Đăng xuất & Ban) trên từng dòng của cột Thao tác
      */
@@ -91,28 +110,44 @@ public class AdminUserOnlineController implements Initializable {
                     private final javafx.scene.layout.HBox container = new javafx.scene.layout.HBox(8); // Khoảng cách giữa 2 nút là 8px
 
                     {
-                        // 1. Định dạng style cho nút Đăng xuất (Kick)
+                        // 1. Định dạng style cho nút đăng xuất (Kick)
                         btnKick.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand; -fx-font-weight: bold;");
                         btnKick.setOnAction(event -> {
-                            User selectedUser = getTableView().getItems().get(getIndex());
-                            if (selectedUser != null && selectedUser.getEmail() != null) {
-                                String email = selectedUser.getEmail();
-                                System.out.println("[AdminUserOnlineController] Admin yêu cầu đăng xuất tài khoản: " + email);
-                                RequestSender.send("ADMIN_LOGOUT_COMMAND", email);
+                            if(checkRolePermission()){
+                                User selectedUser = getTableView().getItems().get(getIndex());
+                                if (selectedUser != null && selectedUser.getEmail() != null) {
+                                    String email = selectedUser.getEmail();
+                                    // CÁCH SỬA: Bọc email vào một đối tượng Map/JsonObject trước khi gửi
+                                    Map<String, Object> requestData = new HashMap<>();
+                                    requestData.put("email", email);
+                                    System.out.println("[AdminUserOnlineController] Admin yêu cầu đăng xuất tài khoản: " + email);
+                                    RequestSender.send("ADMIN_LET_USER_LOGOUT", requestData);
+                                }
+                            }
+                            else {
+                                System.out.println("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
                             }
                         });
 
                         // 2. Định dạng style cho nút Ban (Khóa)
-                        // Sử dụng màu xám đậm hoặc đen để phân biệt với nút Đăng xuất đỏ
                         btnBan.setStyle("-fx-background-color: #2c3e50; -fx-text-fill: white; -fx-cursor: hand; -fx-font-weight: bold;");
                         btnBan.setOnAction(event -> {
-                            User selectedUser = getTableView().getItems().get(getIndex());
-                            if (selectedUser != null && selectedUser.getEmail() != null) {
-                                String email = selectedUser.getEmail();
-                                System.out.println("[AdminUserOnlineController] Admin yêu cầu BAN tài khoản: " + email);
+                            if(checkRolePermission()){
+                                User selectedUser = getTableView().getItems().get(getIndex());
+                                if (selectedUser != null && selectedUser.getEmail() != null) {
+                                    String email = selectedUser.getEmail();
+                                    System.out.println("[AdminUserOnlineController] Admin yêu cầu BAN tài khoản: " + email);
 
-                                // Gửi lệnh BAN lên Server qua mạng (Cần đồng bộ chuỗi lệnh này với Server Handler của bạn)
-                                RequestSender.send("ADMIN_BAN_COMMAND", email);
+                                    // ĐỒNG BỘ: Bọc vào Map giống nút Kick để Server không bị lỗi JSON
+                                    Map<String, Object> requestData = new HashMap<>();
+                                    requestData.put("email", email);
+
+                                    // Gửi lệnh BAN lên Server dưới dạng Object
+                                    RequestSender.send("ADMIN_LET_USER_BE_BANNED", requestData);
+                                }
+                            }
+                            else {
+                                System.out.println("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
                             }
                         });
 
