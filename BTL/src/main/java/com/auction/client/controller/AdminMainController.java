@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import static com.auction.client.utils.NavigationService.navigate;
+
 public class AdminMainController implements Initializable {
 
     @FXML
@@ -130,5 +132,10 @@ public class AdminMainController implements Initializable {
         // Đồng thời gửi yêu cầu đăng xuất lên Server xóa Session kết nối
         System.out.println("[AdminMainController] Đang gửi yêu cầu đăng xuất LOGOUT_REQUEST lên server...");
         RequestSender.send(MessageType.LOGOUT_REQUEST, null);
+    }
+    @FXML
+    public void handleSwitchToNormalInterface(ActionEvent event){
+        // load giao dien main
+        navigate("/com/auction/client/view/home.fxml", "Auction - Trang chủ", true);
     }
 }

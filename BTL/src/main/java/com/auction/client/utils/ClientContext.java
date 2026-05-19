@@ -9,7 +9,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import java.util.List;
 
-public class ClientContext {
+public class    ClientContext {
     private static ClientContext instance;
 
     private final ObservableList<Auction> activeAuctions = FXCollections.observableArrayList();
