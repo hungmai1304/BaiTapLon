@@ -4,6 +4,7 @@ import com.auction.protocol.MessageType;
 import com.auction.common.model.auction.Auction;
 import com.auction.common.model.auction.BidTransaction;
 import com.auction.common.model.user.User;
+import com.auction.server.dao.UserDao;
 import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.model.ServerContext;
@@ -67,6 +68,19 @@ public class PlaceBidHandler implements IMessageHandler {
 
             if (bidAmount < minRequiredPrice) {
                 sendError(conn, gson, "Giá bạn đưa ra quá thấp! Phải lớn hơn hoặc bằng: " + minRequiredPrice);
+                return;
+            }
+
+            //  4.5 KIỂM TRA VÍ TIỀN TRƯỚC KHI CHO ĐẶT GIÁ
+            User currentUser = UserDao.getInstance().getUserByEmail(userEmail);
+            if (currentUser == null) {
+                sendError(conn, gson, "Lỗi hệ thống: Không tìm thấy thông tin ví của bạn!");
+                return;
+            }
+
+            // Kiểm tra xem tiền trong ví có đủ để trả mức giá vừa nhập không
+            if (currentUser.getBalance() < bidAmount) {
+                sendError(conn, gson, "Số dư ví không đủ (" + String.format("%,.0fđ", currentUser.getBalance()) + ")! Vui lòng nạp thêm tiền để đấu giá.");
                 return;
             }
 

@@ -102,11 +102,11 @@ public class BiddingController {
             String email = SomeGlobal.getCurrentUser().getEmail();
             RequestSender.sendPlaceBidRequest(p.getId(), bidAmount, email);
 
-            // THÔNG BÁO THÀNH CÔNG (Đã đổi màu xanh và nội dung như Hùng muốn)
-            lblNotification.setStyle("-fx-text-fill: #2ecc71;");
-            lblNotification.setText("Đặt giá thành công! Đang chờ hệ thống ghi nhận...");
-
+            //  đang chờ Server check ví!
+            lblNotification.setStyle("-fx-text-fill: #f39c12;");
+            lblNotification.setText("Đang kiểm tra ví và gửi yêu cầu...");
             txtBidAmount.clear();
+
 
         } catch (NumberFormatException e) {
             lblNotification.setStyle("-fx-text-fill: #e74c3c;");
@@ -117,6 +117,14 @@ public class BiddingController {
             lblNotification.setText("Lỗi hệ thống: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    @FXML
+    public void showServerNotification(String msg, boolean isSuccess) {
+        Platform.runLater(() -> {
+            lblNotification.setStyle(isSuccess ? "-fx-text-fill: #2ecc71;" : "-fx-text-fill: #e74c3c;");
+            lblNotification.setText(msg);
+        });
     }
 
     public void updateAuctionPriceRealtime(double newPrice, String leaderName) {
@@ -155,5 +163,28 @@ public class BiddingController {
     public void handleBackToTikTok(ActionEvent event) {
         ControllerRegistry.unregister("BiddingController");
         NavigationService.setCenterView("/com/auction/client/view/tiktokAuction.fxml");
+    }
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
+        Platform.runLater(() -> {
+            // 1. Kiểm tra ID:
+            if (this.currentAuctionData != null && this.currentAuctionData.getProduct().getId().equals(productId)) {
+
+                // 2. Cập nhật giá chữ to
+                lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0fđ", newPrice));
+
+                // 3. Cập nhật tên người dẫn đầu
+                updateLeaderUI(leaderName, newPrice);
+
+                // 4. Lưu vào RAM để lúc back ra back vào nó không bị mất
+                this.currentAuctionData.setCurrentPrice(newPrice);
+                this.currentAuctionData.setLeaderName(leaderName);
+
+                // 5. Cập nhật biểu đồ
+                bidCount++;
+                priceSeries.getData().add(new XYChart.Data<>(String.valueOf(bidCount), newPrice));
+
+                System.out.println("[Bidding UI] Đã nhảy số và vẽ biểu đồ realtime!");
+            }
+        });
     }
 }
