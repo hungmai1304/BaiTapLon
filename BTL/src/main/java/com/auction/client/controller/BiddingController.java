@@ -102,11 +102,11 @@ public class BiddingController {
             String email = SomeGlobal.getCurrentUser().getEmail();
             RequestSender.sendPlaceBidRequest(p.getId(), bidAmount, email);
 
-            // THÔNG BÁO THÀNH CÔNG (Đã đổi màu xanh và nội dung như Hùng muốn)
-            lblNotification.setStyle("-fx-text-fill: #2ecc71;");
-            lblNotification.setText("Đặt giá thành công! Đang chờ hệ thống ghi nhận...");
-
+            //  đang chờ Server check ví!
+            lblNotification.setStyle("-fx-text-fill: #f39c12;");
+            lblNotification.setText("Đang kiểm tra ví và gửi yêu cầu...");
             txtBidAmount.clear();
+
 
         } catch (NumberFormatException e) {
             lblNotification.setStyle("-fx-text-fill: #e74c3c;");
@@ -117,6 +117,14 @@ public class BiddingController {
             lblNotification.setText("Lỗi hệ thống: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    @FXML
+    public void showServerNotification(String msg, boolean isSuccess) {
+        Platform.runLater(() -> {
+            lblNotification.setStyle(isSuccess ? "-fx-text-fill: #2ecc71;" : "-fx-text-fill: #e74c3c;");
+            lblNotification.setText(msg);
+        });
     }
 
     public void updateAuctionPriceRealtime(double newPrice, String leaderName) {

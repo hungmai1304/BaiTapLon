@@ -47,21 +47,27 @@ public class SellProductHandler implements IMessageHandler {
                 return;
             }
 
-            // 1. Cập nhật trạng thái sản phẩm trong Database thành đang đem bán đấu giá
+            //  KIỂM TRA TRẠNG THÁI TRƯỚC KHI BÁN
+            Product pCheck = ProductDao.getInstance().getProductById(productId);
+            if (pCheck == null) {
+                sendError(conn, safeGson, "Sản phẩm không tồn tại trong hệ thống!");
+                return;
+            }
+            if (pCheck.getStatus() == ProductStatus.SOLD) {
+                sendError(conn, safeGson, "Thất bại: Sản phẩm này ĐÃ ĐƯỢC CHỐT ĐƠN, không thể đem đấu giá lại!");
+                return;
+            }
+
+            // 2cho phép cập nhật Database
             boolean isSold = ProductDao.getInstance().sellProduct(productId);
 
             if (isSold) {
-                // 2. Lấy bản mới nhất của Product từ DB lên để đóng gói vào Auction
+                // Lấy bản mới nhất của Product từ DB lên để đóng gói vào Auction
                 Product updatedProduct = ProductDao.getInstance().getProductById(productId);
 
                 if (updatedProduct != null) {
-                    if (updatedProduct.getStatus() == ProductStatus.SOLD) {
-                        sendError(conn, safeGson, "Sản phẩm này đã được chốt đơn, không thể đem đấu giá lại!");
-                        return;
-                    }
-
                     // NẾU CHƯA BÁN THÌ BẮT ĐẦU LOGIC TẠO PHIÊN ĐẤU GIÁ
-                    int auctionId = Math.abs(new Random().nextInt()); // Tạo ID tự động cho phiên
+                    int auctionId = Math.abs(new Random().nextInt());
 
                     LocalDateTime now = LocalDateTime.now();
                     LocalDateTime startTime = now.plusMinutes(1);
