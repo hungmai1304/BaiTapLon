@@ -58,8 +58,8 @@ public class SellProductHandler implements IMessageHandler {
                     int auctionId = Math.abs(new Random().nextInt()); // Tạo ID tự động cho phiên
 
                     LocalDateTime now = LocalDateTime.now();
-                    LocalDateTime startTime = now.plusSeconds(30);
-                    LocalDateTime endTime = startTime.plusSeconds(15);
+                    LocalDateTime startTime = now.plusMinutes(1);
+                    LocalDateTime endTime = startTime.plusMinutes(2);
 
                     // Đóng gói thành Phiên Đấu Giá (Gắn product trực tiếp vào đây)
                     Auction newAuction = new Auction(
@@ -79,8 +79,8 @@ public class SellProductHandler implements IMessageHandler {
 
                 // PHẦN HẸN GIỜ TỰ ĐỘNG CHUYỂN TRẠNG THÁI PHIÊN ĐẤU GIÁ
                 // =========================================================
-                long delayToActive = 30;    // Chờ 30s để bắt đầu (Lúc TEST đổi từ phút thành giây)
-                long delayToCompleted = 45; // Tổng 45s để kết thúc
+                long delayToActive = 1;    // Chờ 30s để bắt đầu (Lúc TEST đổi từ phút thành giây)
+                long delayToCompleted = 2; // Tổng 45s để kết thúc
 
                 // Hẹn giờ 1: MỞ BÁT PHIÊN ĐẤU GIÁ (PENDING -> ACTIVE)
                 scheduler.schedule(() -> {
@@ -90,7 +90,7 @@ public class SellProductHandler implements IMessageHandler {
                         context.updateAuction(auctionToStart); // Hàm này tự động broadcast update danh sách phiên
                         System.out.println(" [Timer] SP " + productId + " ĐÃ LÊN SÀN ĐẤU GIÁ!");
                     }
-                }, delayToActive, TimeUnit.SECONDS);
+                }, delayToActive, TimeUnit.MINUTES);
 
                 // Hẹn giờ 2: KHÓA SỔ PHIÊN ĐẤU GIÁ & HẠ SẢN PHẨM (ACTIVE -> COMPLETED)
                 scheduler.schedule(() -> {
@@ -116,7 +116,7 @@ public class SellProductHandler implements IMessageHandler {
                         broadcastNewAuctionSession(context, safeGson);
                         System.out.println("[Timer] SP " + productId + " ĐÃ HẾT GIỜ. Phiên kết thúc!");
                     }
-                }, delayToCompleted, TimeUnit.SECONDS);
+                }, delayToCompleted, TimeUnit.MINUTES);
 
                 // 3. Phản hồi thành công cho Seller đang gửi request
                 Response response = new Response(MessageType.SELL_PRODUCT_RESPONSE, "SUCCESS", "Đã đưa sản phẩm lên sàn đấu giá!");
