@@ -9,7 +9,7 @@ import javafx.scene.control.Alert;
 import static com.auction.client.utils.NavigationService.navigate;
 
 @ResponseHandler(type = "BACK_TO_ADMIN_RESPONSE")
-public class BackToLoginResponse implements IClientHandler {
+public class BackToAdminResponse implements IClientHandler {
 
     @Override
     public void handle(Response response) {

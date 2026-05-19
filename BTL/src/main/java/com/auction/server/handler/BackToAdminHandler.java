@@ -1,59 +1,97 @@
-package com.auction.server.handler;
+    package com.auction.server.handler;
 
-import com.auction.server.annotation.CommandMap;
-import com.auction.server.model.ServerContext;
-import com.auction.common.model.user.User; // Giả định đúng package của User model
-import com.auction.server.dao.UserDao;       // Giả định đúng package của UserDao
-import com.google.gson.Gson;
-import org.java_websocket.WebSocket;
+    import com.auction.server.annotation.CommandMap;
+    import com.auction.server.model.ServerContext;
+    import com.auction.common.model.user.User;
+    import com.auction.server.dao.UserDao;
+    import com.google.gson.Gson;
+    import org.java_websocket.WebSocket;
 
-import java.util.HashMap;
-import java.util.Map;
+    import java.util.HashMap;
+    import java.util.Map;
 
-@CommandMap("BACK_TO_ADMIN_COMMAND")
-public class BackToAdminHandler implements IMessageHandler {
+    @CommandMap("BACK_TO_ADMIN_COMMAND")
+    public class BackToAdminHandler implements IMessageHandler {
 
-    @Override
-    public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
-        Map<String, Object> responseMap = new HashMap<>();
-        responseMap.put("type", "BACK_TO_ADMIN_RESPONSE");
+        @Override
+        public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
+            Map<String, Object> responseMap = new HashMap<>();
+            responseMap.put("type", "BACK_TO_ADMIN_RESPONSE");
 
-        // =========================================================================
-        // 1. KIỂM TRA CHÍNH CHỦ (Authentication & Authorization)
-        // =========================================================================
+            // =========================================================================
+            // 1. KIỂM TRA DỮ LIỆU ĐẦU VÀO (Request Validation)
+            // =========================================================================
+            String clientProvidedEmail = (String) data.get("email");
 
-        // Bước 1.1: Kiểm tra xem kết nối (conn) này đã đăng nhập vào hệ thống chưa
-        String loggedInEmail = context.getUserByConn(conn);
-        if (loggedInEmail == null) {
-            System.err.println("[BackToAdminHandler] Từ chối: Thao tác từ một kết nối chưa đăng nhập!");
-            responseMap.put("status", "ERROR");
-            responseMap.put("message", "Bạn cần đăng nhập để thực hiện thao tác này!");
+            if (clientProvidedEmail == null || clientProvidedEmail.trim().isEmpty()) {
+                System.err.println("[BackToAdminHandler] Từ chối: Thiếu thông tin Email định danh từ Client!");
+                responseMap.put("status", "ERROR");
+                responseMap.put("message", "Dữ liệu yêu cầu không hợp lệ!");
+                conn.send(gson.toJson(responseMap));
+                return;
+            }
+
+            // =========================================================================
+            // 2. KIỂM TRA CHÍNH CHỦ (Authentication & Authorization)
+            // =========================================================================
+
+            // Bước 2.1: Kiểm tra xem kết nối mạng đã từng đăng nhập chưa
+            String loggedInEmail = context.getUserByConn(conn);
+            if (loggedInEmail == null) {
+                System.err.println("[BackToAdminHandler] Từ chối: Kết nối mạng này chưa từng đăng ký Session đăng nhập!");
+                responseMap.put("status", "ERROR");
+                responseMap.put("message", "Bạn cần đăng nhập lại để thực hiện thao tác này!");
+                conn.send(gson.toJson(responseMap));
+                return;
+            }
+
+            // Bước 2.2: Cross-check chống giả mạo gói tin
+            if (!loggedInEmail.equalsIgnoreCase(clientProvidedEmail.trim())) {
+                System.err.println("[BackToAdminHandler] Cảnh báo: Email kết nối mạng ('" + loggedInEmail + "') lệch với Email client gửi lên ('" + clientProvidedEmail + "')!");
+                responseMap.put("status", "ERROR");
+                responseMap.put("message", "Xác thực danh tính thất bại!");
+                conn.send(gson.toJson(responseMap));
+                return;
+            }
+
+            // Bước 2.3: Kiểm tra quyền ADMIN từ Database công tâm
+            UserDao userDao = UserDao.getInstance();
+            User currentRequester = userDao.getUserByEmail(loggedInEmail);
+
+            // Trường hợp lỗi 1: Không tìm thấy User trong Database
+            if (currentRequester == null) {
+                System.err.println("[BackToAdminHandler] LỖI hệ thống: Không tìm thấy tài khoản tương ứng với email '" + loggedInEmail + "' trong Database!");
+                responseMap.put("status", "ERROR");
+                responseMap.put("message", "Tài khoản của bạn không tồn tại trên hệ thống dữ liệu!");
+                conn.send(gson.toJson(responseMap));
+                return;
+            }
+
+            // GIẢI PHÁP CHỐNG LỖI ENUM & KHOẢNG TRẮNG:
+            // Ép dữ liệu getRole() về dạng String thuần túy, loại bỏ khoảng trắng thừa
+            String roleStr = "";
+            if (currentRequester.getRole() != null) {
+                roleStr = currentRequester.getRole().toString().trim();
+            }
+
+            // Log cực kỳ quan trọng này sẽ cho bạn biết Server thực tế đang đọc ra chữ gì từ DB
+            System.out.println("[DEBUG - SERVER LOG] Tài khoản: '" + loggedInEmail + "' | Quyền hạn thực tế đọc từ DB: '" + roleStr + "'");
+
+            if (!"ADMIN".equalsIgnoreCase(roleStr)) {
+                System.err.println("[BackToAdminHandler] Bị từ chối: Tài khoản '" + loggedInEmail + "' mang quyền '" + roleStr + "' chứ không phải ADMIN!");
+                responseMap.put("status", "ERROR");
+                responseMap.put("message", "Bạn không có quyền truy cập vào giao diện quản trị!");
+                conn.send(gson.toJson(responseMap));
+                return;
+            }
+
+            // =========================================================================
+            // 3. PHẢN HỒI THÀNH CÔNG (Success Response)
+            // =========================================================================
+            System.out.println("[BackToAdminHandler] Xác thực THÀNH CÔNG! Cho phép Admin " + loggedInEmail + " chuyển cảnh.");
+
+            responseMap.put("status", "SUCCESS");
+            responseMap.put("message", "Xác thực Admin thành công!");
             conn.send(gson.toJson(responseMap));
-            return;
         }
-
-        // Lấy email truyền lên từ Client data để đối chiếu chéo (Cross-check phòng hờ giả mạo)
-        String clientProvidedEmail = (String) data.get("data"); // Ở HomeController bạn gửi chuỗi Email làm data payload
-
-        // Bước 1.2: Lấy thông tin user từ DB để chắc chắn người này có quyền ADMIN
-        UserDao userDao = UserDao.getInstance();
-        User currentRequester = userDao.getUserByEmail(loggedInEmail);
-
-        if (currentRequester == null || !"ADMIN".equalsIgnoreCase(currentRequester.getRole())) {
-            System.err.println("[BackToAdminHandler] Cảnh báo: Tài khoản " + loggedInEmail + " cố tình hack quyền Admin!");
-            responseMap.put("status", "ERROR");
-            responseMap.put("message", "Bạn đã bị cấm mãi mãi hoặc không có quyền!");
-            conn.send(gson.toJson(responseMap));
-            return;
-        }
-
-        // =========================================================================
-        // 2. PHẢN HỒI THÀNH CÔNG
-        // =========================================================================
-        System.out.println("[BackToAdminHandler] Xác thực thành công! Cho phép Admin " + loggedInEmail + " quay lại bảng quản trị.");
-        responseMap.put("status", "SUCCESS");
-        responseMap.put("message", "Xác thực Admin thành công!");
-
-        conn.send(gson.toJson(responseMap));
     }
-}

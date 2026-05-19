@@ -3,18 +3,18 @@ package com.auction.client.controller;
 import com.auction.client.network.ClientMessageDispatcher;
 import com.auction.client.network.MessageListener;
 import com.auction.client.network.NetworkClient;
-import com.auction.client.network.RequestSender; // Import thêm class này để gửi dữ liệu mạng
+import com.auction.client.network.RequestSender;
 import com.auction.client.utils.NavigationService;
 import javafx.event.ActionEvent;
 import com.auction.common.model.product.ProductStatus;
-import com.auction.common.model.user.User; // Đảm bảo import Model User
+import com.auction.common.model.user.User;
 import com.auction.protocol.MessageType;
 import com.auction.protocol.Request;
 import com.google.gson.Gson;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.control.ToggleButton; // Import thêm ToggleButton cho fx:id nút quản trị
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
@@ -24,13 +24,15 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import com.auction.client.controller.SomeGlobal;
+
 public class HomeController implements Initializable {
 
     @FXML
     private BorderPane borderpane_home;
 
     @FXML
-    private ToggleButton backToAdmin; // Khai báo fx:id ánh xạ chuẩn xác từ file FXML của bạn
+    private ToggleButton backToAdmin;
 
     public BorderPane getBorderpaneHome() {
         return borderpane_home;
@@ -50,28 +52,40 @@ public class HomeController implements Initializable {
             loadMainView();
             NavigationService.setTopView("/com/auction/client/view/topView.fxml");
 
-            // --- Xử lý ẩn/hiện nút Quay lại Admin dựa trên Vai trò người dùng ---
-            User currentUser = SomeGlobal.getCurrentUser();
-            if (currentUser != null) {
-                String role = currentUser.getRole(); // Giả định Model User của bạn có hàm getRole() trả về String
-
-                if ("BIDDER".equalsIgnoreCase(role) || "SELLER".equalsIgnoreCase(role)) {
-                    // Ẩn nút hoàn toàn khỏi giao diện và không chiếm không gian hiển thị
-                    backToAdmin.setVisible(false);
-                    backToAdmin.setManaged(false);
-                } else if ("ADMIN".equalsIgnoreCase(role)) {
-                    // Nếu là Admin thì hiển thị bình thường
-                    backToAdmin.setVisible(true);
-                    backToAdmin.setManaged(true);
-                }
-            } else {
-                // Đề phòng trường hợp chưa có thông tin user, mặc định tạm ẩn
-                backToAdmin.setVisible(false);
-                backToAdmin.setManaged(false);
-            }
+            // Gọi hàm cập nhật hiển thị thanh menu công khai
+            refreshMenuVisibility();
 
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Hàm làm mới trạng thái ẩn/hiện của nút Admin (Có thể gọi từ bên ngoài)
+     */
+    public void refreshMenuVisibility() {
+        User currentUser = SomeGlobal.getCurrentUser();
+
+        if (currentUser != null && currentUser.getRole() != null) {
+            // Sử dụng .trim() để triệt tiêu mọi khoảng trắng lỗi ("ADMIN " -> "ADMIN")
+            String role = currentUser.getRole().trim();
+
+            System.out.println("[DEBUG - HomeController] Quyền hệ thống nhận diện được: '" + role + "'");
+
+            if ("ADMIN".equalsIgnoreCase(role)) {
+                System.out.println("[DEBUG - HomeController] Khớp quyền ADMIN -> Đang hiển thị nút.");
+                backToAdmin.setVisible(true);
+                backToAdmin.setManaged(true);
+            } else {
+                System.out.println("[DEBUG - HomeController] Không phải ADMIN -> Ẩn nút.");
+                backToAdmin.setVisible(false);
+                backToAdmin.setManaged(false);
+            }
+        } else {
+            // Nếu bị Null, tạm thời cho hiển thị TRUE để bạn có thể tương tác test tính năng luôn
+            System.out.println("[WARNING - HomeController] CurrentUser hoặc Role bị NULL! Ép buộc hiển thị nút để TEST.");
+            backToAdmin.setVisible(true);
+            backToAdmin.setManaged(true);
         }
     }
 
@@ -109,22 +123,24 @@ public class HomeController implements Initializable {
         borderpane_home.setCenter(settingView);
     }
 
-    /**
-     * Xử lý khi Admin nhấn nút quay lại màn hình Admin chuyên dụng
-     */
     @FXML
     public void handleBackToAdmin(ActionEvent event) {
         User currentUser = SomeGlobal.getCurrentUser();
+        String role = (currentUser != null && currentUser.getRole() != null) ? currentUser.getRole().trim() : "";
 
-        if (currentUser != null && "ADMIN".equalsIgnoreCase(currentUser.getRole())) {
-            System.out.println("[HomeController] Admin nhấn quay lại màn hình Admin. Đang gửi lệnh...");
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            System.out.println("[HomeController] Đang gói dữ liệu dạng Object để gửi lên Server...");
 
-            // Gửi tín hiệu lệnh "BACK_TO_ADMIN_COMMAND" thông qua RequestSender lên Server
-            // Bạn có thể gửi kèm email của admin làm dữ liệu nhận biết
-            RequestSender.send("BACK_TO_ADMIN_COMMAND", currentUser.getEmail());
+            // BỎ DÒNG CŨ: RequestSender.send("BACK_TO_ADMIN_COMMAND", currentUser.getEmail());
 
-            // Tùy chọn: Nếu bạn muốn chuyển đổi view ngay lập tức ở phía Client sang view AdminMain:
-            // if (SomeGlobal.getAdminMainController() != null) { ... }
+            // THAY BẰNG ĐOẠN NÀY: Gói email vào Map để tạo thành cấu trúc { "email": "..." }
+            java.util.Map<String, Object> requestPayload = new java.util.HashMap<>();
+            requestPayload.put("email", currentUser.getEmail());
+
+            // Gửi map này đi
+            RequestSender.send("BACK_TO_ADMIN_COMMAND", requestPayload);
+        } else {
+            System.out.println("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
         }
     }
 }

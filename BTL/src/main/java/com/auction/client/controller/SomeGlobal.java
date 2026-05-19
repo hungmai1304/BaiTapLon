@@ -11,7 +11,19 @@ public class SomeGlobal {
 
     // --- BIẾN VÀ HÀM CHO ADMIN CONTROLLER TẠI ĐÂY ---
     private static AdminUserOnlineController adminUserOnlineController;
-    private static AdminMainController adminMainController; // Thêm biến adminMainController
+    private static AdminMainController adminMainController;
+
+    // THÊM BIẾN NÀY: Quản lý BannedListController toàn cục
+    private static BannedListController bannedListController;
+
+    // Hàm set và get cho BannedListController (Đúng chuẩn form mẫu)
+    public static void setBannedListController(BannedListController controller) {
+        bannedListController = controller;
+    }
+
+    public static BannedListController getBannedListController() {
+        return bannedListController;
+    }
 
     public static void setAdminMainController(AdminMainController controller) {
         adminMainController = controller;

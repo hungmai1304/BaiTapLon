@@ -1,8 +1,7 @@
 package com.auction.client.handler;
 
 import com.auction.client.annotation.ResponseHandler;
-
-import com.auction.client.controller.AdminMainController; // Hoặc controller quản lý chính của Admin
+import com.auction.client.controller.AdminMainController;
 import com.auction.client.controller.LoginController;
 import com.auction.client.network.IClientHandler;
 import com.auction.client.network.RequestSender;
@@ -10,7 +9,7 @@ import com.auction.client.utils.ControllerRegistry;
 import com.auction.client.utils.NavigationService;
 import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
-import com.auction.common.model.user.User; // Hoặc model Admin của bạn nếu có riêng
+import com.auction.common.model.user.User;
 import com.auction.client.controller.SomeGlobal;
 import javafx.application.Platform;
 
@@ -32,7 +31,12 @@ public class AdminLoginHandler implements IClientHandler {
                 admin.setUsername((String) response.getData().get("name"));
                 admin.setId((String) response.getData().get("id"));
 
-                // Nếu Server có trả về quyền hoặc số dư/thông tin bổ sung của Admin
+                // =========================================================================
+                // THÊM DÒNG NÀY: Ép quyền ADMIN cho đối tượng để đồng bộ với HomeController
+                // =========================================================================
+                admin.setRole("ADMIN");
+
+                // Nếu Server có trả về số dư/thông tin bổ sung của Admin
                 if (response.getData().containsKey("balance")) {
                     double balance = ((Number) response.getData().get("balance")).doubleValue();
                     admin.setBalance(balance);
@@ -40,13 +44,14 @@ public class AdminLoginHandler implements IClientHandler {
 
                 // Lưu thông tin Admin vào hệ thống toàn cục
                 SomeGlobal.setCurrentUser(admin);
+                System.out.println("[DEBUG - AdminLoginHandler] Đã lưu thông tin Admin toàn cục với quyền: " + admin.getRole());
 
                 // Thực hiện chuyển màn hình sang Admin Main (Bọc trong Platform.runLater để an toàn cho UI FX)
                 Platform.runLater(() -> {
                     navigate("/com/auction/client/view/adminMain.fxml", "Auction - Trang chủ Admin", true);
                 });
 
-                // Gửi thêm các request khởi tạo dữ liệu cho hệ thống Admin (ví dụ: lấy danh sách user online)
+                // Gợi thêm các request khởi tạo dữ liệu cho hệ thống Admin
                 RequestSender.send(MessageType.GET_ONLINE_USERS_REQUEST, null);
 
                 // Hủy đăng ký AdminLoginController sau khi đã đăng nhập xong
