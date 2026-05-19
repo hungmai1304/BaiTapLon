@@ -37,6 +37,7 @@ public class LoginHandler implements IClientHandler {
                 user.setEmail((String) response.getData().get("email"));
                 user.setUsername((String) response.getData().get("name"));
                 user.setId((String) response.getData().get("id"));
+                user.setAvatar((String) response.getData().get("avatar"));
 
 
                 // gui yeu cau lay so du tai khoan user
