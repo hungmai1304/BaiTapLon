@@ -100,4 +100,32 @@ public class TikTokAuctionController {
     public void handleBotBid(ActionEvent event) {
         NavigationService.setCenterView("/com/auction/client/view/botBidding.fxml");
     }
+
+    // THÊM HÀM NÀY ĐỂ XỬ LÝ NHẢY SỐ REAL-TIME TỪ SERVER GỬI VỀ
+
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
+        Platform.runLater(() -> {
+            // Lấy món đồ đang được hiển thị trên màn hình hiện tại
+            Auction currentAuction = ClientContext.getInstance().getCurrentAuction();
+
+            // Nếu ID của món đồ trên màn hình TRÙNG với ID của món vừa được trả giá
+            if (currentAuction != null && currentAuction.getProduct() != null
+                    && currentAuction.getProduct().getId().equals(productId)) {
+
+                // 1. Nhảy số tiền trực tiếp trên UI
+                price.setText(String.format("%,.0f VNĐ", newPrice));
+
+                // 2. Cập nhật luôn giá trị vào RAM (để khi người dùng lướt Up/Down quay lại vẫn giữ giá mới)
+                currentAuction.setCurrentPrice(newPrice);
+
+                //  LƯU Ý :
+                // Hiện tại giao diện của anh chỉ có Label "name", "price", "step".
+                // Nếu sau này anh kéo thêm 1 cái Label vào FXML để hiển thị tên người thắng (ví dụ: lblLeader)
+                // Thì anh chỉ cần uncomment dòng dưới đây là tên người dẫn đầu sẽ hiện ra!
+                // lblLeader.setText("Dẫn đầu: " + leaderName);
+
+                System.out.println("[TikTok UI] Đã nhảy số trực tiếp trên màn hình: " + newPrice);
+            }
+        });
+    }
 }
