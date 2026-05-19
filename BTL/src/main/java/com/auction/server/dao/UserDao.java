@@ -26,20 +26,22 @@ public class UserDao {
         return instance;
     }
 
-    // 1. CẬP NHẬT: Thêm tham số double balance và đưa vào câu lệnh INSERT
-    public boolean insertBidder(String email, String password, String name, String id, Timestamp timeCreated, double balance) {
+    /**
+     * Thêm người dùng phân hệ Bidder (hoặc role tùy biến như ADMIN_REQUEST) có mã hóa mật khẩu BCrypt
+     */
+    public boolean insertBidder(String email, String password, String name, String id, Timestamp timeCreated, double balance, String role) {
         // Check trùng email trước khi insert
         if (getUserByEmail(email) != null) {
-            System.err.println("[UserDao]Lỗi: Email " + email + " đã tồn tại!");
+            System.err.println("[UserDao] Lỗi: Email " + email + " đã tồn tại!");
             return false;
         }
 
-        // Thêm cột balance vào SQL INSERT
-        String sql = "INSERT INTO users (id, email, password, name, time_created, role, balance) VALUES (?, ?, ?, ?, ?, 'BIDDER', ?)";
+        // Nhận role động từ tham số truyền vào, tích hợp thêm cột balance
+        String sql = "INSERT INTO users (id, email, password, name, time_created, role, balance) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // Mã hóa mật khẩu trước khi lưu
+            // Mã hóa mật khẩu bảo mật trước khi lưu vào DB
             String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
 
             pstmt.setString(1, id);
@@ -47,16 +49,19 @@ public class UserDao {
             pstmt.setString(3, hashedPassword);
             pstmt.setString(4, name);
             pstmt.setTimestamp(5, timeCreated);
-            pstmt.setDouble(6, balance); // Đưa số dư vào statement
+            pstmt.setString(6, role);    // Thiết lập role động
+            pstmt.setDouble(7, balance); // Đưa số dư vào statement
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("[UserDao] Lỗi insert Bidder: " + e.getMessage());
+            System.err.println("[UserDao] Lỗi insert với role " + role + ": " + e.getMessage());
             return false;
         }
     }
 
-    // 2. CẬP NHẬT: Thêm tham số double balance và đưa vào câu lệnh INSERT
+    /**
+     * Thêm người dùng phân hệ Seller có mã hóa mật khẩu BCrypt
+     */
     public boolean insertSeller(String email, String password, String name, String id, Timestamp timeCreated, String shopName, double balance) {
         // Check trùng email trước khi insert
         if (getUserByEmail(email) != null) {
@@ -69,7 +74,7 @@ public class UserDao {
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // Mã hóa mật khẩu trước khi lưu
+            // Mã hóa mật khẩu bảo mật trước khi lưu vào DB
             String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
 
             pstmt.setString(1, id);
@@ -104,58 +109,46 @@ public class UserDao {
         return null;
     }
 
+    /**
+     * Xác thực tài khoản dựa trên BCrypt mật khẩu băm
+     */
     public User authenticate(String email, String password) {
-        // 1. Chỉ tìm kiếm bằng EMAIL, bỏ điều kiện "AND password = ?" trong SQL
-        String sql = "SELECT * FROM users WHERE email = ?";
-        try (Connection conn = Db.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, email);
-
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    // 2. Sử dụng hàm map của bạn để lấy đầy đủ data (Role, Balance,...) thành Object User
-                    User user = mapResultSetToUser(rs);
-
-                    // 3. Sử dụng BCrypt để check mật khẩu người dùng nhập vào với mật khẩu đã hash trong DB
-                    if (BCrypt.checkpw(password, user.getPassword())) {
-                        return user; // Đăng nhập thành công -> Trả về user đủ dữ liệu
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("[UserDao] Lỗi authenticate: " + e.getMessage());
+        User user = getUserByEmail(email);
+        if (user != null && BCrypt.checkpw(password, user.getPassword())) {
+            return user;
         }
-        return null; // Đăng nhập thất bại (Sai email hoặc sai password)
+        return null;
     }
 
-    // 3. CẬP NHẬT: Lấy dữ liệu balance từ DB gán ngược lại cho Object User
+    /**
+     * Ánh xạ dữ liệu từ ResultSet vào Object User và các lớp con (Admin, Seller, Bidder)
+     */
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
-        User user;
         String role = rs.getString("role");
+        User user;
 
-        if ("SELLER".equalsIgnoreCase(role)) {
-            Seller seller = new Seller();
-            seller.setShopName(rs.getString("shop_name"));
-            user = seller;
+        // 1. Khởi tạo đối tượng theo Class con tương ứng
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            user = new Admin();
+        } else if ("SELLER".equalsIgnoreCase(role)) {
+            user = new Seller();
+            ((Seller) user).setShopName(rs.getString("shop_name"));
         } else if ("BIDDER".equalsIgnoreCase(role)) {
             user = new Bidder();
-        } else if ("ADMIN".equalsIgnoreCase(role)) {
-            user = new Admin();
         } else {
+            // Đối với các quyền khác như "ADMIN_REQUEST", khởi tạo thực thể User tiêu chuẩn
             user = new User();
         }
 
-        user.setRole(role);
+        // 2. Đổ toàn bộ dữ liệu chung từ DB vào Object
         user.setId(rs.getString("id"));
         user.setEmail(rs.getString("email"));
         user.setPassword(rs.getString("password"));
         user.setUsername(rs.getString("name"));
-
-        // --- THÊM DÒNG NÀY ĐỂ ĐỌC SỐ DƯ ---
+        user.setRole(role);
         user.setBalance(rs.getDouble("balance"));
 
-        // FIX DỨT ĐIỂM Ở ĐÂY: Dùng getTimestamp để JDBC tự parse LocalDateTime
+        // 3. Sử dụng getTimestamp để JDBC tự động parse sang LocalDateTime an toàn hơn
         Timestamp ts = rs.getTimestamp("time_created");
         if (ts != null) {
             user.setTimeCreated(ts.toLocalDateTime());
@@ -177,6 +170,7 @@ public class UserDao {
         }
         return null;
     }
+
     /**
      * Cập nhật số dư tài khoản (Nạp tiền vào tài khoản)
      * @param email Email của người dùng cần nạp tiền
@@ -203,6 +197,7 @@ public class UserDao {
             return false;
         }
     }
+
     /**
      * Cập nhật số dư tài khoản (Rút tiền khỏi tài khoản)
      * @param email Email của người dùng cần rút tiền
@@ -240,8 +235,8 @@ public class UserDao {
             System.err.println("❌ Lỗi khi thực hiện rút tiền cho: " + email + " - " + e.getMessage());
             return false;
         }
-
     }
+
     /**
      * Lấy riêng số dư hiện tại của tài khoản dựa trên Email
      * @param email Email của người dùng cần kiểm tra
@@ -288,6 +283,7 @@ public class UserDao {
         }
         return userList;
     }
+
     /**
      * Cập nhật Role (Quyền) của người dùng dựa trên ID
      * @param id ID của người dùng cần cập nhật
