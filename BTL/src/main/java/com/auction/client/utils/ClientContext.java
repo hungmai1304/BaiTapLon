@@ -136,4 +136,16 @@ public class ClientContext {
     public ObservableList<Auction> getActiveAuctions() { return activeAuctions; }
     public int getCurrentIndex() { return currentIndex; }
     public void setCurrentIndex(int index) { this.currentIndex = index; }
+
+    public void setCurrentAuctionByObject(Auction auction) {
+        if (auction == null) return;
+        int index = activeAuctions.indexOf(auction);
+        if (index != -1) {
+            this.currentIndex = index;
+        } else {
+            // Nếu không có trong list hiện tại, add vào và set index
+            activeAuctions.add(auction);
+            this.currentIndex = activeAuctions.size() - 1;
+        }
+    }
 }

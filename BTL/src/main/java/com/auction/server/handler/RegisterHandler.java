@@ -54,7 +54,7 @@ public class RegisterHandler implements IMessageHandler {
                 isSuccess = UserDao.getInstance().insertSeller(email, password, name, id, sqlTimestamp, shopName, initialBalance);
             } else {
                 // Nhánh này xử lý chung cho cả "BIDDER" và "ADMIN_REQUEST" nhờ tham số role động vừa thêm
-                isSuccess = UserDao.getInstance().insertBidder(email, password, name, id, sqlTimestamp, initialBalance, role);
+                isSuccess = UserDao.getInstance().insertBidder(email, password, name, id, sqlTimestamp, initialBalance);
             }
 
             // 4. Trả về kết quả

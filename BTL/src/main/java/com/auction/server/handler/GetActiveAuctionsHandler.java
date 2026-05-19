@@ -21,6 +21,30 @@ public class GetActiveAuctionsHandler implements IMessageHandler {
             // Móc danh sách Phiên đấu giá từ RAM ra
             List<Auction> activeAuctions = context.getActiveAuctions();
 
+            // --- LOGIC LỌC DỮ LIỆU (Search Filtering) ---
+            if (data != null) {
+                String keyword = (String) data.get("keyword");
+                String category = (String) data.get("category");
+                String sellerName = (String) data.get("sellerName");
+
+                activeAuctions = activeAuctions.stream()
+                    .filter(a -> {
+                        boolean match = true;
+                        if (keyword != null && !keyword.isBlank()) {
+                            match = match && a.getProduct() != null && a.getProduct().getName().toLowerCase().contains(keyword.toLowerCase());
+                        }
+                        if (category != null && !category.isBlank()) {
+                            match = match && a.getProduct() != null && category.equalsIgnoreCase(a.getProduct().getCategory());
+                        }
+                        if (sellerName != null && !sellerName.isBlank()) {
+                            match = match && a.getLeaderName() != null && sellerName.equalsIgnoreCase(a.getLeaderName());
+                        }
+                        return match;
+                    })
+                    .toList();
+            }
+            // -------------------------------------------
+
             // Đóng gói trả về cho Client vừa gửi Request
             Response response = new Response(MessageType.GET_ACTIVE_AUCTIONS_RESPONSE, "SUCCESS", "Lấy danh sách đấu giá thành công!");
             response.getData().put("auctionList", activeAuctions);
@@ -28,7 +52,7 @@ public class GetActiveAuctionsHandler implements IMessageHandler {
             // Chỉ gửi trả lại cho ĐÚNG cái thằng vừa xin
             conn.send(gson.toJson(response));
 
-            System.out.println("-> [GetActiveAuctions] Đã gửi " + activeAuctions.size() + " phiên đấu giá cho 1 Client.");
+            System.out.println("-> [GetActiveAuctions] Đã gửi " + activeAuctions.size() + " phiên đấu giá cho 1 Client (Sau khi lọc).");
 
         } catch (Exception e) {
             e.printStackTrace();
