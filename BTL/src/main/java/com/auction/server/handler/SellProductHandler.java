@@ -104,17 +104,39 @@ public class SellProductHandler implements IMessageHandler {
                         // B. Lấy thông tin sản phẩm gắn liền trong phiên để khôi phục trạng thái dưới DB
                         Product p = auctionToEnd.getProduct();
                         if (p != null) {
-                            p.setStatus(ProductStatus.AVAILABLE);
+
+                            // XỬ LÝ LƯU THÔNG TIN ĐẤU GIÁ THÀNH CÔNG HOẶC THẤT BẠI
+                            if (auctionToEnd.getHighestBidder() != null) {
+                                // TRƯỜNG HỢP 1: CÓ NGƯỜI THẮNG CUỘC
+                                System.out.println("[CHỐT ĐƠN REAL-TIME] Sản phẩm: " + p.getName()
+                                        + " | Người thắng: " + auctionToEnd.getHighestBidder().getEmail()
+                                        + " | Giá chốt: " + auctionToEnd.getCurrentPrice());
+
+                                // Đổi trạng thái sản phẩm sang SOLD
+                                p.setStatus(ProductStatus.SOLD);
+                                // Ghi nhận giá chốt đơn cuối cùng vào trường giá hiện tại dưới DB
+                                p.setCurrentPrice(auctionToEnd.getCurrentPrice());
+
+                            } else {
+                                // TRƯỜNG HỢP 2: KHÔNG CÓ AI ĐẶT GIÁ
+                                System.out.println(" [PHIÊN ĐẤU GIÁ THẤT BẠI] Sản phẩm: " + p.getName() + " tự động trả về kho.");
+                                p.setStatus(ProductStatus.AVAILABLE);
+                            }
+
                             p.setStartTime(null);
                             p.setEndTime(null);
 
-                            // Lưu trực tiếp xuống Database. Do RAM không giữ productList nữa nên không cần update RAM cho Product.
+                            // Lưu trực tiếp trạng thái mới nhất (SOLD hoặc AVAILABLE) xuống Database.
                             ProductDao.getInstance().editProduct(p);
                         }
 
-                        // C. Thông báo danh sách phiên đấu giá mới nhất (Đã cập nhật trạng thái COMPLETED) cho Client
+                        //  Xóa phiên đấu giá này ra khỏi danh sách RAM
+                        context.removeAuction(auctionToEnd.getId());
+
+                        // D. Thông báo danh sách phiên đấu giá mới nhất cho Client
                         broadcastNewAuctionSession(context, safeGson);
-                        System.out.println("[Timer] SP " + productId + " ĐÃ HẾT GIỜ. Phiên kết thúc!");
+
+                        System.out.println("[Timer] SP " + productId + " ĐÃ HẾT GIỜ. Phiên kết thúc & Dọn dẹp RAM hoàn tất!");
                     }
                 }, delayToCompleted, TimeUnit.MINUTES);
 
