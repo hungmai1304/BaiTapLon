@@ -34,7 +34,6 @@ public class LoginHandler implements IMessageHandler {
                 // Kiểm tra bằng instanceof để chắc chắn class khởi tạo là Admin độc quyền
                 if (maybeAdmin instanceof Admin) {
                     Admin admin = (Admin) maybeAdmin;
-
                     context.addOnlineUser(email, conn);
                     context.addOnlineUserObject(conn, admin);
 

@@ -112,11 +112,30 @@ public class UserDao {
     /**
      * Xác thực tài khoản dựa trên BCrypt mật khẩu băm
      */
+    /**
+     * Xác thực tài khoản linh hoạt: Hỗ trợ cả mật khẩu đã băm (BCrypt) và mật khẩu thô
+     */
     public User authenticate(String email, String password) {
         User user = getUserByEmail(email);
-        if (user != null && BCrypt.checkpw(password, user.getPassword())) {
+        if (user == null) {
+            return null;
+        }
+
+        // Trường hợp 1: Kiểm tra theo chuẩn mật khẩu đã mã hóa BCrypt (Bản 2)
+        try {
+            if (BCrypt.checkpw(password, user.getPassword())) {
+                return user;
+            }
+        } catch (IllegalArgumentException e) {
+            // Nhảy vào đây nếu mật khẩu trong DB là chuỗi thô (không phải định dạng hash của BCrypt)
+            // Ta sẽ bỏ qua lỗi này để xuống kiểm tra trường hợp 2
+        }
+
+        // Trường hợp 2: Kiểm tra so sánh chuỗi thô trực tiếp (Bản 1 - dành cho dữ liệu cũ)
+        if (password.equals(user.getPassword())) {
             return user;
         }
+
         return null;
     }
 
