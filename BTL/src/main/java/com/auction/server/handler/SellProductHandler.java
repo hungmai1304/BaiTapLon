@@ -135,11 +135,16 @@ public class SellProductHandler implements IMessageHandler {
                                 UserDao.getInstance().deductBalance(winnerEmail, finalPrice);
 
                                 System.out.println("Đã trừ " + finalPrice + " từ ví của " + winnerEmail);
+                                String thongBao = " Chúc mừng " + winnerEmail + " đã chốt đơn sản phẩm '" + p.getName() + "' với giá " + String.format("%,.0fđ", finalPrice) + "!";
+                                broadcastAuctionResult(context, safeGson, thongBao);
+
 
                             } else {
                                 // TRƯỜNG HỢP 2: KHÔNG CÓ AI ĐẶT GIÁ
                                 System.out.println(" [PHIÊN ĐẤU GIÁ THẤT BẠI] Sản phẩm: " + p.getName() + " tự động trả về kho.");
                                 p.setStatus(ProductStatus.AVAILABLE);
+                                String thongBaoE = "❌ Rất tiếc, sản phẩm '" + p.getName() + "' đã hết giờ mà không có ai chốt đơn!";
+                                broadcastAuctionResult(context, safeGson, thongBaoE);
                             }
 
                             p.setStartTime(null);
@@ -148,6 +153,7 @@ public class SellProductHandler implements IMessageHandler {
                             // Lưu trực tiếp trạng thái mới nhất (SOLD hoặc AVAILABLE) xuống Database.
                             ProductDao.getInstance().editProduct(p);
                         }
+
 
                         //  Xóa phiên đấu giá này ra khỏi danh sách RAM
                         context.removeAuction(auctionToEnd.getId());
@@ -192,6 +198,14 @@ public class SellProductHandler implements IMessageHandler {
             }
         }
         System.out.println("-> [Broadcast] Đã phát sóng danh sách Phiên Đấu Giá mới tới toàn bộ Client.");
+    }
+
+    private void broadcastAuctionResult(ServerContext context, Gson gson, String thongBao) {
+        Response res = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBao);
+        String msg = gson.toJson(res);
+        for (WebSocket client : context.getConnectedClients()) {
+            if (client.isOpen()) client.send(msg);
+        }
     }
 
     private void sendError(WebSocket conn, Gson gson, String msg) {
