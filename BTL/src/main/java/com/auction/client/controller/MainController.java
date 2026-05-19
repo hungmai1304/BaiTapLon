@@ -10,8 +10,14 @@ import javafx.fxml.FXML;
 import java.time.LocalTime;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.shape.Circle;
+
+import java.io.ByteArrayInputStream;
+import java.util.Base64;
 
 public class MainController {
 
@@ -26,11 +32,17 @@ public class MainController {
     @FXML private Label about_you_name;
     @FXML private Label balance_main;
     @FXML private AnchorPane shopAnchorPane;
+    @FXML private ImageView main_avatar;
 
     @FXML
     public void initialize() {
         User user = SomeGlobal.getCurrentUser();
         SomeGlobal.setMainController(this);
+
+        if (main_avatar != null) {
+            Circle clip = new Circle(45, 45, 45);
+            main_avatar.setClip(clip);
+        }
 
         if (user != null && HI_USER_NAME != null) {
             if (user instanceof com.auction.common.model.user.Bidder) {
@@ -41,6 +53,10 @@ public class MainController {
 
             String username = user.getUsername();
             about_you_name.setText(username);
+            
+            // Load Avatar
+            updateAvatar(user.getAvatar());
+
             LocalTime now = LocalTime.now();
             int hour = now.getHour();
             String greeting;
@@ -66,6 +82,20 @@ public class MainController {
         }
         RequestSender.send(MessageType.GET_SHOP_PRODUCTS_REQUEST, null);
         RequestSender.send(MessageType.GET_BALANCE_REQUEST, null);
+    }
+
+    public void updateAvatar(String base64) {
+        if (base64 != null && !base64.isEmpty() && main_avatar != null) {
+            Platform.runLater(() -> {
+                try {
+                    byte[] imageBytes = Base64.getDecoder().decode(base64);
+                    Image image = new Image(new ByteArrayInputStream(imageBytes));
+                    main_avatar.setImage(image);
+                } catch (Exception e) {
+                    System.err.println("[MainController] Lỗi load avatar: " + e.getMessage());
+                }
+            });
+        }
     }
 
 

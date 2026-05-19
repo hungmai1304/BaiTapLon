@@ -31,6 +31,7 @@ public class AdminLoginHandler implements IClientHandler {
                 admin.setEmail((String) response.getData().get("email"));
                 admin.setUsername((String) response.getData().get("name"));
                 admin.setId((String) response.getData().get("id"));
+                admin.setAvatar((String) response.getData().get("avatar"));
 
                 // Nếu Server có trả về quyền hoặc số dư/thông tin bổ sung của Admin
                 if (response.getData().containsKey("balance")) {

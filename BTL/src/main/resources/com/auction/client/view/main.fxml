@@ -76,7 +76,7 @@
                         <Label styleClass="label-super-bold" text="About You" textFill="WHITE">
                            <font><Font size="45.0" /></font>
                         </Label>
-                        <ImageView fitHeight="90.0" fitWidth="90.0" pickOnBounds="true" preserveRatio="true">
+                        <ImageView fx:id="main_avatar" fitHeight="90.0" fitWidth="90.0" pickOnBounds="true" preserveRatio="true">
                            <image><Image url="@account.png" /></image>
                         </ImageView>
                         <Label fx:id="about_you_name" styleClass="label-super-bold" text="Name" textFill="WHITE">

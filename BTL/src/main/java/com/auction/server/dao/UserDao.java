@@ -138,6 +138,13 @@ public class UserDao {
         // --- THÊM DÒNG NÀY ĐỂ ĐỌC SỐ DƯ ---
         user.setBalance(rs.getDouble("balance"));
 
+        // --- ĐỌC AVATAR (Từ bytea sang Base64) ---
+        byte[] avatarBytes = rs.getBytes("avatar");
+        if (avatarBytes != null) {
+            String base64Avatar = java.util.Base64.getEncoder().encodeToString(avatarBytes);
+            user.setAvatar(base64Avatar);
+        }
+
         // FIX DỨT ĐIỂM Ở ĐÂY: Dùng getTimestamp để JDBC tự parse LocalDateTime
         Timestamp ts = rs.getTimestamp("time_created");
         if (ts != null) {
@@ -288,6 +295,29 @@ public class UserDao {
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("[UserDao] Lỗi khi cập nhật role cho user ID " + id + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Cập nhật Avatar cho người dùng
+     * @param email Email của người dùng
+     * @param avatarBase64 Chuỗi ảnh Base64
+     * @return true nếu cập nhật thành công
+     */
+    public boolean updateUserAvatar(String email, String avatarBase64) {
+        String sql = "UPDATE users SET avatar = ? WHERE email = ?";
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            // Chuyển Base64 thành byte array để lưu vào cột kiểu bytea
+            byte[] avatarBytes = java.util.Base64.getDecoder().decode(avatarBase64);
+            pstmt.setBytes(1, avatarBytes);
+            pstmt.setString(2, email);
+
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("[UserDao] Lỗi updateUserAvatar cho " + email + ": " + e.getMessage());
             return false;
         }
     }

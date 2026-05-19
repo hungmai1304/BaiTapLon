@@ -107,4 +107,8 @@ public class MessageType {
 
     public static final String ADMIN_ACCEPT_REQUEST="ADMIN_ACCEPT_REQUEST";
     public static final String ADMIN_REJECT_REQUEST="ADMIN_REJECT_REQUEST";
+
+    // Cập nhật Avatar
+    public static final String UPDATE_AVATAR_REQUEST = "UPDATE_AVATAR_REQUEST";
+    public static final String UPDATE_AVATAR_RESPONSE = "UPDATE_AVATAR_RESPONSE";
 }

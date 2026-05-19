@@ -7,6 +7,7 @@ public class User extends BaseEntity {
     private String username;
     private String password;
     private String email;
+    private String avatar;
 
     // Trường role mới thêm của bạn
     private String role;
@@ -15,6 +16,14 @@ public class User extends BaseEntity {
     private double balance;
 
     public User() {}
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
 
     // --- Getter và Setter cho các trường cơ bản ---
     public String getEmail() {
