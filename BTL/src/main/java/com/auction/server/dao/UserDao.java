@@ -105,11 +105,28 @@ public class UserDao {
     }
 
     public User authenticate(String email, String password) {
-        User user = getUserByEmail(email);
-        if (user != null && BCrypt.checkpw(password, user.getPassword())) {
-            return user;
+        // 1. Chỉ tìm kiếm bằng EMAIL, bỏ điều kiện "AND password = ?" trong SQL
+        String sql = "SELECT * FROM users WHERE email = ?";
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, email);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    // 2. Sử dụng hàm map của bạn để lấy đầy đủ data (Role, Balance,...) thành Object User
+                    User user = mapResultSetToUser(rs);
+
+                    // 3. Sử dụng BCrypt để check mật khẩu người dùng nhập vào với mật khẩu đã hash trong DB
+                    if (BCrypt.checkpw(password, user.getPassword())) {
+                        return user; // Đăng nhập thành công -> Trả về user đủ dữ liệu
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[UserDao] Lỗi authenticate: " + e.getMessage());
         }
-        return null;
+        return null; // Đăng nhập thất bại (Sai email hoặc sai password)
     }
 
     // 3. CẬP NHẬT: Lấy dữ liệu balance từ DB gán ngược lại cho Object User
