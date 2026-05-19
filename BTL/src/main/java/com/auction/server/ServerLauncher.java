@@ -20,7 +20,7 @@ public class ServerLauncher {
             port=10000;
 
             System.out.println("================================");
-            System.out.println("? SERVER ??U GI� ?ANG KH?I ??NG");
+            System.out.println("🚀 SERVER ĐẤU GIÁ ĐANG KHỞI ĐỘNG");
             System.out.println("PORT: " + port);
             System.out.println("================================");
 
@@ -29,8 +29,8 @@ public class ServerLauncher {
 
             server.start();
 
-            System.out.println("? Server ?� start.");
-            System.out.println("? ?ang ch? client k?t n?i...");
+            System.out.println("✔ Server đã start.");
+            System.out.println("⌛ Đang chờ client kết nối...");
 
             // GI? SERVER S?NG TR�N RENDER
             Thread.currentThread().join();

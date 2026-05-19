@@ -27,7 +27,7 @@ public class NetworkClient {
         if (webSocketClient != null
                 && webSocketClient.isOpen()) {
 
-            System.out.println("? ?� ???c k?t n?i t?i server.");
+            System.out.println("✔ Đã được kết nối tới server.");
 
             return;
         }
@@ -44,21 +44,21 @@ public class NetworkClient {
                 ) {
 
                     System.out.println(
-                            "? ?� k?t n?i t?i server!"
+                            "✔ Đã kết nối tới server!"
                     );
                 }
 
                 @Override
                 public void onMessage(String message) {
-//                    // 1. Debug th�ng minh:
-//                    // N?u tin nh?n qu� d�i (th??ng l� c� ch?a ?nh), ch? in 200 k� t? ??u ?? xem Type v� Status
+//                    // 1. Debug thông minh:
+//                    // Nếu tin nhắn quá dài (thường là có chứa ảnh), chỉ in 200 ký tự đầu để xem Type và Status
 //                    if (message != null && message.length() > 200) {
-//                        System.out.println("? [T? Server] (G�i tin l?n): " + message.substring(0, 200) + "... [T?ng: " + message.length() + " k� t?]");
+//                        System.out.println("✔ [Từ Server] (Gói tin lớn): " + message.substring(0, 200) + "... [Tổng: " + message.length() + " ký tự]");
 //                    } else {
-//                        System.out.println("? [T? Server]: " + message);
+//                        System.out.println("✔ [Từ Server]: " + message);
 //                    }
 
-                    // 2. V?n dispatch b�nh th??ng ?? x? l� logic
+                    // 2. Vẫn dispatch bình thường để xử lý logic
                     ClientMessageDispatcher.dispatch(message);
                 }
 
@@ -69,7 +69,7 @@ public class NetworkClient {
                         boolean remote
                 ) {
 
-                    System.out.println("? M?t k?t n?i");
+                    System.out.println("✘ Mất kết nối");
 
                     System.out.println(
                             "Code: " + code
@@ -84,7 +84,7 @@ public class NetworkClient {
                 public void onError(Exception ex) {
 
                     System.err.println(
-                            "? L?i m?ng:"
+                            "✘ Lỗi mạng:"
                     );
 
                     ex.printStackTrace();
@@ -92,13 +92,13 @@ public class NetworkClient {
             };
 
             System.out.println(
-                    "? ?ang k?t n?i t?i server..."
+                    "⌛ Đang kết nối tới server..."
             );
 
             webSocketClient.connectBlocking();
 
             System.out.println(
-                    "? K?t n?i ho�n t?t."
+                    "✔ Kết nối hoàn tất."
             );
 
         } catch (Exception e) {
@@ -111,15 +111,15 @@ public class NetworkClient {
         if (webSocketClient != null && webSocketClient.isOpen()) {
             webSocketClient.send(command);
 
-            // Debug th�ng minh: N?u g�i tin qu� d�i th� ch? in ?? d�i th�i
+            // Debug thông minh: Nếu gói tin quá dài thì chỉ in độ dài thôi
             if (command.length() > 200) {
-                System.out.println("? [Client] ?� g?i g�i tin l?n (Size: " + command.length() + " chars)");
+                System.out.println("✈ [Client] Đã gửi gói tin lớn (Size: " + command.length() + " chars)");
             } else {
-                System.out.println("? [Client] ?� g?i: " + command);
+                System.out.println("✈ [Client] Đã gửi: " + command);
             }
 
         } else {
-            System.err.println("? Ch?a k?t n?i m?ng!");
+            System.err.println("✘ Chưa kết nối mạng!");
         }
     }
 
@@ -129,7 +129,7 @@ public class NetworkClient {
                 && webSocketClient.isOpen();
     }
 
-    // H�m ?? c�c m�n h�nh kh�c g?n tai nghe v�o
+    // Hàm để các màn hình khác gắn tai nghe vào
     public static void setListener(MessageListener listener) {
         currentListener = listener;
     }
