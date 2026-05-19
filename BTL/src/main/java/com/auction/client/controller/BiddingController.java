@@ -232,7 +232,6 @@ public class BiddingController {
         });
     }
 
-    // --- CHỈ THÊM: Hàm xử lý đếm ngược tự động chạy độc lập (Đã xóa toàn bộ icon) ---
     private void startAuctionCountdown() {
         if (countdownTimeline != null) {
             countdownTimeline.stop();
