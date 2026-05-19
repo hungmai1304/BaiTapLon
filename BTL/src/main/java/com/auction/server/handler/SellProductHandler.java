@@ -8,6 +8,7 @@ import com.auction.common.model.auction.Auction;
 import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.dao.ProductDao;
+import com.auction.server.dao.UserDao;
 import com.auction.server.model.ServerContext;
 import com.google.gson.*;
 import java.time.format.DateTimeFormatter;
@@ -54,7 +55,12 @@ public class SellProductHandler implements IMessageHandler {
                 Product updatedProduct = ProductDao.getInstance().getProductById(productId);
 
                 if (updatedProduct != null) {
-                    // BẮT ĐẦU LOGIC TẠO PHIÊN ĐẤU GIÁ
+                    if (updatedProduct.getStatus() == ProductStatus.SOLD) {
+                        sendError(conn, safeGson, "Sản phẩm này đã được chốt đơn, không thể đem đấu giá lại!");
+                        return;
+                    }
+
+                    // NẾU CHƯA BÁN THÌ BẮT ĐẦU LOGIC TẠO PHIÊN ĐẤU GIÁ
                     int auctionId = Math.abs(new Random().nextInt()); // Tạo ID tự động cho phiên
 
                     LocalDateTime now = LocalDateTime.now();
@@ -80,7 +86,7 @@ public class SellProductHandler implements IMessageHandler {
                 // PHẦN HẸN GIỜ TỰ ĐỘNG CHUYỂN TRẠNG THÁI PHIÊN ĐẤU GIÁ
                 // =========================================================
                 long delayToActive = 1;    // Chờ 30s để bắt đầu (Lúc TEST đổi từ phút thành giây)
-                long delayToCompleted = 2; // Tổng 45s để kết thúc
+                long delayToCompleted = 3; // Tổng 45s để kết thúc
 
                 // Hẹn giờ 1: MỞ BÁT PHIÊN ĐẤU GIÁ (PENDING -> ACTIVE)
                 scheduler.schedule(() -> {
@@ -104,17 +110,46 @@ public class SellProductHandler implements IMessageHandler {
                         // B. Lấy thông tin sản phẩm gắn liền trong phiên để khôi phục trạng thái dưới DB
                         Product p = auctionToEnd.getProduct();
                         if (p != null) {
-                            p.setStatus(ProductStatus.AVAILABLE);
+
+                            // XỬ LÝ LƯU THÔNG TIN ĐẤU GIÁ THÀNH CÔNG HOẶC THẤT BẠI
+                            if (auctionToEnd.getHighestBidder() != null) {
+                                // TRƯỜNG HỢP 1: CÓ NGƯỜI THẮNG CUỘC
+                                System.out.println("[CHỐT ĐƠN REAL-TIME] Sản phẩm: " + p.getName()
+                                        + " | Người thắng: " + auctionToEnd.getHighestBidder().getEmail()
+                                        + " | Giá chốt: " + auctionToEnd.getCurrentPrice());
+
+                                // Đổi trạng thái sản phẩm sang SOLD
+                                p.setStatus(ProductStatus.SOLD);
+                                // Ghi nhận giá chốt đơn cuối cùng vào trường giá hiện tại dưới DB
+                                p.setCurrentPrice(auctionToEnd.getCurrentPrice());
+                                // TRỪ TIỀN :
+                                String winnerEmail = auctionToEnd.getHighestBidder().getEmail();
+                                double finalPrice = auctionToEnd.getCurrentPrice();
+
+                                UserDao.getInstance().deductBalance(winnerEmail, finalPrice);
+
+                                System.out.println("Đã trừ " + finalPrice + " từ ví của " + winnerEmail);
+
+                            } else {
+                                // TRƯỜNG HỢP 2: KHÔNG CÓ AI ĐẶT GIÁ
+                                System.out.println(" [PHIÊN ĐẤU GIÁ THẤT BẠI] Sản phẩm: " + p.getName() + " tự động trả về kho.");
+                                p.setStatus(ProductStatus.AVAILABLE);
+                            }
+
                             p.setStartTime(null);
                             p.setEndTime(null);
 
-                            // Lưu trực tiếp xuống Database. Do RAM không giữ productList nữa nên không cần update RAM cho Product.
+                            // Lưu trực tiếp trạng thái mới nhất (SOLD hoặc AVAILABLE) xuống Database.
                             ProductDao.getInstance().editProduct(p);
                         }
 
-                        // C. Thông báo danh sách phiên đấu giá mới nhất (Đã cập nhật trạng thái COMPLETED) cho Client
+                        //  Xóa phiên đấu giá này ra khỏi danh sách RAM
+                        context.removeAuction(auctionToEnd.getId());
+
+                        // D. Thông báo danh sách phiên đấu giá mới nhất cho Client
                         broadcastNewAuctionSession(context, safeGson);
-                        System.out.println("[Timer] SP " + productId + " ĐÃ HẾT GIỜ. Phiên kết thúc!");
+
+                        System.out.println("[Timer] SP " + productId + " ĐÃ HẾT GIỜ. Phiên kết thúc & Dọn dẹp RAM hoàn tất!");
                     }
                 }, delayToCompleted, TimeUnit.MINUTES);
 

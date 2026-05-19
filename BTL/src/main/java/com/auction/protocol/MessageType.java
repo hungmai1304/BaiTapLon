@@ -77,7 +77,7 @@ public class MessageType {
     public static final String GET_BALANCE_RESPONSE = "GET_BALANCE_RESPONSE";
 
     // =========================================================================
-    // 🆕 CÁC TÍN HIỆU DỰ PHÒNG CHO LOGIC KẾT THÚC ĐẤU GIÁ
+    //  CÁC TÍN HIỆU DỰ PHÒNG CHO LOGIC KẾT THÚC ĐẤU GIÁ
     // =========================================================================
 
     // Server thông báo phiên đấu giá đã kết thúc thành công (Có người thắng) hoặc thất bại (Không ai mua)
