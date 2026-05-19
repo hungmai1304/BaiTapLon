@@ -156,4 +156,27 @@ public class BiddingController {
         ControllerRegistry.unregister("BiddingController");
         NavigationService.setCenterView("/com/auction/client/view/tiktokAuction.fxml");
     }
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
+        Platform.runLater(() -> {
+            // 1. Kiểm tra ID:
+            if (this.currentAuctionData != null && this.currentAuctionData.getProduct().getId().equals(productId)) {
+
+                // 2. Cập nhật giá chữ to
+                lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0fđ", newPrice));
+
+                // 3. Cập nhật tên người dẫn đầu
+                updateLeaderUI(leaderName, newPrice);
+
+                // 4. Lưu vào RAM để lúc back ra back vào nó không bị mất
+                this.currentAuctionData.setCurrentPrice(newPrice);
+                this.currentAuctionData.setLeaderName(leaderName);
+
+                // 5. Cập nhật biểu đồ
+                bidCount++;
+                priceSeries.getData().add(new XYChart.Data<>(String.valueOf(bidCount), newPrice));
+
+                System.out.println("[Bidding UI] Đã nhảy số và vẽ biểu đồ realtime!");
+            }
+        });
+    }
 }

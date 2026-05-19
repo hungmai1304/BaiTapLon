@@ -1,6 +1,7 @@
 package com.auction.client.handler;
 
 import com.auction.client.annotation.ResponseHandler;
+import com.auction.client.controller.BiddingController;
 import com.auction.client.controller.TikTokAuctionController;
 import com.auction.client.network.IClientHandler;
 import com.auction.client.utils.ControllerRegistry;
@@ -25,6 +26,10 @@ public class NewBidClientHandler implements IClientHandler {
                     // GỌI CONTROLLER QUA REGISTRY ĐỂ NHẢY SỐ UI
 
                     TikTokAuctionController controller = (TikTokAuctionController) ControllerRegistry.get("TikTokAuctionController");
+                    BiddingController biddingCtrl = (BiddingController) ControllerRegistry.get("BiddingController");
+                    if (biddingCtrl != null) {
+                        biddingCtrl.updateRealtimeBid(productId, newPrice, leaderName);
+                    }
 
                     if (controller != null) {
                         // Truyền dữ liệu sang UI để nó tự nhảy số

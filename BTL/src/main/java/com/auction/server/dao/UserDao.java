@@ -291,4 +291,26 @@ public class UserDao {
             return false;
         }
     }
+
+    // HÀM TRỪ TIỀN KHI CHỐT ĐƠN ĐẤU GIÁ THÀNH CÔNG
+
+    public boolean deductBalance(String email, double amountToDeduct) {
+        // Câu lệnh SQL: Trừ tiền với điều kiện số dư hiện tại phải lớn hơn hoặc bằng số tiền cần trừ (Bảo mật kép dưới DB)
+        String sql = "UPDATE users SET balance = balance - ? WHERE email = ? AND balance >= ?";
+
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setDouble(1, amountToDeduct);
+            pstmt.setString(2, email);
+            pstmt.setDouble(3, amountToDeduct);
+
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0; // Trả về true nếu trừ tiền thành công
+
+        } catch (SQLException e) {
+            System.err.println("[UserDao] Lỗi khi trừ tiền của user " + email + ": " + e.getMessage());
+            return false;
+        }
+    }
 }

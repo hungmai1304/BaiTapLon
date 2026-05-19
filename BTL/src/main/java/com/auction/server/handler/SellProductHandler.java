@@ -8,6 +8,7 @@ import com.auction.common.model.auction.Auction;
 import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.dao.ProductDao;
+import com.auction.server.dao.UserDao;
 import com.auction.server.model.ServerContext;
 import com.google.gson.*;
 import java.time.format.DateTimeFormatter;
@@ -54,7 +55,12 @@ public class SellProductHandler implements IMessageHandler {
                 Product updatedProduct = ProductDao.getInstance().getProductById(productId);
 
                 if (updatedProduct != null) {
-                    // BẮT ĐẦU LOGIC TẠO PHIÊN ĐẤU GIÁ
+                    if (updatedProduct.getStatus() == ProductStatus.SOLD) {
+                        sendError(conn, safeGson, "Sản phẩm này đã được chốt đơn, không thể đem đấu giá lại!");
+                        return;
+                    }
+
+                    // NẾU CHƯA BÁN THÌ BẮT ĐẦU LOGIC TẠO PHIÊN ĐẤU GIÁ
                     int auctionId = Math.abs(new Random().nextInt()); // Tạo ID tự động cho phiên
 
                     LocalDateTime now = LocalDateTime.now();
@@ -80,7 +86,7 @@ public class SellProductHandler implements IMessageHandler {
                 // PHẦN HẸN GIỜ TỰ ĐỘNG CHUYỂN TRẠNG THÁI PHIÊN ĐẤU GIÁ
                 // =========================================================
                 long delayToActive = 1;    // Chờ 30s để bắt đầu (Lúc TEST đổi từ phút thành giây)
-                long delayToCompleted = 2; // Tổng 45s để kết thúc
+                long delayToCompleted = 3; // Tổng 45s để kết thúc
 
                 // Hẹn giờ 1: MỞ BÁT PHIÊN ĐẤU GIÁ (PENDING -> ACTIVE)
                 scheduler.schedule(() -> {
@@ -116,6 +122,13 @@ public class SellProductHandler implements IMessageHandler {
                                 p.setStatus(ProductStatus.SOLD);
                                 // Ghi nhận giá chốt đơn cuối cùng vào trường giá hiện tại dưới DB
                                 p.setCurrentPrice(auctionToEnd.getCurrentPrice());
+                                // TRỪ TIỀN :
+                                String winnerEmail = auctionToEnd.getHighestBidder().getEmail();
+                                double finalPrice = auctionToEnd.getCurrentPrice();
+
+                                UserDao.getInstance().deductBalance(winnerEmail, finalPrice);
+
+                                System.out.println("Đã trừ " + finalPrice + " từ ví của " + winnerEmail);
 
                             } else {
                                 // TRƯỜNG HỢP 2: KHÔNG CÓ AI ĐẶT GIÁ
