@@ -1,8 +1,9 @@
-package com.auction.server.handler;
+package com.auction.server.handler.login;
 
 import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
+import com.auction.server.handler.IMessageHandler;
 import com.auction.server.model.ServerContext;
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
