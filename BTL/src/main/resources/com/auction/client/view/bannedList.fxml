@@ -9,13 +9,13 @@
 
 <AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.auction.client.controller.BannedListController"
+            fx:controller="com.auction.client.controller.admin.BannedListController"
             prefHeight="400.0" prefWidth="700.0">
     <children>
         <VBox spacing="10.0" AnchorPane.bottomAnchor="15.0" AnchorPane.leftAnchor="15.0" AnchorPane.rightAnchor="15.0" AnchorPane.topAnchor="15.0">
             <children>
 
-                <Label text="Quản Lý Danh Sách Người Dùng" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+                <Label text="Manage :Banned, Blacklist Users" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
 
                 <TableView fx:id="userTable" VBox.vgrow="ALWAYS">
                     <columns>

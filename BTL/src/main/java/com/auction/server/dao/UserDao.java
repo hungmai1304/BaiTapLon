@@ -123,7 +123,7 @@ public class UserDao {
             return null;
         }
 
-        // VIẾT THÊM: Nếu user có status là BANNED thì lập tức chặn, không cho so khớp mật khẩu nữa
+
         if ("BANNED".equalsIgnoreCase(user.getStatus())) {
             System.err.println("[UserDao] Từ chối xác thực: Tài khoản [" + email + "] đang bị khóa (BANNED)!");
             return null;
@@ -368,4 +368,36 @@ public class UserDao {
         }
         return false;
     }
+    /**
+     * VIẾT THÊM: Lấy danh sách người dùng dựa theo Trạng thái (Ví dụ: "BANNED", "NORMAL")
+     * Thường dùng khi Admin muốn hiển thị danh sách các tài khoản đang bị khóa.
+     * * @param status Trạng thái cần tìm kiếm (Ví dụ: "BANNED")
+     * @return Danh sách các Object User (hoặc lớp con tương ứng) thỏa mãn điều kiện
+     */
+    public List<User> getUsersByStatus(String status) {
+        List<User> userList = new ArrayList<>();
+        if (status == null || status.trim().isEmpty()) {
+            return userList;
+        }
+
+        // Truy vấn sắp xếp theo thời gian tạo mới nhất lên đầu
+        String sql = "SELECT * FROM users WHERE UPPER(status) = ? ORDER BY time_created DESC";
+
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, status.toUpperCase());
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    // Tận dụng hàm mapResultSetToUser có sẵn để tự động nhận diện Admin, Seller, Bidder
+                    userList.add(mapResultSetToUser(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[UserDao] Lỗi trong hàm getUsersByStatus khi tìm trạng thái " + status + ": " + e.getMessage());
+        }
+        return userList;
+    }
+
 }
