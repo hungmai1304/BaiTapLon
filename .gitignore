@@ -6,6 +6,7 @@ target/
 
 .env*
 !.env.example
+REMEMBER_ME_FILE.txt
 # --- JetBrains (Nội dung bạn đã có) ---
 .idea/
 *.iws

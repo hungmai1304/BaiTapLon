@@ -60,6 +60,17 @@ public class TikTokAuctionController {
                 // Giá hiển thị là giá hiện tại của phiên (Current Price)
                 price.setText(String.format("%,.0f VNĐ", auction.getCurrentPrice()));
                 step.setText(String.format("Bước giá: %,.0f VNĐ", product.getStepPrice()));
+                if (lblTopBidder != null) {
+                    // Kiểm tra xem đã có ai đặt giá chưa
+                    String leader = (auction.getLeaderName() != null && !auction.getLeaderName().isEmpty())
+                            ? auction.getLeaderName()
+                            : "Chưa có ai đặt giá";
+
+                    // Nếu chưa có ai đặt thì in giá khởi điểm, có rồi thì in giá hiện tại
+                    double displayPrice = auction.getCurrentPrice() > 0 ? auction.getCurrentPrice() : product.getStartPrice();
+
+                    lblTopBidder.setText(leader + " - " + String.format("%,.0f VNĐ", displayPrice));
+                }
             }
         });
     }
