@@ -179,9 +179,18 @@ public class ProductDao {
             product.setTimeCreated(ts.toLocalDateTime());
         }
 
-        User owner = new User();
-        owner.setId(rs.getString("owner_id"));
-        product.setOwner(owner);
+        String ownerId = rs.getString("owner_id");
+        if (ownerId != null) {
+            User owner = UserDao.getInstance().findById(ownerId);
+            if (owner != null) {
+                owner.setPassword(null); // Bảo mật: Không gửi password của owner qua mạng
+                product.setOwner(owner);
+            } else {
+                User fallbackOwner = new User();
+                fallbackOwner.setId(ownerId);
+                product.setOwner(fallbackOwner);
+            }
+        }
         Timestamp startTimeTs = rs.getTimestamp("start_time");
         if (startTimeTs != null) {
             product.setStartTime(startTimeTs.toLocalDateTime());

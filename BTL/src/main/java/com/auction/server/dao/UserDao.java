@@ -134,6 +134,7 @@ public class UserDao {
         user.setEmail(rs.getString("email"));
         user.setPassword(rs.getString("password"));
         user.setUsername(rs.getString("name"));
+        user.setShopName(rs.getString("shop_name"));
 
         // --- THÊM DÒNG NÀY ĐỂ ĐỌC SỐ DƯ ---
         user.setBalance(rs.getDouble("balance"));

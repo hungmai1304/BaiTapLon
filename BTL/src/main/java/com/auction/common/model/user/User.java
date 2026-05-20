@@ -14,8 +14,17 @@ public class User extends BaseEntity {
 
     // Các thông tin thời gian chung
     private double balance;
+    private String shopName;
 
     public User() {}
+
+    public String getShopName() {
+        return shopName;
+    }
+
+    public void setShopName(String shopName) {
+        this.shopName = shopName;
+    }
 
     public String getAvatar() {
         return avatar;

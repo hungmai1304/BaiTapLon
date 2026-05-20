@@ -37,7 +37,7 @@ public class GetActiveAuctionsHandler implements IMessageHandler {
                             match = match && a.getProduct() != null && category.equalsIgnoreCase(a.getProduct().getCategory());
                         }
                         if (sellerName != null && !sellerName.isBlank()) {
-                            match = match && a.getLeaderName() != null && sellerName.equalsIgnoreCase(a.getLeaderName());
+                            match = match && a.getProduct() != null && a.getProduct().getOwner() != null && sellerName.equalsIgnoreCase(a.getProduct().getOwner().getUsername());
                         }
                         return match;
                     })

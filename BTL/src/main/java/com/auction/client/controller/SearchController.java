@@ -5,6 +5,7 @@ import com.auction.client.utils.ControllerRegistry;
 import com.auction.client.utils.NavigationService;
 import com.auction.client.utils.ClientContext;
 import com.auction.common.model.auction.Auction;
+import com.auction.common.model.user.User;
 import com.auction.protocol.MessageType;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -168,7 +169,16 @@ public class SearchController implements Initializable {
         lblPrice.setTextFill(Color.web("#2E7D32"));
 
         // Seller Info
-        Label lblSeller = new Label("Seller: " + (auction.getHighestBidder() != null ? auction.getHighestBidder().getUsername() : "Original Owner"));
+        String sellerName = "Original Owner";
+        if (auction.getProduct() != null && auction.getProduct().getOwner() != null) {
+            User owner = auction.getProduct().getOwner();
+            if (owner.getShopName() != null && !owner.getShopName().isEmpty()) {
+                sellerName = owner.getShopName();
+            } else if (owner.getUsername() != null && !owner.getUsername().isEmpty()) {
+                sellerName = owner.getUsername();
+            }
+        }
+        Label lblSeller = new Label("Seller: " + sellerName);
         lblSeller.setFont(Font.font("System", 14));
         lblSeller.setTextFill(Color.GRAY);
 

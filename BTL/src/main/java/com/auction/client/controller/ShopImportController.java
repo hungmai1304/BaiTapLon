@@ -59,9 +59,9 @@ public class ShopImportController {
 
     @FXML
     public void initialize() {
-        // Đã sửa font Tiếng Việt
+        // Updated categories to English and matched with SearchController
         categoryComboBox.setItems(FXCollections.observableArrayList(
-                "Điện tử", "Thời trang", "Gia dụng", "Xe cộ", "Khác"
+                "Art", "Electronics", "Fashion", "Vehicles", "Property", "Other"
         ));
     }
 
