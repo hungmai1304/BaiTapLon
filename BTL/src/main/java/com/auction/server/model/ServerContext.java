@@ -65,7 +65,7 @@ public class ServerContext {
         }
     }
 
-    public void removeAuction(int auctionId) {
+    public void removeAuction(String auctionId) {
         boolean removed = activeAuctions.removeIf(a -> a.getId() == auctionId);
         if (removed) {
             System.out.println("[ServerContext] Đã xóa Phiên Đấu Giá (ID: " + auctionId + ") khỏi RAM.");
