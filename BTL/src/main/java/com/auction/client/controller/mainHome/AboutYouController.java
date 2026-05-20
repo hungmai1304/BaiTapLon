@@ -1,5 +1,6 @@
-package com.auction.client.controller;
+package com.auction.client.controller.mainHome;
 
+import com.auction.client.controller.general.SomeGlobal;
 import com.auction.client.network.RequestSender;
 import com.auction.client.utils.ControllerRegistry;
 import com.auction.client.utils.NavigationService;

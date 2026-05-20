@@ -1,7 +1,9 @@
 package com.auction.client.controller.mainHome;
 
+import com.auction.client.controller.general.SomeGlobal;
 import com.auction.client.network.RequestSender;
 import com.auction.client.utils.ClientContext;
+import com.auction.common.model.user.User;
 import com.auction.protocol.MessageType;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;

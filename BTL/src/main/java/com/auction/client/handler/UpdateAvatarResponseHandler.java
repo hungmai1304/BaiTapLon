@@ -1,10 +1,10 @@
 package com.auction.client.handler;
 
 import com.auction.client.annotation.ResponseHandler;
-import com.auction.client.controller.AboutYouController;
-import com.auction.client.controller.MainController;
-import com.auction.client.controller.SomeGlobal;
-import com.auction.client.controller.TopViewController;
+import com.auction.client.controller.mainHome.AboutYouController;
+import com.auction.client.controller.mainHome.MainController;
+import com.auction.client.controller.general.SomeGlobal;
+import com.auction.client.controller.mainHome.TopViewController;
 import com.auction.client.network.IClientHandler;
 import com.auction.client.utils.ControllerRegistry;
 import com.auction.common.model.user.User;

@@ -6,6 +6,7 @@ import com.auction.client.controller.admin.BannedListController;
 import com.auction.client.controller.mainHome.BankController;
 import com.auction.client.controller.mainHome.HomeController;
 import com.auction.client.controller.mainHome.MainController;
+import com.auction.client.controller.mainHome.TopViewController;
 import com.auction.client.controller.shop.ShopSellController;
 import com.auction.common.model.user.User;
 
