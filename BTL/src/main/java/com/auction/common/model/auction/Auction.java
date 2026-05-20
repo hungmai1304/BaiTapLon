@@ -1,15 +1,16 @@
 package com.auction.common.model.auction;
 
+import com.auction.common.model.base.BaseEntity;
 import com.auction.common.model.product.Product;
 import com.auction.common.model.user.User;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+// xin lỗi tất cả anh em vì đã k cho nó kế thừa BaseEntity ngay từ đầu
+public class Auction extends BaseEntity {
 
-public class Auction {
-    private int id;
-    private Product product; // Đã đổi thống nhất thành product
+    private Product product;
     private double startPrice;
     private double stepPrice;
     private double currentPrice;
@@ -28,8 +29,8 @@ public class Auction {
     public Auction() {}
 
     // Sửa lại cú pháp nhận vào và gán cho biến product
-    public Auction(int id, Product product, double startPrice, double stepPrice, double currentPrice, LocalDateTime startTime, LocalDateTime endTime) {
-        this.id = id;
+    public Auction( Product product, double startPrice, double stepPrice, double currentPrice, LocalDateTime startTime, LocalDateTime endTime) {
+
         this.product = product;
         this.startPrice = startPrice;
         this.stepPrice = stepPrice;
@@ -42,8 +43,7 @@ public class Auction {
     }
 
     // --- GETTER / SETTER CƠ BẢN ---
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+
 
     // Đã chuyển toàn bộ sang Product thay vì Item cũ
     public Product getProduct() { return product; }
