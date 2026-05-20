@@ -44,14 +44,8 @@
                         <Font size="35.0" />
                      </font></Label>
 
-                        <Label style="-fx-font-size: 35; -fx-text-fill: #7f8c8d;" text="Mật khẩu:" GridPane.rowIndex="2" />
-                        <Label fx:id="userPassword" prefHeight="29.0" prefWidth="343.0" style="-fx-font-size: 35; -fx-font-weight: bold; -fx-text-fill: #27ae60;" text="abc" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                     <font>
-                        <Font size="35.0" />
-                     </font></Label>
-
-                        <Label style="-fx-font-size: 35; -fx-text-fill: #7f8c8d;" text="Trạng thái:" GridPane.rowIndex="3" />
-                        <Label fx:id="userState" style="-fx-text-fill: #2980b9;" text="Đang hoạt động" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                        <Label style="-fx-font-size: 35; -fx-text-fill: #7f8c8d;" text="Trạng thái:" GridPane.rowIndex="2" />
+                        <Label fx:id="userState" style="-fx-text-fill: #2980b9;" text="Đang hoạt động" GridPane.columnIndex="1" GridPane.rowIndex="2">
                      <font>
                         <Font size="35.0" />
                      </font></Label>
@@ -59,11 +53,20 @@
                 </GridPane>
             </children>
         </VBox>
-      <ImageView fitHeight="316.0" fitWidth="354.0" layoutX="56.0" layoutY="185.0" pickOnBounds="true" preserveRatio="true">
-         <image>
-            <Image url="@account.png" />
-         </image>
-      </ImageView>
+      <VBox alignment="CENTER" layoutX="50.0" layoutY="185.0" spacing="15.0">
+         <children>
+            <ImageView fx:id="userAvatar" fitHeight="300.0" fitWidth="300.0" onMouseClicked="#handleUploadAvatar" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+               <image>
+                  <Image url="@account.png" />
+               </image>
+            </ImageView>
+            <Label text="Click để đổi ảnh" textFill="#888888">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+         </children>
+      </VBox>
       <Button layoutX="48.0" layoutY="45.0" mnemonicParsing="false" onAction="#handleBackMain" prefHeight="114.0" prefWidth="134.0" styleClass="btn-transparent">
          <graphic>
             <ImageView fitHeight="94.0" fitWidth="103.0" pickOnBounds="true" preserveRatio="true" rotate="180.0">

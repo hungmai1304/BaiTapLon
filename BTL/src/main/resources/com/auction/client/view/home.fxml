@@ -68,6 +68,22 @@
                         <String fx:value="toggle-button" />
                      </styleClass>
                   </ToggleButton>
+                  <ToggleButton fx:id="backToAdmin" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleBackToAdmin">
+                     <toggleGroup>
+                        <ToggleGroup fx:id="menu1" />
+                     </toggleGroup>
+                     <graphic>
+                        <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true" rotate="180.0">
+                           <image>
+                              <Image url="@arrow.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                     <styleClass>
+                        <String fx:value="transparent" />
+                        <String fx:value="toggle-button" />
+                     </styleClass>
+                  </ToggleButton>
                </children>
                <padding>
                   <Insets top="30.0" />

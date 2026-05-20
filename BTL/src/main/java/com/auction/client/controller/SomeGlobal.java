@@ -8,6 +8,15 @@ public class SomeGlobal {
     private static ShopSellController shopSellController;
     private static User currentUser;
     private static BankController bankController;
+    private static TopViewController topViewController;
+
+    public static void setTopViewController(TopViewController controller) {
+        topViewController = controller;
+    }
+
+    public static TopViewController getTopViewController() {
+        return topViewController;
+    }
 
     // --- BIẾN VÀ HÀM CHO ADMIN CONTROLLER TẠI ĐÂY ---
     private static AdminUserOnlineController adminUserOnlineController;

@@ -78,30 +78,47 @@ public class AdminUserOnlineController implements Initializable {
     /**
      * Hàm cấu hình sinh các nút chức năng đăng xuất từ xa trên từng dòng của cột Thao tác
      */
+    /**
+     * Hàm cấu hình sinh các nút chức năng (Đăng xuất & Ban) trên từng dòng của cột Thao tác
+     */
     private void setupActionColumn() {
         Callback<TableColumn<User, Void>, TableCell<User, Void>> cellFactory = new Callback<>() {
             @Override
             public TableCell<User, Void> call(final TableColumn<User, Void> param) {
                 return new TableCell<>() {
                     private final Button btnKick = new Button("Đăng xuất");
+                    private final Button btnBan = new Button("Ban");
+                    private final javafx.scene.layout.HBox container = new javafx.scene.layout.HBox(8); // Khoảng cách giữa 2 nút là 8px
 
                     {
-                        // Định dạng style cơ bản cho nút bấm
-                        btnKick.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand;");
-
-                        // Xử lý sự kiện khi Admin bấm nút này trên một hàng bất kỳ
+                        // 1. Định dạng style cho nút Đăng xuất (Kick)
+                        btnKick.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand; -fx-font-weight: bold;");
                         btnKick.setOnAction(event -> {
                             User selectedUser = getTableView().getItems().get(getIndex());
-
                             if (selectedUser != null && selectedUser.getEmail() != null) {
                                 String email = selectedUser.getEmail();
                                 System.out.println("[AdminUserOnlineController] Admin yêu cầu đăng xuất tài khoản: " + email);
-
-                                // Gửi gói tin yêu cầu kick/đăng xuất user này lên Server qua WebSocket
-                                // Lưu ý: Đồng bộ chuỗi lệnh "ADMIN_LOUGOUT_COMMAND" khớp với Handler xử lý trên Server
                                 RequestSender.send("ADMIN_LOGOUT_COMMAND", email);
                             }
                         });
+
+                        // 2. Định dạng style cho nút Ban (Khóa)
+                        // Sử dụng màu xám đậm hoặc đen để phân biệt với nút Đăng xuất đỏ
+                        btnBan.setStyle("-fx-background-color: #2c3e50; -fx-text-fill: white; -fx-cursor: hand; -fx-font-weight: bold;");
+                        btnBan.setOnAction(event -> {
+                            User selectedUser = getTableView().getItems().get(getIndex());
+                            if (selectedUser != null && selectedUser.getEmail() != null) {
+                                String email = selectedUser.getEmail();
+                                System.out.println("[AdminUserOnlineController] Admin yêu cầu BAN tài khoản: " + email);
+
+                                // Gửi lệnh BAN lên Server qua mạng (Cần đồng bộ chuỗi lệnh này với Server Handler của bạn)
+                                RequestSender.send("ADMIN_BAN_COMMAND", email);
+                            }
+                        });
+
+                        // 3. Đưa các nút vào HBox container và căn giữa
+                        container.setAlignment(javafx.geometry.Pos.CENTER);
+                        container.getChildren().addAll(btnKick, btnBan);
                     }
 
                     @Override
@@ -110,7 +127,7 @@ public class AdminUserOnlineController implements Initializable {
                         if (empty) {
                             setGraphic(null);
                         } else {
-                            setGraphic(btnKick); // Đưa nút bấm vào ô giao diện
+                            setGraphic(container); // Đưa container chứa cả 2 nút vào ô giao diện
                         }
                     }
                 };

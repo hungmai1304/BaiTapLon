@@ -34,7 +34,6 @@ public class LoginHandler implements IMessageHandler {
                 // Kiểm tra bằng instanceof để chắc chắn class khởi tạo là Admin độc quyền
                 if (maybeAdmin instanceof Admin) {
                     Admin admin = (Admin) maybeAdmin;
-
                     context.addOnlineUser(email, conn);
                     context.addOnlineUserObject(conn, admin);
 
@@ -48,6 +47,7 @@ public class LoginHandler implements IMessageHandler {
                     response.getData().put("email", admin.getEmail());
                     response.getData().put("name", admin.getUsername());
                     response.getData().put("role", "ADMIN");
+                    response.getData().put("avatar", admin.getAvatar());
 
                     conn.send(gson.toJson(response));
                     System.out.println("[LoginHandler] Admin [" + admin.getUsername() + "] đã vào hệ thống.");
@@ -81,6 +81,7 @@ public class LoginHandler implements IMessageHandler {
                 response.getData().put("id", loginUser.getId());
                 response.getData().put("email", loginUser.getEmail());
                 response.getData().put("name", loginUser.getUsername());
+                response.getData().put("avatar", loginUser.getAvatar());
 
                 // ĐỒNG BỘ MỚI: Lấy trực tiếp role từ thuộc tính của đối tượng thay vì đoán qua instanceof
                 response.getData().put("role", loginUser.getRole());
