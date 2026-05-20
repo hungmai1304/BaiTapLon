@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="1080.0" prefWidth="1831.0" styleClass="Scene-Black" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.AboutYouController">
+<AnchorPane prefHeight="1080.0" prefWidth="1831.0" styleClass="Scene-Black" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.mainHome.AboutYouController">
     <children>
         <VBox layoutX="396.0" layoutY="99.0" prefHeight="773.0" prefWidth="1352.0" spacing="20.0" style="-fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5); -fx-padding: 40;" styleClass="Scene-Back-1">
             <children>

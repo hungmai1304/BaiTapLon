@@ -9,7 +9,7 @@
 
 <AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.auction.client.controller.AdminUserOnlineController"
+            fx:controller="com.auction.client.controller.admin.AdminUserOnlineController"
             prefHeight="400.0" prefWidth="700.0">
     <children>
         <VBox spacing="10.0" AnchorPane.bottomAnchor="15.0" AnchorPane.leftAnchor="15.0" AnchorPane.rightAnchor="15.0" AnchorPane.topAnchor="15.0">

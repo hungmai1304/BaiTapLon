@@ -31,7 +31,7 @@ public class LoginHandler implements IMessageHandler {
 
                 User maybeAdmin = UserDao.getInstance().authenticate(email, password);
 
-                // Kiểm tra bằng instanceof để chắc chắn class khởi tạo là Admin độc quyền
+                // Kiểm tra bằng instanceof để chắc chắn class khởi tạo là Admin đặc quyền
                 if (maybeAdmin instanceof Admin) {
                     Admin admin = (Admin) maybeAdmin;
                     context.addOnlineUser(email, conn);
@@ -48,6 +48,9 @@ public class LoginHandler implements IMessageHandler {
                     response.getData().put("name", admin.getUsername());
                     response.getData().put("role", "ADMIN");
                     response.getData().put("avatar", admin.getAvatar());
+
+                    // VIẾT THÊM: Phản hồi trạng thái cho tài khoản Admin
+                    response.getData().put("status", admin.getStatus());
 
                     conn.send(gson.toJson(response));
                     System.out.println("[LoginHandler] Admin [" + admin.getUsername() + "] đã vào hệ thống.");
@@ -86,19 +89,35 @@ public class LoginHandler implements IMessageHandler {
                 // ĐỒNG BỘ MỚI: Lấy trực tiếp role từ thuộc tính của đối tượng thay vì đoán qua instanceof
                 response.getData().put("role", loginUser.getRole());
 
+                // VIẾT THÊM: Phản hồi trạng thái (status) của User về Client (NORMAL, BANNED, v.v...)
+                response.getData().put("status", loginUser.getStatus());
+
                 // 2. Chỉ dùng instanceof để bổ sung các thuộc tính mở rộng chuyên biệt (như shopName)
                 if (loginUser instanceof Seller) {
                     response.getData().put("shopName", ((Seller) loginUser).getShopName());
                 }
 
                 conn.send(gson.toJson(response));
-                System.out.println("[LoginHandler] User [" + loginUser.getUsername() + "] với vai trò [" + loginUser.getRole() + "] đã vào hệ thống.");
+                System.out.println("[LoginHandler] User [" + loginUser.getUsername() + "] với vai trò [" + loginUser.getRole() + "] và trạng thái [" + loginUser.getStatus() + "] đã vào hệ thống.");
 
             } else {
+                User user = UserDao.getInstance().getUserByEmail(email);
+
+                // VIẾT THÊM: Nếu user có status là BANNED thì lập tức chặn, không cho so khớp mật khẩu nữa
+                if ("BANNED".equalsIgnoreCase(user.getStatus())) {
+                    System.err.println("[UserDao] Từ chối xác thực: Tài khoản [" + email + "] đang bị khóa (BANNED)!");
+                    Response response = new Response(
+                            MessageType.LOGIN_RESPONSE,
+                            "ERROR",
+                            "bạn đã bị kick!"
+                    );
+                    conn.send(gson.toJson(response));
+                    return ;
+                }
                 Response response = new Response(
                         MessageType.LOGIN_RESPONSE,
                         "ERROR",
-                        "Sai tài khoản hoặc mật khẩu!"
+                        "Sai tài khoản hoặc mật khẩu, hoặc bạn đã bị kick!"
                 );
                 conn.send(gson.toJson(response));
             }

@@ -17,7 +17,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.shape.SVGPath?>
-<VBox prefHeight="1080.0" prefWidth="1831.0" style="-fx-background-color: #F8FBFF;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.SearchController">
+<VBox prefHeight="1080.0" prefWidth="1831.0" style="-fx-background-color: #F8FBFF;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.mainHome.SearchController">
     <children>
         <!-- Header Section -->
         <VBox alignment="TOP_CENTER" style="-fx-background-color: linear-gradient(to bottom, #2196F3, #64B5F6);" VBox.vgrow="NEVER">

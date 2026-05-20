@@ -1,6 +1,6 @@
 package com.auction.client.utils;
 
-import com.auction.client.controller.SomeGlobal;
+import com.auction.client.controller.general.SomeGlobal;
 import com.auction.common.model.auction.Auction;
 import com.auction.common.model.product.Product;
 import javafx.beans.property.DoubleProperty;

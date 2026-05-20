@@ -15,6 +15,9 @@ public class User extends BaseEntity {
     // Các thông tin thời gian chung
     private double balance;
 
+    // VIẾT THÊM: Thêm trường status để quản lý trạng thái tài khoản (ACTIVE, BANNED, v.v.)
+    private String status;
+
     public User() {}
 
     public String getAvatar() {
@@ -66,5 +69,14 @@ public class User extends BaseEntity {
 
     public void setBalance(double balance) {
         this.balance = balance;
+    }
+
+    // --- VIẾT THÊM: GETTER VÀ SETTER CHO STATUS TẠI ĐÂY ---
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

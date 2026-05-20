@@ -12,13 +12,32 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="borderpane_home" styleClass="Scene-Black" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.HomeController">
+<BorderPane fx:id="borderpane_home" styleClass="Scene-Black" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.mainHome.HomeController">
+
+   <fx:define>
+      <ToggleGroup fx:id="menu" />
+   </fx:define>
+
    <left>
       <VBox prefWidth="85.0" styleClass="Scene-Black" BorderPane.alignment="CENTER">
          <children>
             <VBox alignment="TOP_CENTER" spacing="10.0">
                <children>
-                  <ToggleButton maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleHomeClicked" selected="true">
+                  <ToggleButton fx:id="backToAdmin" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleBackToAdmin" prefHeight="39.0" prefWidth="85.0" toggleGroup="$menu">
+                     <graphic>
+                        <ImageView fitHeight="38.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true" rotate="180.0">
+                           <image>
+                              <Image url="@arrow.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                     <styleClass>
+                        <String fx:value="transparent" />
+                        <String fx:value="toggle-button" />
+                     </styleClass>
+                  </ToggleButton>
+
+                  <ToggleButton maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleHomeClicked" selected="true" toggleGroup="$menu">
                      <graphic>
                         <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
                            <image><Image url="@home-button.png" /></image>
@@ -28,9 +47,6 @@
                         <String fx:value="transparent" />
                         <String fx:value="toggle-button" />
                      </styleClass>
-                     <toggleGroup>
-                        <ToggleGroup fx:id="menu" />
-                     </toggleGroup>
                   </ToggleButton>
 
                   <ToggleButton maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSearchClicked" toggleGroup="$menu">
@@ -61,22 +77,6 @@
                      <graphic>
                         <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
                            <image><Image url="@shopping-cart.png" /></image>
-                        </ImageView>
-                     </graphic>
-                     <styleClass>
-                        <String fx:value="transparent" />
-                        <String fx:value="toggle-button" />
-                     </styleClass>
-                  </ToggleButton>
-                  <ToggleButton fx:id="backToAdmin" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleBackToAdmin">
-                     <toggleGroup>
-                        <ToggleGroup fx:id="menu1" />
-                     </toggleGroup>
-                     <graphic>
-                        <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true" rotate="180.0">
-                           <image>
-                              <Image url="@arrow.png" />
-                           </image>
                         </ImageView>
                      </graphic>
                      <styleClass>

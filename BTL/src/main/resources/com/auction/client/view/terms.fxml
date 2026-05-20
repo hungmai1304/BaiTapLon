@@ -10,7 +10,7 @@
 
 <AnchorPane xmlns:fx="http://javafx.com/fxml/1"
             xmlns="http://javafx.com/javafx/17"
-            fx:controller="com.auction.client.controller.TermsController"
+            fx:controller="com.auction.client.controller.settings.TermsController"
             style="-fx-background-color: #1a1a2e;">
 
     <!-- Nút Back cố định trên cùng -->

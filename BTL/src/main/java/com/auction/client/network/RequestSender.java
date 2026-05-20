@@ -25,7 +25,7 @@ public class RequestSender {
         requestMap.put("data", data);
         String json = gson.toJson(requestMap);
         NetworkClient.sendCommand(json);
-    }
+    }// dit me may sua tao cai ham send cai, cu loi json, gson la sao nhi
 
     public static void sendLoginRequest(String email, String password) {
         Map<String, String> data = new HashMap<>();

@@ -96,10 +96,10 @@ public class PlaceBidHandler implements IMessageHandler {
 
             // Ghi sổ lịch sử bằng BidTransaction
             BidTransaction transaction = new BidTransaction();
-            transaction.setAuctionId(String.valueOf(currentAuction.getId()));
+            transaction.setId(String.valueOf(currentAuction.getId()));
             transaction.setBidder(newLeader);
             transaction.setBidAmount(bidAmount);
-            transaction.setTimestamp(LocalDateTime.now());
+            transaction.setTimeCreated(LocalDateTime.now());
 
             // Kiểm tra an toàn trước khi add vào list
             if (currentAuction.getBiddingHistory() == null) {

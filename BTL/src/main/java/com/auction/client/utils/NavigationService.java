@@ -1,11 +1,10 @@
 package com.auction.client.utils;
 
-import com.auction.client.controller.HomeController;
-import com.auction.client.controller.SomeGlobal;
+import com.auction.client.controller.mainHome.HomeController;
+import com.auction.client.controller.general.SomeGlobal;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.application.Platform;
 import java.io.IOException;

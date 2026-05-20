@@ -1,35 +1,36 @@
 package com.auction.common.model.auction;
 
+import com.auction.common.model.base.BaseEntity;
 import com.auction.common.model.user.User;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class BidTransaction implements Serializable {
+public class BidTransaction extends BaseEntity {
     private static final long serialVersionUID = 1L; 
 
-    private String auctionId;        // ID của phiên đấu giá 
+//    private String auctionId;        // ID của phiên đấu giá
     private User bidder;             // Người vung tiền
     private double bidAmount;        // Số tiền đặt giá
-    private LocalDateTime timestamp; // Thời gian bấm nút
+//    private LocalDateTime timestamp; // Thời gian bấm nút
 
     // Bắt buộc phải có constructor rỗng cho hệ thống
     public BidTransaction() {}
 
-    public BidTransaction(String auctionId, User bidder, double bidAmount, LocalDateTime timestamp) {
-        this.auctionId = auctionId;
-        this.bidder = bidder;
-        this.bidAmount = bidAmount;
-        this.timestamp = timestamp;
-    }
+//    public BidTransaction(String auctionId, User bidder, double bidAmount, LocalDateTime timestamp) {
+//        this.auctionId = auctionId;
+//        this.bidder = bidder;
+//        this.bidAmount = bidAmount;
+//        this.timestamp = timestamp;
+//    }
 
-    public String getAuctionId() {
-        return auctionId;
-    }
+//    public String getAuctionId() {
+//        return auctionId;
+//    }
 
-    public void setAuctionId(String auctionId) {
-        this.auctionId = auctionId;
-    }
+//    public void setAuctionId(String auctionId) {
+//        this.auctionId = auctionId;
+//    }
 
     public User getBidder() {
         return bidder;
@@ -47,11 +48,11 @@ public class BidTransaction implements Serializable {
         this.bidAmount = bidAmount;
     }
 
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
-    }
+//    public LocalDateTime getTimestamp() {
+//        return timestamp;
+//    }
+//
+//    public void setTimestamp(LocalDateTime timestamp) {
+//        this.timestamp = timestamp;
+//    }
 }

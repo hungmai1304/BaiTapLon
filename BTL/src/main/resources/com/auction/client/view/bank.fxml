@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<StackPane fx:id="balance_anchorpane" minHeight="720.0" minWidth="1280.0" prefHeight="1080.0" prefWidth="1920.0" styleClass="Scene-black-4" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.BankController">
+<StackPane fx:id="balance_anchorpane" minHeight="720.0" minWidth="1280.0" prefHeight="1080.0" prefWidth="1920.0" styleClass="Scene-black-4" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.mainHome.BankController">
    <children>
       <VBox spacing="30.0">
          <children>
