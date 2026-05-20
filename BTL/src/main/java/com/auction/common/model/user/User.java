@@ -14,11 +14,20 @@ public class User extends BaseEntity {
 
     // Các thông tin thời gian chung
     private double balance;
+    private String shopName;
 
     // VIẾT THÊM: Thêm trường status để quản lý trạng thái tài khoản (ACTIVE, BANNED, v.v.)
     private String status;
 
     public User() {}
+
+    public String getShopName() {
+        return shopName;
+    }
+
+    public void setShopName(String shopName) {
+        this.shopName = shopName;
+    }
 
     public String getAvatar() {
         return avatar;
