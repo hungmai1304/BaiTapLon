@@ -71,37 +71,9 @@
                             <children>
                                 <StackPane styleClass="image-container" VBox.vgrow="ALWAYS">
                                     <children>
-                                        <Label styleClass="image-placeholder" text="Picture" />
-                                        <HBox alignment="CENTER" spacing="550.0">
-                                            <children>
-                                    <Button>
-                                       <graphic>
-                                          <ImageView fitHeight="49.0" fitWidth="47.0" pickOnBounds="true" preserveRatio="true" rotate="180.0">
-                                             <image>
-                                                <Image url="@arrow.png" />
-                                             </image>
-                                          </ImageView>
-                                       </graphic>
-                                       <styleClass>
-                                          <String fx:value="product-nav-btn" />
-                                          <String fx:value="btn-transparent" />
-                                       </styleClass>
-                                    </Button>
-                                    <Button>
-                                       <graphic>
-                                          <ImageView fitHeight="49.0" fitWidth="47.0" pickOnBounds="true" preserveRatio="true">
-                                             <image>
-                                                <Image url="@arrow.png" />
-                                             </image>
-                                          </ImageView>
-                                       </graphic>
-                                       <styleClass>
-                                          <String fx:value="product-nav-btn" />
-                                          <String fx:value="btn-transparent" />
-                                       </styleClass>
-                                    </Button>
-                                            </children>
-                                        </HBox>
+                                        <Label styleClass="image-placeholder" text="Đang tải ảnh..." />
+
+                                        <ImageView fx:id="productImage" fitHeight="400.0" fitWidth="600.0" pickOnBounds="true" preserveRatio="true" />
                                     </children>
                                 </StackPane>
 

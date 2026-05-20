@@ -18,6 +18,7 @@ public class TikTokAuctionController {
     @FXML private Label price;
     @FXML private Label step;
     @FXML private Label lblTopBidder;
+    @FXML private javafx.scene.image.ImageView productImage;
 
     @FXML
     public void initialize() {
@@ -70,6 +71,23 @@ public class TikTokAuctionController {
                     double displayPrice = auction.getCurrentPrice() > 0 ? auction.getCurrentPrice() : product.getStartPrice();
 
                     lblTopBidder.setText(leader + " - " + String.format("%,.0f VNĐ", displayPrice));
+                }
+
+                if (productImage != null) {
+                    String imageSource = product.getImagePath();
+
+                    // Kiểm tra xem link có tồn tại không
+                    if (imageSource != null && !imageSource.isEmpty() && imageSource.startsWith("http")) {
+                        try {
+                            javafx.scene.image.Image img = new javafx.scene.image.Image(imageSource, true);
+                            productImage.setImage(img);
+                        } catch (Exception e) {
+                            System.out.println("[TikTok UI] Không thể load ảnh từ Cloudinary: " + e.getMessage());
+                            productImage.setImage(null);
+                        }
+                    } else {
+                        productImage.setImage(null);
+                    }
                 }
             }
         });
