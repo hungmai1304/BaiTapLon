@@ -6,6 +6,7 @@ import com.auction.common.model.product.ProductStatus;
 import com.auction.common.model.auction.Auction;
 import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
+import com.auction.server.dao.AuctionDao;
 import com.auction.server.dao.ProductDao;
 import com.auction.server.dao.UserDao;
 import com.auction.server.handler.IMessageHandler;
@@ -139,13 +140,32 @@ public class SellProductHandler implements IMessageHandler {
                                 String thongBao = " Chúc mừng " + winnerEmail + " đã chốt đơn sản phẩm '" + p.getName() + "' với giá " + String.format("%,.0fđ", finalPrice) + "!";
                                 broadcastAuctionResult(context, safeGson, thongBao);
 
+                                // LƯU LỊCH SỬ CHỐT ĐƠN VÀO BẢNG AUCTIONS
+                                boolean isSaved = AuctionDao.getInstance().saveCompletedAuction(
+                                        Integer.parseInt(auctionToEnd.getId()), // ép kiểu string về int
+                                        p.getId(),
+                                        winnerEmail,
+                                        finalPrice
+                                );
+
+                                if (isSaved) {
+                                    System.out.println("Đã ghi nhận lịch sử đấu giá thành công vào Database!");
+                                }
 
                             } else {
                                 // TRƯỜNG HỢP 2: KHÔNG CÓ AI ĐẶT GIÁ
                                 System.out.println(" [PHIÊN ĐẤU GIÁ THẤT BẠI] Sản phẩm: " + p.getName() + " tự động trả về kho.");
                                 p.setStatus(ProductStatus.AVAILABLE);
-                                String thongBaoE = "❌ Rất tiếc, sản phẩm '" + p.getName() + "' đã hết giờ mà không có ai chốt đơn!";
+                                String thongBaoE = "Rất tiếc, sản phẩm '" + p.getName() + "' đã hết giờ mà không có ai chốt đơn!";
                                 broadcastAuctionResult(context, safeGson, thongBaoE);
+                                AuctionDao.getInstance().saveCompletedAuction(
+                                        Integer.parseInt(auctionToEnd.getId()),
+                                        p.getId(),
+                                        null,
+                                        p.getStartPrice()
+                                );
+                                System.out.println("Đã ghi nhận phiên đấu giá không thành công vào Database!");
+
                             }
 
                             p.setStartTime(null);
