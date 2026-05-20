@@ -19,16 +19,15 @@ public class AuctionDao {
         return instance;
     }
 
-    public boolean saveCompletedAuction(int auctionId, String productId, String winnerEmail, double finalPrice) {
+    public boolean saveCompletedAuction(String auctionId, String productId, String winnerEmail, double finalPrice) {
         // Lưu thông tin phiên với trạng thái COMPLETED
         String sql = "INSERT INTO auctions (id, product_id, winner_email, final_price, status) VALUES (?, ?, ?, ?, 'COMPLETED')";
 
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, auctionId);
+            pstmt.setString(1, auctionId);
             pstmt.setString(2, productId);
-            // Nếu không có người thắng thì lưu là "No Winner"
             pstmt.setString(3, winnerEmail != null ? winnerEmail : "No Winner");
             pstmt.setDouble(4, finalPrice);
 

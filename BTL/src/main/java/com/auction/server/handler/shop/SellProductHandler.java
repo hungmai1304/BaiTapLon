@@ -142,7 +142,7 @@ public class SellProductHandler implements IMessageHandler {
 
                                 // LƯU LỊCH SỬ CHỐT ĐƠN VÀO BẢNG AUCTIONS
                                 boolean isSaved = AuctionDao.getInstance().saveCompletedAuction(
-                                        Integer.parseInt(auctionToEnd.getId()), // ép kiểu string về int
+                                        auctionToEnd.getId(),
                                         p.getId(),
                                         winnerEmail,
                                         finalPrice
@@ -158,8 +158,8 @@ public class SellProductHandler implements IMessageHandler {
                                 p.setStatus(ProductStatus.AVAILABLE);
                                 String thongBaoE = "Rất tiếc, sản phẩm '" + p.getName() + "' đã hết giờ mà không có ai chốt đơn!";
                                 broadcastAuctionResult(context, safeGson, thongBaoE);
-                                AuctionDao.getInstance().saveCompletedAuction(
-                                        Integer.parseInt(auctionToEnd.getId()),
+                                boolean isSaved = AuctionDao.getInstance().saveCompletedAuction(
+                                        auctionToEnd.getId(),
                                         p.getId(),
                                         null,
                                         p.getStartPrice()
