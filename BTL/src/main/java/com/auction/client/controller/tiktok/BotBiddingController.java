@@ -92,7 +92,7 @@ public class BotBiddingController {
 
                 // Gửi request cho Server để đăng ký Auto-bid
                 RequestSender.sendRegisterBotRequest(
-                        String.valueOf(currentAuction.getId()),
+                        currentAuction.getProduct().getId(),
                         maxPrice,
                         botStep,
                         email

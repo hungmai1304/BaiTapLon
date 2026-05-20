@@ -25,6 +25,9 @@ public class Auction extends BaseEntity {
     // PHỤC VỤ UI
     private String leaderName;
 
+    // Auto_bidding
+    private List<AutoBidConfig> registeredBots = new ArrayList<>();
+
     // Constructor rỗng cho Gson dễ đọc dữ liệu
     public Auction() {}
 
@@ -71,4 +74,8 @@ public class Auction extends BaseEntity {
     // --- GETTER/SETTER CHO LEADER NAME (UI) ---
     public String getLeaderName() { return leaderName; }
     public void setLeaderName(String leaderName) { this.leaderName = leaderName; }
+
+    public List<AutoBidConfig> getRegisteredBots() { return registeredBots; }
+    public void setRegisteredBots(List<AutoBidConfig> registeredBots) { this.registeredBots = registeredBots; }
+    public void addBot(AutoBidConfig bot) { this.registeredBots.add(bot); }
 }
