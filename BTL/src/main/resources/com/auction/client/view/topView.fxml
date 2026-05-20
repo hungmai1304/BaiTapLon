@@ -5,10 +5,18 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<HBox alignment="CENTER_RIGHT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="69.0" prefWidth="1651.0" spacing="20.0" styleClass="Scene-Black" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.TopViewController">
+<HBox alignment="CENTER_RIGHT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="69.0" prefWidth="1651.0" spacing="20.0" styleClass="Scene-Black" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.mainHome.TopViewController">
    <children>
+
+      <HBox fx:id="marqueeContainer" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS" prefHeight="49.0">
+         <children>
+            <Pane fx:id="textViewPane" HBox.hgrow="ALWAYS" prefHeight="49.0" />
+         </children>
+      </HBox>
+
       <Label fx:id="clock" prefHeight="49.0" prefWidth="240.0" styleClass="link-text" text="Clock: 00:00:00">
          <font>
             <Font size="23.0" />
