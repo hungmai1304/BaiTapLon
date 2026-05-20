@@ -67,7 +67,9 @@ public class SellProductHandler implements IMessageHandler {
 
                 if (updatedProduct != null) {
                     // NẾU CHƯA BÁN THÌ BẮT ĐẦU LOGIC TẠO PHIÊN ĐẤU GIÁ
-                    int auctionId = Math.abs(new Random().nextInt());
+                    String auctionId = String.valueOf(
+                            new Random().nextInt(Integer.MAX_VALUE)
+                    );
 
                     LocalDateTime now = LocalDateTime.now();
                     LocalDateTime startTime = now.plusMinutes(1);
@@ -75,7 +77,6 @@ public class SellProductHandler implements IMessageHandler {
 
                     // Đóng gói thành Phiên Đấu Giá (Gắn product trực tiếp vào đây)
                     Auction newAuction = new Auction(
-                            auctionId,
                             updatedProduct,
                             updatedProduct.getStartPrice(),
                             updatedProduct.getStepPrice(),
