@@ -36,9 +36,8 @@
                   <TableColumn fx:id="colProductName" prefWidth="250.0" text="Product Name" />
                   <TableColumn fx:id="colProductImage" prefWidth="150.0" text="Image" />
                   <TableColumn fx:id="colSeller" prefWidth="200.0" text="Seller" />
-                  <TableColumn fx:id="colFinalPrice" prefWidth="150.0" text="Winning Price" />
-                  <TableColumn fx:id="colTime" prefWidth="200.0" text="Time" />
-                  <TableColumn fx:id="colDelivery" prefWidth="150.0" text="Delivery" />
+                  <TableColumn fx:id="colFinalPrice" prefWidth="200.0" text="Winning Price" />
+                  <TableColumn fx:id="colTime" prefWidth="250.0" text="Time" />
                </columns>
                <columnResizePolicy>
                   <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />

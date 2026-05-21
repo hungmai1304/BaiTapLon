@@ -108,6 +108,10 @@ public class MessageType {
     public static final String ADMIN_ACCEPT_REQUEST="ADMIN_ACCEPT_REQUEST";
     public static final String ADMIN_REJECT_REQUEST="ADMIN_REJECT_REQUEST";
 
+    // Yêu cầu lấy danh sách phiên đấu giá đã thắng của user
+    public static final String GET_WON_AUCTIONS_REQUEST = "GET_WON_AUCTIONS_REQUEST";
+    public static final String GET_WON_AUCTIONS_RESPONSE = "GET_WON_AUCTIONS_RESPONSE";
+
     // Cập nhật Avatar
     public static final String UPDATE_AVATAR_REQUEST = "UPDATE_AVATAR_REQUEST";
     public static final String UPDATE_AVATAR_RESPONSE = "UPDATE_AVATAR_RESPONSE";
