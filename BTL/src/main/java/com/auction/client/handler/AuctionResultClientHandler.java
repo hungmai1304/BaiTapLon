@@ -22,22 +22,17 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-
 @ResponseHandler(type = "AUCTION_RESULT_NOTIFICATION")
 public class AuctionResultClientHandler implements IClientHandler {
-
     @Override
     public void handle(Response response) {
         Platform.runLater(() -> {
             String rawMessage = response.getMessage();
             if (rawMessage == null) rawMessage = "";
-
             String winnerEmail = "Không có";
             String productName = "Sản phẩm";
             double finalPrice = 0.0;
-
             boolean isSuccess = !rawMessage.contains("Rất tiếc") && !rawMessage.contains("Phiên đấu giá đã kết thúc");
-
             try {
                 // 1. Bóc tách tên sản phẩm trước để làm dữ liệu đối chiếu phòng
                 if (rawMessage.contains("'")) {
@@ -47,7 +42,6 @@ public class AuctionResultClientHandler implements IClientHandler {
                         productName = rawMessage.substring(firstQuote + 1, secondQuote);
                     }
                 }
-
                 if (isSuccess) {
                     // Bóc tách Email người thắng
                     if (rawMessage.contains("Chúc mừng ") && rawMessage.contains(" đã chốt đơn")) {
@@ -55,7 +49,6 @@ public class AuctionResultClientHandler implements IClientHandler {
                         int emailEnd = rawMessage.indexOf(" đã chốt đơn");
                         winnerEmail = rawMessage.substring(emailStart, emailEnd).trim();
                     }
-
                     // Bóc tách số tiền
                     if (rawMessage.contains("với giá ")) {
                         int priceStart = rawMessage.indexOf("với giá ") + "với giá ".length();
@@ -66,24 +59,20 @@ public class AuctionResultClientHandler implements IClientHandler {
                             finalPrice = Double.parseDouble(priceStr);
                         }
                     }
-
                     // THANH CHỮ CHẠY TOÀN SERVER: Luôn kích hoạt cho mọi màn hình cùng đọc
                     GlobalMarqueeController.addNotification(winnerEmail, productName, finalPrice);
                 }
             } catch (Exception e) {
                 System.err.println("[Parser Error] Lỗi bóc tách chuỗi văn bản từ Server.");
             }
-
-            // 2. KHỞI TẠO CẤU TRÚC POPUP Ô VUÔNG (Giữ nguyên giao diện chuẩn phối dải màu của ông)
+            // 2. KHỞI TẠO CỬA SỔ POPUP Ô VUÔNG (Giữ nguyên giao diện chuẩn phối dải màu của ông)
             Stage dialog = new Stage();
             dialog.initStyle(StageStyle.TRANSPARENT);
             dialog.initModality(Modality.APPLICATION_MODAL);
-
             VBox root = new VBox(25);
             root.setStyle("-fx-background-color: #1f293d; -fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #2c3e50; -fx-border-width: 2; -fx-padding: 30;");
             root.setPrefWidth(460);
             root.setAlignment(Pos.TOP_CENTER);
-
             HBox topBar = new HBox();
             topBar.setAlignment(Pos.TOP_RIGHT);
             Button btnCloseX = new Button("✕");
@@ -91,7 +80,6 @@ public class AuctionResultClientHandler implements IClientHandler {
             btnCloseX.setOnAction(e -> dialog.close());
             topBar.getChildren().add(btnCloseX);
             root.getChildren().add(topBar);
-
             String titleText = isSuccess ? "CHÚC MỪNG PHIÊN ĐẤU GIÁ\nTHÀNH CÔNG." : "PHIÊN ĐẤU GIÁ\nĐÃ KẾT THÚC.";
             Label lblMainTitle = new Label(titleText);
             lblMainTitle.setTextFill(Color.WHITE);
@@ -99,7 +87,6 @@ public class AuctionResultClientHandler implements IClientHandler {
             lblMainTitle.setTextAlignment(TextAlignment.CENTER);
             lblMainTitle.setAlignment(Pos.CENTER);
             root.getChildren().add(lblMainTitle);
-
             StackPane targetGraphic = new StackPane();
             targetGraphic.setPrefSize(120, 120);
             Circle outerCircle = new Circle(45, Color.TRANSPARENT); outerCircle.setStroke(Color.web("#94a3b8")); outerCircle.setStrokeWidth(3);
@@ -130,21 +117,16 @@ public class AuctionResultClientHandler implements IClientHandler {
                     createStyledRow("Bằng chữ", convertMoneyToVietnameseWords(finalPrice), "transparent")
             );
             root.getChildren().add(infoBox);
-
             Button btnConfirm = new Button("XÁC NHẬN");
             btnConfirm.setMaxWidth(Double.MAX_VALUE); btnConfirm.setPrefHeight(45);
             btnConfirm.setStyle("-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14; -fx-background-radius: 8; -fx-cursor: hand;");
             btnConfirm.setOnAction(e -> dialog.close());
             root.getChildren().add(btnConfirm);
-
             Scene scene = new Scene(root);
             scene.setFill(Color.TRANSPARENT);
             dialog.setScene(scene);
             dialog.centerOnScreen();
-
-            // ==================================================================================
-            // 🌟 BỘ LỌC TUYỆT ĐỐI: CHỈ HIỆN POPUP Ô VUÔNG NẾU USER ĐANG Ở ĐÚNG PHÒNG ĐẤU GIÁ ĐÓ
-            // ==================================================================================
+            //  BỘ LỌC TUYỆT ĐỐI: CHỈ HIỆN POPUP NẾU USER ĐANG Ở ĐÚNG PHÒNG ĐẤU GIÁ ĐÓ
             boolean isUserInThisProductRoom = false;
             try {
                 Object registryController = ControllerRegistry.get("BiddingController");
@@ -180,7 +162,6 @@ public class AuctionResultClientHandler implements IClientHandler {
             }
         });
     }
-
     private HBox createStyledRow(String key, String value, String bgColor) {
         HBox row = new HBox();
         row.setPadding(new Insets(10, 15, 10, 15));
@@ -193,25 +174,43 @@ public class AuctionResultClientHandler implements IClientHandler {
         row.getChildren().addAll(lblKey, lblValue);
         return row;
     }
-
+    // THUẬT TOÁN DỊCH TIỀN ĐỆ QUY MỚI: CHỐNG LỖI OUT OF BOUNDS KHI GIÁ TRỊ LÊN ĐẾN HÀNG TỶ
     private String convertMoneyToVietnameseWords(double amount) {
         if (amount <= 0) return "Không đồng";
         long number = (long) amount;
-        String[] ones = {"", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"};
-        String[] tens = {"", "mười", "hai mươi", "ba mươi", "bốn mươi", "năm mươi", "sáu mươi", "bảy mươi", "tám mươi", "chín mươi"};
-        StringBuilder words = new StringBuilder();
-        if ((number / 1000000) > 0) { words.append(ones[(int)(number / 1000000)]).append(" triệu "); number %= 1000000; }
-        if ((number / 1000) > 0) {
-            long nghin = number / 1000;
-            if (nghin < 10) words.append(ones[(int)nghin]).append(" nghìn ");
-            else words.append(tens[(int)(nghin / 10)]).append(" ").append(ones[(int)(nghin % 10)]).append(" nghìn ");
-            number %= 1000;
-        }
-        if (number > 0) {
-            if (number >= 100) { words.append(ones[(int)(number / 100)]).append(" trăm "); number %= 100; }
-            if (number > 0) words.append(tens[(int)(number / 10)]).append(" ").append(ones[(int)(number % 10)]);
-        }
-        String result = words.toString().trim().replaceAll("\\s+", " ") + " đồng";
+
+        String result = convertToWordsLong(number);
+        result = result.trim().replaceAll("\\s+", " ") + " đồng";
         return result.substring(0, 1).toUpperCase() + result.substring(1);
+    }
+    private String convertToWordsLong(long number) {
+        if (number == 0) return "";
+
+        String[] ones = {"", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"};
+
+        if (number >= 1000000000L) {
+            return convertToWordsLong(number / 1000000000L) + " tỷ " + convertToWordsLong(number % 1000000000L);
+        }
+        if (number >= 1000000L) {
+            return convertToWordsLong(number / 1000000L) + " triệu " + convertToWordsLong(number % 1000000L);
+        }
+        if (number >= 1000L) {
+            return convertToWordsLong(number / 1000L) + " nghìn " + convertToWordsLong(number % 1000L);
+        }
+        if (number >= 100L) {
+            return ones[(int)(number / 100)] + " trăm " + convertToWordsLong(number % 100);
+        }
+        if (number >= 10) {
+            String[] tens = {"", "mười", "hai mươi", "ba mươi", "bốn mươi", "năm mươi", "sáu mươi", "bảy mươi", "tám mươi", "chín mươi"};
+            long t = number / 10;
+            long u = number % 10;
+            String uStr = "";
+            if (u == 1 && t > 1) uStr = "mốt";
+            else if (u == 5) uStr = "lăm";
+            else if (u > 0) uStr = ones[(int)u];
+            return tens[(int)t] + " " + uStr;
+        }
+
+        return ones[(int)number];
     }
 }
