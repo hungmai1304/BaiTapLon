@@ -297,4 +297,13 @@ public class BiddingController {
         countdownTimeline.play();
     }
     // --- HẾT PHẦN THÊM ---
+    // --- CHỈ THÊM MỚI: Các hàm hỗ trợ kiểm tra phòng đấu giá hiển thị thực tế công khai ---
+    public Label getLblProductName() {
+        return this.lblProductName;
+    }
+
+    public com.auction.common.model.auction.Auction getCurrentAuctionData() {
+        return this.currentAuctionData;
+    }
+    // --- HẾT PHẦN THÊM MỚI ---
 }

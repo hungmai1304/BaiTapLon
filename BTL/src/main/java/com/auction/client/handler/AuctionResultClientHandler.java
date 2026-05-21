@@ -3,6 +3,11 @@ package com.auction.client.handler;
 import com.auction.client.annotation.ResponseHandler;
 import com.auction.client.network.IClientHandler;
 import com.auction.protocol.Response;
+import com.auction.client.controller.mainHome.GlobalMarqueeController;
+import com.auction.client.utils.ControllerRegistry;
+import com.auction.client.controller.tiktok.BiddingController; // Import trực tiếp controller phòng đấu giá
+import com.auction.common.model.auction.Auction;
+import com.auction.common.model.product.Product;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -24,41 +29,17 @@ public class AuctionResultClientHandler implements IClientHandler {
     @Override
     public void handle(Response response) {
         Platform.runLater(() -> {
-            // 1. EXTRACT DATA FROM THE BACKEND
             String rawMessage = response.getMessage();
             if (rawMessage == null) rawMessage = "";
 
-            // DATA PARSER (NO EMOJIS USED IN CODE LOGIC)
-            String winnerEmail = "None";
-            String productName = "Product";
+            String winnerEmail = "Không có";
+            String productName = "Sản phẩm";
             double finalPrice = 0.0;
 
-            // Check success based on text (avoiding emojis in comparison)
             boolean isSuccess = !rawMessage.contains("Rất tiếc") && !rawMessage.contains("Phiên đấu giá đã kết thúc");
 
             try {
-                if (isSuccess) {
-                    // Extract Winner's Email (between "Chúc mừng " and " đã chốt đơn")
-                    if (rawMessage.contains("Chúc mừng ") && rawMessage.contains(" đã chốt đơn")) {
-                        int emailStart = rawMessage.indexOf("Chúc mừng ") + "Chúc mừng ".length();
-                        int emailEnd = rawMessage.indexOf(" đã chốt đơn");
-                        winnerEmail = rawMessage.substring(emailStart, emailEnd).trim();
-                    }
-
-                    // Extract the final price (between "với giá " and "đ!")
-                    if (rawMessage.contains("với giá ")) {
-                        int priceStart = rawMessage.indexOf("với giá ") + "với giá ".length();
-                        int priceEnd = rawMessage.indexOf("đ", priceStart);
-                        if (priceStart != -1 && priceEnd != -1) {
-                            String priceStr = rawMessage.substring(priceStart, priceEnd);
-                            // Normalize price string
-                            priceStr = priceStr.replaceAll("[.,\\s]", "").trim();
-                            finalPrice = Double.parseDouble(priceStr);
-                        }
-                    }
-                }
-
-                // Extract Product Name (between single quotes ' ')
+                // 1. Bóc tách tên sản phẩm trước để làm dữ liệu đối chiếu phòng
                 if (rawMessage.contains("'")) {
                     int firstQuote = rawMessage.indexOf("'");
                     int secondQuote = rawMessage.indexOf("'", firstQuote + 1);
@@ -66,27 +47,43 @@ public class AuctionResultClientHandler implements IClientHandler {
                         productName = rawMessage.substring(firstQuote + 1, secondQuote);
                     }
                 }
+
+                if (isSuccess) {
+                    // Bóc tách Email người thắng
+                    if (rawMessage.contains("Chúc mừng ") && rawMessage.contains(" đã chốt đơn")) {
+                        int emailStart = rawMessage.indexOf("Chúc mừng ") + "Chúc mừng ".length();
+                        int emailEnd = rawMessage.indexOf(" đã chốt đơn");
+                        winnerEmail = rawMessage.substring(emailStart, emailEnd).trim();
+                    }
+
+                    // Bóc tách số tiền
+                    if (rawMessage.contains("với giá ")) {
+                        int priceStart = rawMessage.indexOf("với giá ") + "với giá ".length();
+                        int priceEnd = rawMessage.indexOf("đ", priceStart);
+                        if (priceStart != -1 && priceEnd != -1) {
+                            String priceStr = rawMessage.substring(priceStart, priceEnd);
+                            priceStr = priceStr.replaceAll("[.,\\s]", "").trim();
+                            finalPrice = Double.parseDouble(priceStr);
+                        }
+                    }
+
+                    // THANH CHỮ CHẠY TOÀN SERVER: Luôn kích hoạt cho mọi màn hình cùng đọc
+                    GlobalMarqueeController.addNotification(winnerEmail, productName, finalPrice);
+                }
             } catch (Exception e) {
-                System.err.println("[Parser Error] Error parsing notification details.");
+                System.err.println("[Parser Error] Lỗi bóc tách chuỗi văn bản từ Server.");
             }
 
-            // 2. CREATE A TRANSPARENT MODAL POPUP STAGE
+            // 2. KHỞI TẠO CẤU TRÚC POPUP Ô VUÔNG (Giữ nguyên giao diện chuẩn phối dải màu của ông)
             Stage dialog = new Stage();
             dialog.initStyle(StageStyle.TRANSPARENT);
             dialog.initModality(Modality.APPLICATION_MODAL);
 
-            // 3. MAIN CARD CONTAINER (MODERN DARK STYLE)
             VBox root = new VBox(25);
-            root.setStyle("-fx-background-color: #1f293d; " + // Dark grey background
-                    "-fx-background-radius: 20; " +     // rounded corners
-                    "-fx-border-radius: 20; " +
-                    "-fx-border-color: #2c3e50; " +    // subtle border
-                    "-fx-border-width: 2; " +
-                    "-fx-padding: 30;");                // padding
-            root.setPrefWidth(460);                           // fixed width
-            root.setAlignment(Pos.TOP_CENTER); // Title at the top
+            root.setStyle("-fx-background-color: #1f293d; -fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #2c3e50; -fx-border-width: 2; -fx-padding: 30;");
+            root.setPrefWidth(460);
+            root.setAlignment(Pos.TOP_CENTER);
 
-            // X Close Button
             HBox topBar = new HBox();
             topBar.setAlignment(Pos.TOP_RIGHT);
             Button btnCloseX = new Button("✕");
@@ -95,58 +92,37 @@ public class AuctionResultClientHandler implements IClientHandler {
             topBar.getChildren().add(btnCloseX);
             root.getChildren().add(topBar);
 
-            // 4. LARGE STATUS ANNOUNCEMENT TITLE AT THE VERY TOP (TWO LINES)
             String titleText = isSuccess ? "CHÚC MỪNG PHIÊN ĐẤU GIÁ\nTHÀNH CÔNG." : "PHIÊN ĐẤU GIÁ\nĐÃ KẾT THÚC.";
             Label lblMainTitle = new Label(titleText);
             lblMainTitle.setTextFill(Color.WHITE);
-            lblMainTitle.setStyle("-fx-font-size: 20; -fx-font-weight: bold;"); // Sized for the card width
+            lblMainTitle.setStyle("-fx-font-size: 20; -fx-font-weight: bold;");
             lblMainTitle.setTextAlignment(TextAlignment.CENTER);
             lblMainTitle.setAlignment(Pos.CENTER);
             root.getChildren().add(lblMainTitle);
 
-            // 5. THE TARGET GRAPHIC WITH CORRECTED STATUS BADGE (NO Symbol Characters Are Used)
             StackPane targetGraphic = new StackPane();
             targetGraphic.setPrefSize(120, 120);
-
-            // Target rings
             Circle outerCircle = new Circle(45, Color.TRANSPARENT); outerCircle.setStroke(Color.web("#94a3b8")); outerCircle.setStrokeWidth(3);
             Circle midCircle = new Circle(30, Color.TRANSPARENT); midCircle.setStroke(Color.web("#94a3b8")); midCircle.setStrokeWidth(2);
             Circle bullseye = new Circle(15, Color.TRANSPARENT); bullseye.setStroke(Color.web("#e2e8f0")); bullseye.setStrokeWidth(2);
-
-            // Arrow shaft
             Line arrowShaft = new Line(-40, 40, 15, -15); arrowShaft.setStroke(Color.web("#e2e8f0")); arrowShaft.setStrokeWidth(4);
-
-            // Corrected Status Badge - Made with shapes only
-            Circle statusCircle = new Circle(14, isSuccess ? Color.web("#10b981") : Color.web("#ef4444")); // Green or Red
-
-            // Checkmark with shapes
+            Circle statusCircle = new Circle(14, isSuccess ? Color.web("#10b981") : Color.web("#ef4444"));
             Line checkShort = new Line(-5, 0, 0, 5); checkShort.setStroke(Color.WHITE); checkShort.setStrokeWidth(2);
             Line checkLong = new Line(0, 5, 8, -5); checkLong.setStroke(Color.WHITE); checkLong.setStrokeWidth(2);
-            StackPane checkmark = new StackPane(checkShort, checkLong);
-            checkmark.setTranslateX(1.5); checkmark.setTranslateY(1);
-
-            // Cross (X) with shapes
+            StackPane checkmark = new StackPane(checkShort, checkLong); checkmark.setTranslateX(1.5); checkmark.setTranslateY(1);
             Line crossLine1 = new Line(-6, -6, 6, 6); crossLine1.setStroke(Color.WHITE); crossLine1.setStrokeWidth(2);
             Line crossLine2 = new Line(-6, 6, 6, -6); crossLine2.setStroke(Color.WHITE); crossLine2.setStrokeWidth(2);
             StackPane cross = new StackPane(crossLine1, crossLine2);
-
-            // Display checkmark on success, cross on failure (all shape based)
-            StackPane statusBadge = new StackPane(statusCircle, isSuccess ? checkmark : cross);
-            statusBadge.setTranslateX(30); statusBadge.setTranslateY(30);
-
+            StackPane statusBadge = new StackPane(statusCircle, isSuccess ? checkmark : cross); statusBadge.setTranslateX(30); statusBadge.setTranslateY(30);
             targetGraphic.getChildren().addAll(outerCircle, midCircle, bullseye, arrowShaft, statusBadge);
             root.getChildren().add(targetGraphic);
 
-            // Extra subtitle below graphic
             Label lblSubtitle = new Label(isSuccess ? "Dưới đây là chi tiết phiên đấu giá." : "Không có thành viên nào ra giá.");
-            lblSubtitle.setTextFill(Color.web("#94a3b8"));
-            lblSubtitle.setStyle("-fx-font-size: 14;");
+            lblSubtitle.setTextFill(Color.web("#94a3b8")); lblSubtitle.setStyle("-fx-font-size: 14;");
             root.getChildren().add(lblSubtitle);
 
-            // 6. DETAILED GRID INFO BOARD (Winner, Product, Price, Words in order)
-            VBox infoBox = new VBox(5); // container to hold rows
+            VBox infoBox = new VBox(5);
             infoBox.setPadding(new Insets(10, 0, 10, 0));
-
             infoBox.getChildren().addAll(
                     createStyledRow("Người thắng", winnerEmail, "#2d3748"),
                     createStyledRow("Sản phẩm", productName, "transparent"),
@@ -155,48 +131,65 @@ public class AuctionResultClientHandler implements IClientHandler {
             );
             root.getChildren().add(infoBox);
 
-            // 7. CONFIRM BUTTON AT THE BOTTOM
             Button btnConfirm = new Button("XÁC NHẬN");
-            btnConfirm.setMaxWidth(Double.MAX_VALUE);
-            btnConfirm.setPrefHeight(45);
+            btnConfirm.setMaxWidth(Double.MAX_VALUE); btnConfirm.setPrefHeight(45);
             btnConfirm.setStyle("-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14; -fx-background-radius: 8; -fx-cursor: hand;");
             btnConfirm.setOnAction(e -> dialog.close());
             root.getChildren().add(btnConfirm);
 
-            // 8. SETUP SCENE AND SHOW THE DIALOG
             Scene scene = new Scene(root);
             scene.setFill(Color.TRANSPARENT);
             dialog.setScene(scene);
-
-            // Center the popup on the screen
             dialog.centerOnScreen();
-            dialog.show();
+
+            // ==================================================================================
+            // 🌟 BỘ LỌC TUYỆT ĐỐI: CHỈ HIỆN POPUP Ô VUÔNG NẾU USER ĐANG Ở ĐÚNG PHÒNG ĐẤU GIÁ ĐÓ
+            // ==================================================================================
+            boolean isUserInThisProductRoom = false;
+            try {
+                Object registryController = ControllerRegistry.get("BiddingController");
+                if (registryController instanceof BiddingController) {
+                    BiddingController activeController = (BiddingController) registryController;
+
+                    // Lấy nhãn hiển thị tên sản phẩm thông qua hàm Getter mới thêm công khai
+                    Label lbl = activeController.getLblProductName();
+
+                    // ĐIỀU KIỆN QUYẾT ĐỊNH: Màn hình phòng này phải đang hiển thị trên cửa sổ (getScene không null)
+                    if (lbl != null && lbl.getScene() != null && lbl.getScene().getWindow() != null) {
+                        Auction currentAuction = activeController.getCurrentAuctionData();
+                        if (currentAuction != null && currentAuction.getProduct() != null) {
+                            Product activeProduct = (Product) currentAuction.getProduct();
+
+                            // Đối chiếu chính xác tên sản phẩm đang mở xem trên màn hình với gói tin vừa kết thúc
+                            if (activeProduct.getName() != null && activeProduct.getName().trim().equals(productName.trim())) {
+                                isUserInThisProductRoom = true;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("[Filter Error] Lỗi kiểm tra bộ lọc hiển thị phòng: " + e.getMessage());
+            }
+
+            // Thực thi lệnh hiển thị Popup ô vuông dựa trên bộ lọc
+            if (isUserInThisProductRoom) {
+                dialog.show(); // Thỏa mãn điều kiện -> Hiện ô vuông giữa màn hình
+            } else {
+                // Đang ở màn hình chính hoặc phòng khác -> Im lặng hoàn toàn (Chỉ chạy dải chữ trên đầu App)
+                System.out.println("[UX Blocked] Đã chặn popup ô vuông của '" + productName + "' thành công do rời phòng.");
+            }
         });
     }
 
-    /**
-     * Helper to create a structured grid row with a background
-     */
     private HBox createStyledRow(String key, String value, String bgColor) {
         HBox row = new HBox();
         row.setPadding(new Insets(10, 15, 10, 15));
         row.setSpacing(10);
         row.setAlignment(Pos.CENTER_LEFT);
         row.setStyle("-fx-background-color: " + bgColor + "; -fx-background-radius: 8;");
-
-        Label lblKey = new Label(key + ":"); // Key:
-        lblKey.setTextFill(Color.web("#94a3b8"));
-        lblKey.setPrefWidth(100);
-        lblKey.setStyle("-fx-font-size: 14;");
-
-        Label lblValue = new Label(value);
-        lblValue.setTextFill(Color.WHITE);
-        lblValue.setWrapText(true);
-        lblValue.setMaxWidth(240);
-        lblValue.setStyle("-fx-font-size: 14; -fx-font-weight: bold;");
-
-        if (key.contains("Giá")) lblValue.setTextFill(Color.web("#38bdf8")); // Price in Cyan
-
+        Label lblKey = new Label(key + ":"); lblKey.setTextFill(Color.web("#94a3b8")); lblKey.setPrefWidth(100); lblKey.setStyle("-fx-font-size: 14;");
+        Label lblValue = new Label(value); lblValue.setTextFill(Color.WHITE); lblValue.setWrapText(true); lblValue.setMaxWidth(240); lblValue.setStyle("-fx-font-size: 14; -fx-font-weight: bold;");
+        if (key.contains("Giá")) lblValue.setTextFill(Color.web("#38bdf8"));
         row.getChildren().addAll(lblKey, lblValue);
         return row;
     }

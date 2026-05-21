@@ -33,7 +33,7 @@ public class UserDao {
     public boolean insertBidder(String email, String password, String name, String id, Timestamp timeCreated, double balance, String role, String status) {
         // Check trùng email trước khi insert
         if (getUserByEmail(email) != null) {
-            System.err.println("[UserDao] Lỗi: Email " + email + " đã tồn tại!");
+            System.err.println("[UserDao]Lỗi: Email " + email + " đã tồn tại!");
             return false;
         }
 
@@ -42,7 +42,7 @@ public class UserDao {
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // Mã hóa mật khẩu bảo mật trước khi lưu vào DB
+            // Mã hóa mật khẩu trước khi lưu
             String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
 
             pstmt.setString(1, id);
@@ -77,7 +77,7 @@ public class UserDao {
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // Mã hóa mật khẩu bảo mật trước khi lưu vào DB
+            // Mã hóa mật khẩu trước khi lưu
             String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
 
             pstmt.setString(1, id);
@@ -145,35 +145,34 @@ public class UserDao {
         if (password.equals(user.getPassword())) {
             return user;
         }
-
         return null;
     }
 
-    /**
-     * Ánh xạ dữ liệu từ ResultSet vào Object User và các lớp con (Admin, Seller, Bidder)
-     */
+    // 3. CẬP NHẬT: Lấy dữ liệu balance từ DB gán ngược lại cho Object User
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
-        String role = rs.getString("role");
         User user;
+        String role = rs.getString("role");
 
-        // 1. Khởi tạo đối tượng theo Class con tương ứng
-        if ("ADMIN".equalsIgnoreCase(role)) {
-            user = new Admin();
-        } else if ("SELLER".equalsIgnoreCase(role)) {
-            user = new Seller();
-            ((Seller) user).setShopName(rs.getString("shop_name"));
+        if ("SELLER".equalsIgnoreCase(role)) {
+            Seller seller = new Seller();
+            seller.setShopName(rs.getString("shop_name"));
+            user = seller;
         } else if ("BIDDER".equalsIgnoreCase(role)) {
             user = new Bidder();
+        } else if ("ADMIN".equalsIgnoreCase(role)) {
+            user = new Admin();
         } else {
-            // Đối với các quyền khác như "ADMIN_REQUEST", khởi tạo thực thể User tiêu chuẩn
             user = new User();
         }
 
-        // 2. Đổ toàn bộ dữ liệu chung từ DB vào Object
+        user.setRole(role);
         user.setId(rs.getString("id"));
         user.setEmail(rs.getString("email"));
         user.setPassword(rs.getString("password"));
         user.setUsername(rs.getString("name"));
+        user.setShopName(rs.getString("shop_name"));
+
+        // --- THÊM DÒNG NÀY ĐỂ ĐỌC SỐ DƯ ---
         user.setRole(role);
         user.setBalance(rs.getDouble("balance"));
 
@@ -184,11 +183,11 @@ public class UserDao {
         // 3. Đọc dữ liệu AVATAR (Từ bytea trong DB sang Base64 cho Client hiển thị)
         byte[] avatarBytes = rs.getBytes("avatar");
         if (avatarBytes != null) {
-            String base64Avatar = Base64.getEncoder().encodeToString(avatarBytes);
+            String base64Avatar = java.util.Base64.getEncoder().encodeToString(avatarBytes);
             user.setAvatar(base64Avatar);
         }
 
-        // 4. Sử dụng getTimestamp để JDBC tự động parse sang LocalDateTime an toàn hơn
+        // FIX DỨT ĐIỂM Ở ĐÂY: Dùng getTimestamp để JDBC tự parse LocalDateTime
         Timestamp ts = rs.getTimestamp("time_created");
         if (ts != null) {
             user.setTimeCreated(ts.toLocalDateTime());
@@ -197,9 +196,6 @@ public class UserDao {
         return user;
     }
 
-    /**
-     * Tìm kiếm thông tin người dùng bằng ID
-     */
     public User findById(String id) {
         String sql = "SELECT * FROM users WHERE id = ?";
         try (Connection conn = Db.getConnection();
@@ -213,7 +209,6 @@ public class UserDao {
         }
         return null;
     }
-
     /**
      * Cập nhật số dư tài khoản (Nạp tiền vào tài khoản)
      * @param email Email của người dùng cần nạp tiền
@@ -240,7 +235,6 @@ public class UserDao {
             return false;
         }
     }
-
     /**
      * Cập nhật số dư tài khoản (Rút tiền khỏi tài khoản)
      * @param email Email của người dùng cần rút tiền
@@ -278,8 +272,8 @@ public class UserDao {
             System.err.println("❌ Lỗi khi thực hiện rút tiền cho: " + email + " - " + e.getMessage());
             return false;
         }
-    }
 
+    }
     /**
      * Lấy riêng số dư hiện tại của tài khoản dựa trên Email
      * @param email Email của người dùng cần kiểm tra
@@ -326,7 +320,6 @@ public class UserDao {
         }
         return userList;
     }
-
     /**
      * Cập nhật Role (Quyền) của người dùng dựa trên ID
      * @param id ID của người dùng cần cập nhật
@@ -349,9 +342,9 @@ public class UserDao {
     }
 
     /**
-     * Cập nhật Avatar cho người dùng dưới dạng chuỗi Base64
+     * Cập nhật Avatar cho người dùng
      * @param email Email của người dùng
-     * @param avatarBase64 Chuỗi ảnh Base64 nhận từ Client
+     * @param avatarBase64 Chuỗi ảnh Base64
      * @return true nếu cập nhật thành công
      */
     public boolean updateUserAvatar(String email, String avatarBase64) {
@@ -359,8 +352,8 @@ public class UserDao {
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // Chuyển chuỗi Base64 thành byte array để lưu vào cột kiểu dữ liệu băm (như bytea trong PostgreSQL/Blob)
-            byte[] avatarBytes = Base64.getDecoder().decode(avatarBase64);
+            // Chuyển Base64 thành byte array để lưu vào cột kiểu bytea
+            byte[] avatarBytes = java.util.Base64.getDecoder().decode(avatarBase64);
             pstmt.setBytes(1, avatarBytes);
             pstmt.setString(2, email);
 
