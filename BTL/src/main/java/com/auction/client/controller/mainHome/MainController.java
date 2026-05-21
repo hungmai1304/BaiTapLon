@@ -11,6 +11,8 @@ import javafx.fxml.FXML;
 import java.time.LocalTime;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -127,5 +129,10 @@ public class MainController {
     @FXML
     public void handleShopClicked(MouseEvent event) {
         NavigationService.setCenterView("/com/auction/client/view/Shop.fxml");
+    }
+
+    @FXML
+    public void handleWonAuctionsClicked(MouseEvent event) {
+        NavigationService.setCenterView("/com/auction/client/view/wonAuctions.fxml");
     }
 }

@@ -156,27 +156,21 @@
                <GridPane.margin><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></GridPane.margin>
             </AnchorPane>
 
-            <AnchorPane stylesheets="@style.css" GridPane.columnIndex="1" GridPane.rowIndex="2">
+            <AnchorPane onMouseClicked="#handleWonAuctionsClicked" stylesheets="@style.css" GridPane.columnIndex="1" GridPane.rowIndex="2">
                <children>
                   <VBox alignment="CENTER" spacing="15.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
                         <Label styleClass="label-super-bold" text="Auction" textFill="WHITE">
                            <font><Font size="45.0" /></font>
                         </Label>
-                        <HBox alignment="CENTER" spacing="20.0">
-                           <children>
-                              <Label styleClass="label-super-bold" text="0" textFill="WHITE"><font><Font size="60.0" /></font></Label>
-                              <Label styleClass="label-super-bold" text="Products" textFill="WHITE"><font><Font size="30.0" /></font></Label>
-                              <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
-                                 <image><Image url="@products.png" /></image>
-                              </ImageView>
-                           </children>
-                        </HBox>
+                        <ImageView fitHeight="70.0" fitWidth="70.0" pickOnBounds="true" preserveRatio="true">
+                           <image><Image url="@shopping-cart.png" /></image>
+                        </ImageView>
                      </children>
                   </VBox>
                </children>
                <styleClass>
-                  <String fx:value="Scene-Back-1" />
+                  <String fx:value="Scene-back-2" />
                   <String fx:value="bogoc" />
                   <String fx:value="hover-mouse" />
                </styleClass>
