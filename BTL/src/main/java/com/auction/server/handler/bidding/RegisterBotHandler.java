@@ -72,7 +72,7 @@ public class RegisterBotHandler implements IMessageHandler {
             System.out.println("[BOT REGISTER] " + userEmail + " đã cài Bot cho SP: " + productId + " (Hạn mức Max: " + maxPrice + ")");
 
             // Kích hoạt Bot nhảy vào so kè hoặc đặt giá khởi điểm ngay khi vừa đăng ký thành công
-            new PlaceBidHandler().triggerAutoBidding(context, gson, productId, currentAuction);
+            new PlaceBidHandler().triggerBotWar(context, gson, productId, currentAuction);
 
         } catch (Exception e) {
             e.printStackTrace();
