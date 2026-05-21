@@ -17,7 +17,8 @@ public class UserDao {
 
     private static UserDao instance;
 
-    private UserDao() {}
+    private UserDao() {
+    }
 
     // Synchronized đảm bảo an toàn đa luồng trên Server
     public static synchronized UserDao getInstance() {
@@ -209,9 +210,11 @@ public class UserDao {
         }
         return null;
     }
+
     /**
      * Cập nhật số dư tài khoản (Nạp tiền vào tài khoản)
-     * @param email Email của người dùng cần nạp tiền
+     *
+     * @param email  Email của người dùng cần nạp tiền
      * @param amount Số tiền cần nạp (phải > 0)
      * @return true nếu cập nhật thành công, false nếu thất bại
      */
@@ -235,9 +238,11 @@ public class UserDao {
             return false;
         }
     }
+
     /**
      * Cập nhật số dư tài khoản (Rút tiền khỏi tài khoản)
-     * @param email Email của người dùng cần rút tiền
+     *
+     * @param email  Email của người dùng cần rút tiền
      * @param amount Số tiền cần rút (phải > 0 và phải <= số dư hiện tại)
      * @return true nếu rút thành công, false nếu thất bại hoặc không đủ tiền
      */
@@ -274,8 +279,10 @@ public class UserDao {
         }
 
     }
+
     /**
      * Lấy riêng số dư hiện tại của tài khoản dựa trên Email
+     *
      * @param email Email của người dùng cần kiểm tra
      * @return Số dư tài khoản (trả về 0.0 nếu không tìm thấy user hoặc lỗi)
      */
@@ -298,6 +305,7 @@ public class UserDao {
 
     /**
      * Lấy danh sách người dùng dựa theo Role (Ví dụ: "ADMIN_REQUEST")
+     *
      * @param role Tên quyền cần tìm kiếm trong DB
      * @return Danh sách đối tượng User tìm thấy
      */
@@ -320,9 +328,11 @@ public class UserDao {
         }
         return userList;
     }
+
     /**
      * Cập nhật Role (Quyền) của người dùng dựa trên ID
-     * @param id ID của người dùng cần cập nhật
+     *
+     * @param id      ID của người dùng cần cập nhật
      * @param newRole Quyền mới muốn gán (Ví dụ: "ADMIN")
      * @return true nếu cập nhật thành công, false nếu thất bại
      */
@@ -343,7 +353,8 @@ public class UserDao {
 
     /**
      * Cập nhật Avatar cho người dùng
-     * @param email Email của người dùng
+     *
+     * @param email        Email của người dùng
      * @param avatarBase64 Chuỗi ảnh Base64
      * @return true nếu cập nhật thành công
      */
@@ -397,7 +408,8 @@ public class UserDao {
     /**
      * VIẾT THÊM: Cập nhật trạng thái (status) cho người dùng tìm theo Email.
      * Thường dùng khi Admin gửi yêu cầu BAN / LOCK hoặc UNLOCK tài khoản.
-     * @param email Email của người dùng cần thay đổi trạng thái
+     *
+     * @param email     Email của người dùng cần thay đổi trạng thái
      * @param newStatus Trạng thái mới (Ví dụ: "NORMAL", "BANNED")
      * @return true nếu cập nhật thành công xuống cơ sở dữ liệu, ngược lại là false
      */
@@ -421,12 +433,15 @@ public class UserDao {
         }
         return false;
     }
+
     /**
      * VIẾT THÊM: Lấy danh sách người dùng dựa theo Trạng thái (Ví dụ: "BANNED", "NORMAL")
      * Thường dùng khi Admin muốn hiển thị danh sách các tài khoản đang bị khóa.
      * * @param status Trạng thái cần tìm kiếm (Ví dụ: "BANNED")
+     *
      * @return Danh sách các Object User (hoặc lớp con tương ứng) thỏa mãn điều kiện
      */
+
     public List<User> getUsersByStatus(String status) {
         List<User> userList = new ArrayList<>();
         if (status == null || status.trim().isEmpty()) {
@@ -451,6 +466,29 @@ public class UserDao {
             System.err.println("[UserDao] Lỗi trong hàm getUsersByStatus khi tìm trạng thái " + status + ": " + e.getMessage());
         }
         return userList;
+    }
+    /**
+     * Đếm tổng số sản phẩm mà một người dùng (Shop) đang sở hữu trong hệ thống
+     * @param userId ID của người dùng cần đếm sản phẩm
+     * @return Số lượng sản phẩm (trả về 0 nếu không có hoặc lỗi)
+     */
+    public int countProductsByOwnerId(String userId) {
+        if (userId == null || userId.trim().isEmpty()) return 0;
+
+        String sql = "SELECT COUNT(*) AS total FROM products WHERE owner_id = ?";
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, userId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[UserDao] Lỗi trong hàm countProductsByOwnerId cho User ID " + userId + ": " + e.getMessage());
+        }
+        return 0;
     }
 
 }

@@ -41,6 +41,22 @@ public class PlaceBidHandler implements IMessageHandler {
                 return;
             }
 
+            // =========================================================================
+            // KIỂM TRA TRẠNG THÁI BLACKLIST TRƯỚC KHI CHO PHÉP ĐẶT GIÁ
+            // =========================================================================
+            User currentUser = UserDao.getInstance().getUserByEmail(userEmail);
+            if (currentUser == null) {
+                sendError(conn, gson, "Lỗi hệ thống: Không tìm thấy thông tin tài khoản của bạn!");
+                return;
+            }
+
+            // Nếu trạng thái là BLACKLIST thì chặn ngay lập tức
+            if ("BLACKLIST".equalsIgnoreCase(currentUser.getStatus())) {
+                System.err.println("[PlaceBidHandler] Từ chối: Tài khoản thuộc danh sách đen " + userEmail + " cố gắng đặt giá!");
+                sendError(conn, gson, "Tài khoản của bạn đã bị đưa vào danh sách đen (BLACKLIST). Bạn không có quyền tham gia đấu giá!");
+                return;
+            }
+
             if (productId == null) {
                 sendError(conn, gson, "Lỗi: Thiếu ID sản phẩm (productId)!");
                 return;
@@ -116,7 +132,7 @@ public class PlaceBidHandler implements IMessageHandler {
             broadcastNewBid(context, gson, productId, bidAmount, userEmail);
 
             //  Người thật vừa đấu xong, gọi Bot dậy xem có đấu giá được không
-            triggerBotWar(context, gson, productId, currentAuction);
+            triggerAutoBidding(context, gson, productId, currentAuction);
 
             // 7. Gửi phản hồi riêng cho người vừa đấu giá thành công
             Response successRes = new Response(MessageType.PLACE_BID_RESPONSE, "SUCCESS", "Chúc mừng! Bạn đang là người dẫn đầu!");
@@ -132,7 +148,7 @@ public class PlaceBidHandler implements IMessageHandler {
 
     // HÀM PHÁT LOA NHẢY SỐ
 
-    public static void broadcastNewBid(ServerContext context, Gson gson, String productId, double newPrice, String leaderName) {
+    private void broadcastNewBid(ServerContext context, Gson gson, String productId, double newPrice, String leaderName) {
 
         Response broadcastRes = new Response(MessageType.BROADCAST_NEW_BID, "SUCCESS", "Có mức giá mới!");
 
@@ -152,7 +168,7 @@ public class PlaceBidHandler implements IMessageHandler {
     }
 
     // HÀM KÍCH HOẠT BOT TỰ ĐỘNG NHẢY SỐ
-    public static void triggerBotWar(ServerContext context, Gson gson, String productId, Auction currentAuction) {
+    private void triggerAutoBidding(ServerContext context, Gson gson, String productId, Auction currentAuction) {
         if (currentAuction.getRegisteredBots() == null || currentAuction.getRegisteredBots().isEmpty()) {
             return;
         }
