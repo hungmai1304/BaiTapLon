@@ -12,6 +12,7 @@ import com.auction.server.model.ServerContext;
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 @CommandMap(value = MessageType.REGISTER_BOT_REQUEST)
@@ -24,7 +25,7 @@ public class RegisterBotHandler implements IMessageHandler {
             double maxPrice = ((Number) data.get("maxPrice")).doubleValue();
             double botStep = ((Number) data.get("botStep")).doubleValue();
 
-            // Lấy email từ session (bảo mật)
+            // Lấy email từ session để đảm bảo tính bảo mật
             String userEmail = context.getUserByConn(conn);
             if (userEmail == null) {
                 sendError(conn, gson, "Bạn chưa đăng nhập!");
@@ -53,25 +54,30 @@ public class RegisterBotHandler implements IMessageHandler {
                 return;
             }
 
-            // KIỂM TRA: Nếu người này đã từng cài Bot cho phiên này rồi thì xóa Bot cũ đi (Cập nhật Bot mới)
+            // Khởi tạo an toàn nếu danh sách Bot của phiên đấu giá bị null
+            if (currentAuction.getRegisteredBots() == null) {
+                currentAuction.setRegisteredBots(new ArrayList<>());
+            }
+
+            // KIỂM TRA: Nếu người này đã từng cài Bot cho phiên này rồi thì xóa Bot cũ đi (Cập nhật cấu hình Bot mới)
             currentAuction.getRegisteredBots().removeIf(bot -> bot.getEmail().equals(userEmail));
 
-            // Đóng gói hợp đồng Bot và nhét vào Phiên đấu giá
+            // Đóng gói cấu hình Bot mới và đưa vào phiên đấu giá trên RAM
             AutoBidConfig newBot = new AutoBidConfig(userEmail, maxPrice, botStep);
             currentAuction.addBot(newBot);
 
-            // Phản hồi về Client
-            Response successRes = new Response(MessageType.REGISTER_BOT_RESPONSE, "SUCCESS", "Đã thiết lập Bot thành công!");
+            // Phản hồi về Client đăng ký thành công
+            Response successRes = new Response(MessageType.REGISTER_BOT_RESPONSE, "SUCCESS", "Đã thiết lập Bot tự động thành công!");
             conn.send(gson.toJson(successRes));
 
+            System.out.println("[BOT REGISTER] " + userEmail + " đã cài Bot cho SP: " + productId + " (Hạn mức Max: " + maxPrice + ")");
 
-            System.out.println("[BOT REGISTER] " + userEmail + " đã cài Bot cho SP: " + productId + " (Max: " + maxPrice + ")");
-            // cài đặt Bot tự động đặt giá khởi điểm
-            PlaceBidHandler.triggerBotWar(context, gson, productId, currentAuction);
+            // Kích hoạt Bot nhảy vào so kè hoặc đặt giá khởi điểm ngay khi vừa đăng ký thành công
+            new PlaceBidHandler().triggerAutoBidding(context, gson, productId, currentAuction);
 
         } catch (Exception e) {
             e.printStackTrace();
-            sendError(conn, gson, "Lỗi khi đăng ký Bot: " + e.getMessage());
+            sendError(conn, gson, "Lỗi khi đăng ký Bot tự động: " + e.getMessage());
         }
     }
 

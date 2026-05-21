@@ -14,9 +14,9 @@ import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-
 import java.util.Map;
-// tiếp nhận đặt giá
+
+// Tiếp nhận đặt giá từ Client
 @CommandMap(value = MessageType.PLACE_BID_REQUEST)
 public class PlaceBidHandler implements IMessageHandler {
 
@@ -24,7 +24,7 @@ public class PlaceBidHandler implements IMessageHandler {
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
         try {
             String productId = (String) data.get("productId");
-            
+
             // Xử lý an toàn: Lấy bidAmount với kiểm tra null để tránh NullPointerException
             Object bidAmountObj = data.get("bidAmount");
             if (bidAmountObj == null) {
@@ -33,11 +33,16 @@ public class PlaceBidHandler implements IMessageHandler {
             }
             double bidAmount = ((Number) bidAmountObj).doubleValue();
 
-            // BẢO MẬT: Lấy email trực tiếp từ session của kết nối thay vì tin tưởng Client
+            // BẢO MẬT: Lấy email trực tiếp từ session của kết nối thay vì tin tưởng Client gửi lên
             String userEmail = context.getUserByConn(conn);
 
             if (userEmail == null) {
                 sendError(conn, gson, "Lỗi bảo mật: Bạn chưa đăng nhập hoặc phiên làm việc không hợp lệ!");
+                return;
+            }
+
+            if (productId == null || productId.isEmpty()) {
+                sendError(conn, gson, "Lỗi: Thiếu ID sản phẩm (productId)!");
                 return;
             }
 
@@ -57,11 +62,6 @@ public class PlaceBidHandler implements IMessageHandler {
                 return;
             }
 
-            if (productId == null) {
-                sendError(conn, gson, "Lỗi: Thiếu ID sản phẩm (productId)!");
-                return;
-            }
-
             // 2. Tìm Phiên Đấu Giá chứa Sản phẩm này trên RAM
             Auction currentAuction = context.getAuctionByProductId(productId);
 
@@ -70,72 +70,65 @@ public class PlaceBidHandler implements IMessageHandler {
                 return;
             }
 
-            // 3. Kiểm tra trạng thái Phiên đấu giá
+            // 3. Kiểm tra trạng thái Phiên Đấu giá
             if ("PENDING".equals(currentAuction.getStatus())) {
-                sendError(conn, gson, "Chưa đến giờ! Sản phẩm đang trong 30 phút quảng cáo.");
+                sendError(conn, gson, "Chưa đến giờ! Sản phẩm đang trong thời gian quảng cáo chờ sàn mở.");
                 return;
             } else if ("COMPLETED".equals(currentAuction.getStatus())) {
                 sendError(conn, gson, "Muộn rồi! Phiên đấu giá này đã kết thúc.");
                 return;
             }
 
-            // 4. KIỂM TRA LUẬT ĐẤU GIÁ (Giá mới phải >= Giá hiện tại + Bước giá)
+            // 4. KIỂM TRA LUẬT ĐẤU GIÁ (Giá mới phải >= Giá hiện tại + Bước giá sản phẩm)
             double minRequiredPrice = (currentAuction.getHighestBidder() == null)
                     ? currentAuction.getStartPrice()
                     : (currentAuction.getCurrentPrice() + currentAuction.getStepPrice());
 
             if (bidAmount < minRequiredPrice) {
-                sendError(conn, gson, "Giá bạn đưa ra quá thấp! Phải lớn hơn hoặc bằng: " + minRequiredPrice);
+                sendError(conn, gson, "Giá bạn đưa ra quá thấp! Phải lớn hơn hoặc bằng: " + String.format("%,.0f", minRequiredPrice));
                 return;
             }
 
-            //  4.5 KIỂM TRA VÍ TIỀN TRƯỚC KHI CHO ĐẶT GIÁ
-            User currentUser = UserDao.getInstance().getUserByEmail(userEmail);
-            if (currentUser == null) {
-                sendError(conn, gson, "Lỗi hệ thống: Không tìm thấy thông tin ví của bạn!");
-                return;
-            }
-
-            // Kiểm tra xem tiền trong ví có đủ để trả mức giá vừa nhập không
+            // 5. KIỂM TRA VÍ TIỀN TRƯỚC KHI CHO ĐẶT GIÁ (Sử dụng lại biến currentUser đã khai báo ở trên)
             if (currentUser.getBalance() < bidAmount) {
-                sendError(conn, gson, "Số dư ví không đủ (" + String.format("%,.0fđ", currentUser.getBalance()) + ")! Vui lòng nạp thêm tiền để đấu giá.");
+                sendError(conn, gson, "Số dư ví không đủ (" + String.format("%,.0fđ", currentUser.getBalance()) + ")! Vui lòng nạp thêm tiền để tiếp tục đấu giá.");
                 return;
             }
 
-            // 5. Cập nhật dữ liệu vào Phiên Đấu Giá (RAM)
+            // 6. Cập nhật dữ liệu vào Phiên Đấu Giá (RAM)
             User newLeader = new User();
             newLeader.setEmail(userEmail);
             newLeader.setUsername(userEmail);
 
-            //Cập nhật thông tin phiên đấu giá (RAM)
+            // Cập nhật thông tin phiên đấu giá (RAM)
             currentAuction.setCurrentPrice(bidAmount);
             currentAuction.setHighestBidder(newLeader);
             currentAuction.setLeaderName(newLeader.getUsername());
 
-            // Ghi sổ lịch sử bằng BidTransaction
+            // Ghi sổ lịch sử giao dịch bằng BidTransaction
             BidTransaction transaction = new BidTransaction();
             transaction.setId(String.valueOf(currentAuction.getId()));
             transaction.setBidder(newLeader);
             transaction.setBidAmount(bidAmount);
             transaction.setTimeCreated(LocalDateTime.now());
 
-            // Kiểm tra an toàn trước khi add vào list
+            // Kiểm tra an toàn bộ nhớ trước khi thêm vào danh sách lịch sử đặt giá
             if (currentAuction.getBiddingHistory() == null) {
                 currentAuction.setBiddingHistory(new ArrayList<>());
             }
             currentAuction.getBiddingHistory().add(transaction);
 
-            // Lưu lại vào RAM
+            // Lưu dữ liệu cập nhật mới vào bộ nhớ RAM hệ thống
             context.updateAuction(currentAuction);
 
-            // 6. PHÁT LOA CHO CẢ SÀN THEO ĐÚNG GIAO KÈO
+            // 7. PHÁT LOA CHO TOÀN BỘ SÀN ĐỂ NHẢY SỐ REAL-TIME (Gọi hàm static nội bộ)
             broadcastNewBid(context, gson, productId, bidAmount, userEmail);
 
-            //  Người thật vừa đấu xong, gọi Bot dậy xem có đấu giá được không
+            // 8. KÍCH HOẠT BOT TỰ ĐỘNG TRANH CHẤP GIÁ (Gọi hàm static nội bộ)
             triggerAutoBidding(context, gson, productId, currentAuction);
 
-            // 7. Gửi phản hồi riêng cho người vừa đấu giá thành công
-            Response successRes = new Response(MessageType.PLACE_BID_RESPONSE, "SUCCESS", "Chúc mừng! Bạn đang là người dẫn đầu!");
+            // 9. Gửi phản hồi riêng xác nhận thành công cho người vừa thao tác đặt giá
+            Response successRes = new Response(MessageType.PLACE_BID_RESPONSE, "SUCCESS", "Chúc mừng! Bạn đang là người dẫn đầu phiên!");
             conn.send(gson.toJson(successRes));
 
             System.out.println("-> [Bid] " + userEmail + " vừa ra giá " + bidAmount + " cho SP: " + productId);
@@ -146,16 +139,13 @@ public class PlaceBidHandler implements IMessageHandler {
         }
     }
 
-    // HÀM PHÁT LOA NHẢY SỐ
-
-    private void broadcastNewBid(ServerContext context, Gson gson, String productId, double newPrice, String leaderName) {
-
+    /**
+     * ĐÃ CHUYỂN THÀNH PUBLIC STATIC: Hàm phát loa thông báo nhảy số thời gian thực
+     */
+    public static void broadcastNewBid(ServerContext context, Gson gson, String productId, double newPrice, String leaderName) {
         Response broadcastRes = new Response(MessageType.BROADCAST_NEW_BID, "SUCCESS", "Có mức giá mới!");
-
         broadcastRes.getData().put("newPrice", newPrice);
         broadcastRes.getData().put("leaderName", leaderName);
-
-        // Tặng kèm productId để Client biết màn hình nào cần nhảy số
         broadcastRes.getData().put("productId", productId);
 
         String message = gson.toJson(broadcastRes);
@@ -167,36 +157,37 @@ public class PlaceBidHandler implements IMessageHandler {
         System.out.println("   -> [Broadcast Bid] Đã thông báo giá mới (" + newPrice + ") cho toàn Server.");
     }
 
-    // HÀM KÍCH HOẠT BOT TỰ ĐỘNG NHẢY SỐ
-    private void triggerAutoBidding(ServerContext context, Gson gson, String productId, Auction currentAuction) {
+    /**
+     * ĐÃ CHUYỂN THÀNH PUBLIC STATIC: Hàm kích hoạt cuộc chiến giữa các Bot tự động nâng giá
+     */
+    public static void triggerAutoBidding(ServerContext context, Gson gson, String productId, Auction currentAuction) {
         if (currentAuction.getRegisteredBots() == null || currentAuction.getRegisteredBots().isEmpty()) {
             return;
         }
 
         boolean keepFighting = true;
 
-        // Vòng lặp Đấu cho đến khi không con Bot nào dám lên giá nữa
+        // Vòng lặp liên tục cho đến khi không còn Bot nào đủ điều kiện hoặc dám lên giá nữa
         while (keepFighting) {
             keepFighting = false;
 
             for (AutoBidConfig bot : currentAuction.getRegisteredBots()) {
-
+                // Nếu Bot hiện tại đang giữ vị trí dẫn đầu rồi thì bỏ qua không cần nâng giá tiếp
                 if (currentAuction.getHighestBidder() != null && bot.getEmail().equals(currentAuction.getHighestBidder().getEmail())) {
                     continue;
                 }
 
-                // 2. Xử lý chưa ai đặt giá
+                // Tính toán mức giá tiếp theo Bot cần phải trả
                 double nextBotPrice;
                 if (currentAuction.getHighestBidder() == null) {
-                    nextBotPrice = currentAuction.getStartPrice(); // Nếu chưa ai đấu, Bot luôn giá khởi điểm
+                    nextBotPrice = currentAuction.getStartPrice();
                 } else {
-                    nextBotPrice = currentAuction.getCurrentPrice() + bot.getStepPrice();
+                    // Logic chuẩn xác: Phải cộng thêm bước giá (StepPrice) quy định của chính Phiên Đấu Giá
+                    nextBotPrice = currentAuction.getCurrentPrice() + currentAuction.getStepPrice();
                 }
 
-                // 3. Nếu giá vẫn nằm trong khả năng tài chính của Bot này
+                // Nếu giá tính toán vẫn nằm trong hạn mức tài chính tối đa (MaxPrice) mà chủ Bot thiết lập
                 if (nextBotPrice <= bot.getMaxPrice()) {
-
-                    // Cập nhật giá mới
                     User botUser = new User();
                     botUser.setEmail(bot.getEmail());
                     botUser.setUsername(bot.getEmail());
@@ -205,31 +196,32 @@ public class PlaceBidHandler implements IMessageHandler {
                     currentAuction.setHighestBidder(botUser);
                     currentAuction.setLeaderName(botUser.getUsername());
 
-                    // Lưu lịch sử
+                    // Lưu vết giao dịch của Bot vào lịch sử
                     BidTransaction transaction = new BidTransaction();
                     transaction.setId(String.valueOf(currentAuction.getId()));
                     transaction.setBidder(botUser);
                     transaction.setBidAmount(nextBotPrice);
-                    transaction.setTimeCreated(java.time.LocalDateTime.now());
+                    transaction.setTimeCreated(LocalDateTime.now());
 
                     if (currentAuction.getBiddingHistory() == null) {
-                        currentAuction.setBiddingHistory(new java.util.ArrayList<>());
+                        currentAuction.setBiddingHistory(new ArrayList<>());
                     }
                     currentAuction.getBiddingHistory().add(transaction);
 
-                    // Cập nhật RAM
+                    // Đồng bộ RAM
                     context.updateAuction(currentAuction);
 
+                    // Phát tin nhảy số cho toàn bộ Server hiển thị giá của Bot vừa đặt (Hàm static gọi hàm static)
                     broadcastNewBid(context, gson, productId, nextBotPrice, botUser.getEmail());
-                    System.out.println(" [BOT WAR] Bot " + bot.getEmail() + " đè giá lên: " + nextBotPrice);
+                    System.out.println(" [BOT WAR] Bot " + bot.getEmail() + " đã trả giá lên: " + nextBotPrice);
 
-                    keepFighting = true; //  đặt lại để bot khác đấu lại
+                    keepFighting = true; // Kích hoạt tiếp vòng lặp cho các Bot khác vào so kè
 
-                    //
                     try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {}
-
+                        Thread.sleep(500); // Tránh bot spam quá nhanh gây lag nghẽn mạng luồng socket
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
                     break;
                 }
             }
