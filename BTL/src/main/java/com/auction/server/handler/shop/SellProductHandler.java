@@ -170,8 +170,10 @@ public class SellProductHandler implements IMessageHandler {
 
                                 }
 
-                                p.setStartTime(null);
-                                p.setEndTime(null);
+                                if (p.getStatus() != ProductStatus.SOLD) {
+                                    p.setStartTime(null);
+                                    p.setEndTime(null);
+                                }
 
                                 // Lưu trực tiếp trạng thái mới nhất (SOLD hoặc AVAILABLE) xuống Database.
                                 ProductDao.getInstance().editProduct(p);
