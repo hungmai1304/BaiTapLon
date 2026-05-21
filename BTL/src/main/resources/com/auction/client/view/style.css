@@ -1009,5 +1009,45 @@
     -fx-text-fill: #666666;
     -fx-font-size: 11px;
 }
-
+/* 1. Chữ hiển thị ở ô chính (giống màu xám mờ của chữ VD: MacBook...) */
+.combo-box > .list-cell,
+.choice-box > .label,
+.custom-combo-box > .list-cell,
+.custom-choice-box > .label {
+    -fx-text-fill: #858585 !important;
+    -fx-font-weight: normal !important;
+}
+/* 2. Nền của cái bảng menu khi bấm sổ xuống (Màu xám tối) */
+.combo-box-popup .list-view,
+.choice-box .context-menu {
+    -fx-background-color: #2A2A2A !important;
+    -fx-border-color: #444444 !important;
+    -fx-padding: 2;
+}
+/* 3. Từng dòng (item) bên trong menu sổ xuống */
+.combo-box-popup .list-cell,
+.choice-box .menu-item {
+    -fx-background-color: #2A2A2A !important;
+    -fx-text-fill: white !important; /* Chữ màu trắng nổi bật trên nền xám */
+    -fx-padding: 8 12;
+}
+/* Đặc trị cho ChoiceBox Label bên trong menu */
+.choice-box .menu-item > .label {
+    -fx-text-fill: white !important;
+}
+/* 4. Hiệu ứng khi lướt chuột (Hover) vào từng dòng trong menu */
+.combo-box-popup .list-cell:hover,
+.combo-box-popup .list-cell:filled:selected,
+.choice-box .menu-item:hover,
+.choice-box .menu-item:focused {
+    -fx-background-color: #38bdf8 !important; /* Nền highlight xanh dương */
+    -fx-cursor: hand !important;
+}
+/* Đảm bảo chữ vẫn giữ màu trắng khi bị highlight */
+.combo-box-popup .list-cell:hover,
+.combo-box-popup .list-cell:filled:selected,
+.choice-box .menu-item:hover > .label,
+.choice-box .menu-item:focused > .label {
+    -fx-text-fill: white !important;
+}
 /* Tận dụng lại các class Title, Flat-field, Btn-login từ file Login cũ */

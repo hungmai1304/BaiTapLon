@@ -55,8 +55,9 @@ public class TopViewController {
 
         // 1. Tự động đồng bộ số dư (Binding) với ClientContext
         if (balance != null) {
+            // ĐÃ SỬA: Đổi định dạng từ "%,.2f" sang "%,.0f" để xóa phần thập phân ".00"
             balance.textProperty().bind(
-                    ClientContext.getInstance().userBalanceProperty().asString("%,.2f")
+                    ClientContext.getInstance().userBalanceProperty().asString("%,.0f")
             );
         }
 
