@@ -207,7 +207,7 @@ public class PlaceBidHandler implements IMessageHandler {
                         currentAuction.setLeaderName(botUser.getUsername());
 
                         // Lưu lịch sử
-                        com.auction.common.model.auction.BidTransaction transaction = new com.auction.common.model.auction.BidTransaction();
+                        BidTransaction transaction = new BidTransaction();
                         transaction.setId(String.valueOf(currentAuction.getId()));
                         transaction.setBidder(botUser);
                         transaction.setBidAmount(nextBotPrice);
@@ -221,19 +221,19 @@ public class PlaceBidHandler implements IMessageHandler {
                         // Cập nhật RAM
                         context.updateAuction(currentAuction);
 
-                        // Kêu to cho cả làng biết Bot vừa cắn giá
+                        // THông báo cho mo người biết Bot vừa cắn giá
                         broadcastNewBid(context, gson, productId, nextBotPrice, botUser.getEmail());
                         System.out.println("[BOT WAR] Bot " + bot.getEmail() + " đè giá lên: " + String.format("%,.0f", nextBotPrice));
 
                         keepFighting = true; // Báo hiệu vẫn còn
 
                         // Nghỉ nửa giây cho UI Client kịp render số,
-                        // và vì đang chạy ở Thread phụ nên Server KHÔNG HỀ BỊ ĐƠ!
+                        // và vì đang chạy ở Thread phụ nên Server không bị đơ
                         try {
                             Thread.sleep(500);
                         } catch (InterruptedException e) {}
 
-                        break; // Nhường lượt cho Bot khác phản đòn
+                        break; // Nhường lượt cho Bot khác
                     }
                 }
             }
