@@ -46,7 +46,10 @@ public class RegisterBotHandler implements IMessageHandler {
             Response successRes = new Response(MessageType.REGISTER_BOT_RESPONSE, "SUCCESS", "Đã thiết lập Bot thành công!");
             conn.send(gson.toJson(successRes));
 
+
             System.out.println("[BOT REGISTER] " + userEmail + " đã cài Bot cho SP: " + productId + " (Max: " + maxPrice + ")");
+            // cài đặt Bot tự động đặt giá khởi điểm
+            PlaceBidHandler.triggerBotWar(context, gson, productId, currentAuction);
 
         } catch (Exception e) {
             e.printStackTrace();
