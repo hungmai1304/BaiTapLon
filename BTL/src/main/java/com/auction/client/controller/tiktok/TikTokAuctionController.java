@@ -20,6 +20,9 @@ public class TikTokAuctionController {
     @FXML private Label lblTopBidder;
     @FXML private javafx.scene.image.ImageView productImage;
 
+    // 1. CHỈ KHAI BÁO BIẾN Ở ĐÂY LÀ ĐÚNG
+    @FXML private Label lblProductDesc;
+
     @FXML
     public void initialize() {
         ControllerRegistry.register("TikTokAuctionController", this);
@@ -46,6 +49,7 @@ public class TikTokAuctionController {
                 name.setText("Đang đợi sản phẩm...");
                 price.setText("0 VNĐ");
                 step.setText("Bước giá: 0 VNĐ");
+                if (lblProductDesc != null) lblProductDesc.setText("Không có mô tả");
             });
         }
     }
@@ -61,6 +65,13 @@ public class TikTokAuctionController {
                 // Giá hiển thị là giá hiện tại của phiên (Current Price)
                 price.setText(String.format("%,.0f VNĐ", auction.getCurrentPrice()));
                 step.setText(String.format("Bước giá: %,.0f VNĐ", product.getStepPrice()));
+
+                // 2. ĐÃ CHUYỂN ĐOẠN LẤY MÔ TẢ VÀO ĐÚNG HÀM CỦA NÓ
+                if (lblProductDesc != null) {
+                    String desc = product.getDescription();
+                    lblProductDesc.setText(desc != null && !desc.isEmpty() ? desc : "Không có mô tả");
+                }
+
                 if (lblTopBidder != null) {
                     // Kiểm tra xem đã có ai đặt giá chưa
                     String leader = (auction.getLeaderName() != null && !auction.getLeaderName().isEmpty())

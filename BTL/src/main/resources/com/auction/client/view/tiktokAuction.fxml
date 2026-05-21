@@ -93,7 +93,8 @@
                                         </HBox>
                                         <HBox spacing="10.0">
                                             <Label styleClass="label-title" style="-fx-font-weight: bold; -fx-font-size: 16px;" text="Mô tả:" />
-                                            <Label fx:id="lblProductDesc" style="-fx-font-size: 16px; -fx-text-fill: #b0b0b0;" text="Đang đợi tải..." wrapText="true" prefWidth="350.0" />
+
+                                            <Label fx:id="lblProductDesc" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #b0b0b0;" text="Đang đợi tải..." wrapText="true" prefWidth="350.0" />
                                         </HBox>
                                     </children>
                                 </VBox>
