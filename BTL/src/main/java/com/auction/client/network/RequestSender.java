@@ -81,7 +81,7 @@ public class RequestSender {
         data.put("maxPrice", maxPrice);
         data.put("botStep", botStep);
         data.put("email", userEmail);
-        send("REGISTER_BOT_REQUEST", data);
+        send(MessageType.REGISTER_BOT_REQUEST, data);
     }
 
     // đừng có xóa của tao:
