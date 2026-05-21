@@ -32,9 +32,8 @@ public class RegisterBotHandler implements IMessageHandler {
                 return;
             }
 
-            // =========================================================================
             // KIỂM TRA TRẠNG THÁI BLACKLIST TRƯỚC KHI CHO PHÉP ĐĂNG KÝ BOT
-            // =========================================================================
+
             User currentUser = UserDao.getInstance().getUserByEmail(userEmail);
             if (currentUser == null) {
                 sendError(conn, gson, "Lỗi hệ thống: Không tìm thấy thông tin tài khoản của bạn!");

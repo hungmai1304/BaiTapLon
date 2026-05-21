@@ -125,7 +125,7 @@ public class PlaceBidHandler implements IMessageHandler {
             broadcastNewBid(context, gson, productId, bidAmount, userEmail);
 
             // 8. KÍCH HOẠT BOT TỰ ĐỘNG TRANH CHẤP GIÁ (Gọi hàm static nội bộ)
-            triggerAutoBidding(context, gson, productId, currentAuction);
+            triggerBotWar(context, gson, productId, currentAuction);
 
             // 9. Gửi phản hồi riêng xác nhận thành công cho người vừa thao tác đặt giá
             Response successRes = new Response(MessageType.PLACE_BID_RESPONSE, "SUCCESS", "Chúc mừng! Bạn đang là người dẫn đầu phiên!");
@@ -157,75 +157,88 @@ public class PlaceBidHandler implements IMessageHandler {
         System.out.println("   -> [Broadcast Bid] Đã thông báo giá mới (" + newPrice + ") cho toàn Server.");
     }
 
-    /**
-     * ĐÃ CHUYỂN THÀNH PUBLIC STATIC: Hàm kích hoạt cuộc chiến giữa các Bot tự động nâng giá
-     */
-    public static void triggerAutoBidding(ServerContext context, Gson gson, String productId, Auction currentAuction) {
+
+     //ĐÃ CHUYỂN THÀNH PUBLIC STATIC: Hàm kích hoạt cuộc chiến giữa các Bot tự động nâng giá
+
+    //  PHIÊN BẢN CHẠY NGẦM KHÔNG SẬP SERVER
+
+    public static void triggerBotWar(ServerContext context, Gson gson, String productId, Auction currentAuction) {
         if (currentAuction.getRegisteredBots() == null || currentAuction.getRegisteredBots().isEmpty()) {
             return;
         }
+        // Tạo một Thread (Luồng) hoàn toàn mới để Bot đấu giá,
+        // không làm kẹt luồng mạng chính của Server
+        new Thread(() -> {
+            boolean keepFighting = true;
 
-        boolean keepFighting = true;
+            while (keepFighting) {
+                keepFighting = false;
 
-        // Vòng lặp liên tục cho đến khi không còn Bot nào đủ điều kiện hoặc dám lên giá nữa
-        while (keepFighting) {
-            keepFighting = false;
-
-            for (AutoBidConfig bot : currentAuction.getRegisteredBots()) {
-                // Nếu Bot hiện tại đang giữ vị trí dẫn đầu rồi thì bỏ qua không cần nâng giá tiếp
-                if (currentAuction.getHighestBidder() != null && bot.getEmail().equals(currentAuction.getHighestBidder().getEmail())) {
-                    continue;
-                }
-
-                // Tính toán mức giá tiếp theo Bot cần phải trả
-                double nextBotPrice;
-                if (currentAuction.getHighestBidder() == null) {
-                    nextBotPrice = currentAuction.getStartPrice();
-                } else {
-                    // Logic chuẩn xác: Phải cộng thêm bước giá (StepPrice) quy định của chính Phiên Đấu Giá
-                    nextBotPrice = currentAuction.getCurrentPrice() + currentAuction.getStepPrice();
-                }
-
-                // Nếu giá tính toán vẫn nằm trong hạn mức tài chính tối đa (MaxPrice) mà chủ Bot thiết lập
-                if (nextBotPrice <= bot.getMaxPrice()) {
-                    User botUser = new User();
-                    botUser.setEmail(bot.getEmail());
-                    botUser.setUsername(bot.getEmail());
-
-                    currentAuction.setCurrentPrice(nextBotPrice);
-                    currentAuction.setHighestBidder(botUser);
-                    currentAuction.setLeaderName(botUser.getUsername());
-
-                    // Lưu vết giao dịch của Bot vào lịch sử
-                    BidTransaction transaction = new BidTransaction();
-                    transaction.setId(String.valueOf(currentAuction.getId()));
-                    transaction.setBidder(botUser);
-                    transaction.setBidAmount(nextBotPrice);
-                    transaction.setTimeCreated(LocalDateTime.now());
-
-                    if (currentAuction.getBiddingHistory() == null) {
-                        currentAuction.setBiddingHistory(new ArrayList<>());
+                for (com.auction.common.model.auction.AutoBidConfig bot : currentAuction.getRegisteredBots()) {
+                    if (currentAuction.getHighestBidder() != null && bot.getEmail().equals(currentAuction.getHighestBidder().getEmail())) {
+                        continue;
                     }
-                    currentAuction.getBiddingHistory().add(transaction);
 
-                    // Đồng bộ RAM
-                    context.updateAuction(currentAuction);
-
-                    // Phát tin nhảy số cho toàn bộ Server hiển thị giá của Bot vừa đặt (Hàm static gọi hàm static)
-                    broadcastNewBid(context, gson, productId, nextBotPrice, botUser.getEmail());
-                    System.out.println(" [BOT WAR] Bot " + bot.getEmail() + " đã trả giá lên: " + nextBotPrice);
-
-                    keepFighting = true; // Kích hoạt tiếp vòng lặp cho các Bot khác vào so kè
-
-                    try {
-                        Thread.sleep(500); // Tránh bot spam quá nhanh gây lag nghẽn mạng luồng socket
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
+                    // 2. Tính giá tiếp theo
+                    double nextBotPrice;
+                    if (currentAuction.getHighestBidder() == null) {
+                        nextBotPrice = currentAuction.getStartPrice();
+                    } else {
+                        nextBotPrice = currentAuction.getCurrentPrice() + bot.getStepPrice();
                     }
-                    break;
+
+                    // 3. Xử lý Trừ tiền Real-time (Đảm bảo Bot không đấu láo khi hết tiền)
+                    User botUserInfo = UserDao.getInstance().getUserByEmail(bot.getEmail());
+                    if (botUserInfo == null || botUserInfo.getBalance() < nextBotPrice) {
+                        System.out.println("[BOT WAR] Bot " + bot.getEmail() + " đã hết tiền trong ví, tự động dừng!");
+                        continue; // Bỏ qua con Bot này vì hết tiền
+                    }
+
+                    // 4. Nếu giá vẫn nằm trong giới hạn Max
+                    if (nextBotPrice <= bot.getMaxPrice()) {
+
+                        // Cập nhật giá mới
+                        User botUser = new User();
+                        botUser.setEmail(bot.getEmail());
+                        botUser.setUsername(bot.getEmail());
+
+                        currentAuction.setCurrentPrice(nextBotPrice);
+                        currentAuction.setHighestBidder(botUser);
+                        currentAuction.setLeaderName(botUser.getUsername());
+
+                        // Lưu lịch sử
+                        com.auction.common.model.auction.BidTransaction transaction = new com.auction.common.model.auction.BidTransaction();
+                        transaction.setId(String.valueOf(currentAuction.getId()));
+                        transaction.setBidder(botUser);
+                        transaction.setBidAmount(nextBotPrice);
+                        transaction.setTimeCreated(java.time.LocalDateTime.now());
+
+                        if (currentAuction.getBiddingHistory() == null) {
+                            currentAuction.setBiddingHistory(new java.util.ArrayList<>());
+                        }
+                        currentAuction.getBiddingHistory().add(transaction);
+
+                        // Cập nhật RAM
+                        context.updateAuction(currentAuction);
+
+                        // Kêu to cho cả làng biết Bot vừa cắn giá
+                        broadcastNewBid(context, gson, productId, nextBotPrice, botUser.getEmail());
+                        System.out.println("[BOT WAR] Bot " + bot.getEmail() + " đè giá lên: " + String.format("%,.0f", nextBotPrice));
+
+                        keepFighting = true; // Báo hiệu vẫn còn
+
+                        // Nghỉ nửa giây cho UI Client kịp render số,
+                        // và vì đang chạy ở Thread phụ nên Server KHÔNG HỀ BỊ ĐƠ!
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {}
+
+                        break; // Nhường lượt cho Bot khác phản đòn
+                    }
                 }
             }
-        }
+            System.out.println("[BOT WAR] Trận chiến kết thúc! Chờ người thật vào múc tiếp...");
+        }).start(); // Bấm nút kích hoạt Thread ngầm
     }
 
     private void sendError(WebSocket conn, Gson gson, String msg) {
