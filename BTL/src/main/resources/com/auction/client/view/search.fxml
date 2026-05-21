@@ -44,7 +44,7 @@
                      </font></Label>
                         <HBox alignment="CENTER" maxWidth="1000.0" style="-fx-background-color: white; -fx-background-radius: 50; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);">
                             <children>
-                                <TextField fx:id="tfSearchKeyword" promptText="Search by product name or seller..." style="-fx-background-color: transparent; -fx-padding: 15 25; -fx-font-size: 18;" HBox.hgrow="ALWAYS" />
+                                <TextField fx:id="tfSearchKeyword" promptText="Search by product name..." style="-fx-background-color: transparent; -fx-padding: 15 25; -fx-font-size: 18;" HBox.hgrow="ALWAYS" />
                                 <Button mnemonicParsing="false" onAction="#handleSearchAction" style="-fx-background-color: #1976D2; -fx-text-fill: white; -fx-background-radius: 40; -fx-padding: 10 30; -fx-font-weight: bold; -fx-cursor: hand;" text="Search">
                            <HBox.margin>
                               <Insets right="5.0" />
