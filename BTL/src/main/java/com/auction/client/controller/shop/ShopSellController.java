@@ -3,7 +3,7 @@ package com.auction.client.controller.shop;
 import com.auction.client.controller.general.SomeGlobal;
 import com.auction.client.controller.mainHome.HomeController;
 import com.auction.client.network.RequestSender;
-import com.auction.client.utils.ClientContext; // Thêm import này
+import com.auction.client.utils.ClientContext;
 import com.auction.common.model.product.Product;
 import com.auction.common.model.product.ProductStatus;
 import javafx.application.Platform;
@@ -36,7 +36,7 @@ public class ShopSellController {
         productTable.setItems(ClientContext.getInstance().getShopProducts());
         updateTotalLabel();
 
-        // Cấu hình các cột (Giữ nguyên logic cũ của bạn)
+        // Cấu hình các cột hiển thị số thứ tự (STT)
         colSTT.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(Integer item, boolean empty) {
@@ -48,6 +48,7 @@ public class ShopSellController {
 
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
 
+        // Định dạng cột Giá tiền
         colPrice.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(Double item, boolean empty) {
@@ -60,6 +61,7 @@ public class ShopSellController {
 
         colDesc.setCellValueFactory(new PropertyValueFactory<>("description"));
 
+        // Cấu hình hiển thị màu sắc theo trạng thái sản phẩm
         colStatus.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(ProductStatus item, boolean empty) {
@@ -67,15 +69,17 @@ public class ShopSellController {
                 setAlignment(javafx.geometry.Pos.CENTER);
                 if (empty || item == null) { setText(null); setStyle(""); return; }
                 switch (item) {
-                    case AVAILABLE  -> { setText("Trong kho");   setStyle("-fx-text-fill: #f0a500;"); }
-                    case ON_AUCTION -> { setText("Đang treo bán"); setStyle("-fx-text-fill: #6c63ff;"); }
-                    case SOLD       -> { setText("Đã bán");        setStyle("-fx-text-fill: #4caf50;"); }
-                    default         -> { setText(item.toString()); setStyle(""); }
+                    case AVAILABLE     -> { setText("Trong kho");     setStyle("-fx-text-fill: #f0a500;"); }
+                    case ON_AUCTION    -> { setText("Đang treo bán"); setStyle("-fx-text-fill: #6c63ff;"); }
+                    case NOT_AVAILABLE -> { setText("Đã bị cấm");    setStyle("-fx-text-fill: #e63946;"); } // Đổi sang màu đỏ cảnh báo cho rõ ràng
+                    case SOLD          -> { setText("Đã bán");        setStyle("-fx-text-fill: #4caf50;"); }
+                    default            -> { setText(item.toString()); setStyle(""); }
                 }
             }
         });
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
 
+        // Cấu hình các nút chức năng (Hành động) trong TableView
         colAction.setCellFactory(col -> new TableCell<>() {
             private final Button btnEdit = new Button("Edit");
             private final Button btnSell = new Button("Sell");
@@ -84,13 +88,29 @@ public class ShopSellController {
                 box.setAlignment(javafx.geometry.Pos.CENTER);
                 btnEdit.setStyle("-fx-background-color: #f0a500; -fx-text-fill: white; -fx-cursor: hand;");
                 btnSell.setStyle("-fx-background-color: #6c63ff; -fx-text-fill: white; -fx-cursor: hand;");
+
                 btnEdit.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
                 btnSell.setOnAction(e -> handleSell(getTableView().getItems().get(getIndex())));
             }
+
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                setGraphic(empty ? null : box);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    // Lấy đối tượng Product tại dòng hiện tại
+                    Product currentProduct = getTableView().getItems().get(getIndex());
+
+                    if (currentProduct != null && currentProduct.getStatus() == ProductStatus.NOT_AVAILABLE) {
+                        // Nếu sản phẩm BỊ CẤM (NOT_AVAILABLE) -> Loại bỏ hoàn toàn nút Sell khỏi layout HBox
+                        box.getChildren().setAll(btnEdit);
+                    } else {
+                        // Nếu sản phẩm ở trạng thái bình thường khác -> Hiện đầy đủ cả 2 nút
+                        box.getChildren().setAll(btnEdit, btnSell);
+                    }
+                    setGraphic(box);
+                }
             }
         });
     }
@@ -104,13 +124,12 @@ public class ShopSellController {
     }
 
     /**
-     * Hàm này được gọi từ Handler khi có dữ liệu mới từ Server
+     * Hàm này được gọi từ Handler khi có dữ liệu mới cập nhật đồng bộ từ Server
      */
     public void loadProducts(List<Product> products) {
         Platform.runLater(() -> {
-            // Vì Table đã bind với ObservableList trong Context nên chỉ cần update Label
+            // Vì Table đã được bind trực tiếp với ObservableList trong Context nên chỉ cần update Label và làm mới giao diện
             updateTotalLabel();
-            // Nếu bạn muốn cuộn lên đầu bảng khi có list mới:
             productTable.refresh();
         });
     }

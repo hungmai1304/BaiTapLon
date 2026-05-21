@@ -37,7 +37,6 @@ public class AdminUserOnlineController implements Initializable {
     private TableColumn<User, Void> colAction; // Cột chứa nút thao tác công cụ
 
 
-
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         // Đăng ký bộ điều khiển vào Registry / Global nếu cần thiết
@@ -84,7 +83,7 @@ public class AdminUserOnlineController implements Initializable {
     }
 
     /**
-     * Hàm kiểm tra phân quyền của người dùng hiện tại để ẩn/hiện nút quay lại giao diện Admin
+     * Hàm kiểm tra phân quyền của người dùng hiện tại để ẩn/hiển nút quay lại giao diện Admin
      */
     private boolean checkRolePermission() {
         User currentUser = SomeGlobal.getCurrentUser();
@@ -93,13 +92,12 @@ public class AdminUserOnlineController implements Initializable {
         if ("ADMIN".equalsIgnoreCase(role)) {
             return true;
         } else {
-
             return false;
         }
     }
 
     /**
-     * Hàm cấu hình sinh các nút chức năng (Đăng xuất & Ban) trên từng dòng của cột Thao tác
+     * Hàm cấu hình sinh các nút chức năng (Đăng xuất, Ban & Blacklist) trên từng dòng của cột Thao tác
      */
     private void setupActionColumn() {
         Callback<TableColumn<User, Void>, TableCell<User, Void>> cellFactory = new Callback<>() {
@@ -108,17 +106,17 @@ public class AdminUserOnlineController implements Initializable {
                 return new TableCell<>() {
                     private final Button btnKick = new Button("Đăng xuất");
                     private final Button btnBan = new Button("Ban");
-                    private final javafx.scene.layout.HBox container = new javafx.scene.layout.HBox(8); // Khoảng cách giữa 2 nút là 8px
+                    private final Button btnBlacklist = new Button("Blacklist"); // THÊM MỚI: Nút Blacklist
+                    private final javafx.scene.layout.HBox container = new javafx.scene.layout.HBox(8); // Khoảng cách giữa các nút là 8px
 
                     {
-                        // 1. Định dạng style cho nút đăng xuất (Kick)
+                        // 1. Định dạng style cho nút Đăng xuất (Kick)
                         btnKick.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand; -fx-font-weight: bold;");
                         btnKick.setOnAction(event -> {
                             if(checkRolePermission()){
                                 User selectedUser = getTableView().getItems().get(getIndex());
                                 if (selectedUser != null && selectedUser.getEmail() != null) {
                                     String email = selectedUser.getEmail();
-                                    // CÁCH SỬA: Bọc email vào một đối tượng Map/JsonObject trước khi gửi
                                     Map<String, Object> requestData = new HashMap<>();
                                     requestData.put("email", email);
                                     System.out.println("[AdminUserOnlineController] Admin yêu cầu đăng xuất tài khoản: " + email);
@@ -139,11 +137,9 @@ public class AdminUserOnlineController implements Initializable {
                                     String email = selectedUser.getEmail();
                                     System.out.println("[AdminUserOnlineController] Admin yêu cầu BAN tài khoản: " + email);
 
-                                    // ĐỒNG BỘ: Bọc vào Map giống nút Kick để Server không bị lỗi JSON
                                     Map<String, Object> requestData = new HashMap<>();
                                     requestData.put("email", email);
 
-                                    // Gửi lệnh BAN lên Server dưới dạng Object
                                     RequestSender.send("ADMIN_LET_USER_BE_BANNED", requestData);
                                 }
                             }
@@ -152,9 +148,31 @@ public class AdminUserOnlineController implements Initializable {
                             }
                         });
 
-                        // 3. Đưa các nút vào HBox container và căn giữa
+                        // 3. THÊM MỚI: Định dạng style và xử lý sự kiện cho nút Blacklist
+                        btnBlacklist.setStyle("-fx-background-color: #d35400; -fx-text-fill: white; -fx-cursor: hand; -fx-font-weight: bold;"); // Màu cam đậm quyến rũ
+                        btnBlacklist.setOnAction(event -> {
+                            if(checkRolePermission()){
+                                User selectedUser = getTableView().getItems().get(getIndex());
+                                if (selectedUser != null && selectedUser.getEmail() != null) {
+                                    String email = selectedUser.getEmail();
+                                    System.out.println("[AdminUserOnlineController] Admin yêu cầu BLACKLIST tài khoản: " + email);
+
+                                    // Bọc email vào Map để đồng bộ cấu trúc JSON gửi lên Server
+                                    Map<String, Object> requestData = new HashMap<>();
+                                    requestData.put("email", email);
+
+                                    // Gửi lệnh BLACKLIST lên Server
+                                    RequestSender.send("ADMIN_LET_USER_BE_BLACKLIST", requestData);
+                                }
+                            }
+                            else {
+                                System.out.println("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
+                            }
+                        });
+
+                        // 4. Đưa cả 3 nút vào HBox container và căn giữa
                         container.setAlignment(javafx.geometry.Pos.CENTER);
-                        container.getChildren().addAll(btnKick, btnBan);
+                        container.getChildren().addAll(btnKick, btnBan, btnBlacklist);
                     }
 
                     @Override
@@ -163,7 +181,7 @@ public class AdminUserOnlineController implements Initializable {
                         if (empty) {
                             setGraphic(null);
                         } else {
-                            setGraphic(container); // Đưa container chứa cả 2 nút vào ô giao diện
+                            setGraphic(container); // Đưa container chứa cả 3 nút vào ô giao diện
                         }
                     }
                 };

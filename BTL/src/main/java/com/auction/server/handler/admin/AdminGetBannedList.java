@@ -45,29 +45,37 @@ public class AdminGetBannedList implements IMessageHandler {
         }
 
         // =========================================================================
-        // 2. XỬ LÝ LẤY DANH SÁCH VÀ ÉP VÀO MAP CON ĐỂ KHÔNG LỖI CẤU TRÚC CLIENT
+        // 2. XỬ LÝ LẤY DANH SÁCH BANNED & BLACKLIST VÀ GỘP LẠI
         // =========================================================================
-        System.out.println("[AdminGetBannedList] Admin [" + adminEmail + "] đang yêu cầu lấy danh sách tài khoản bị khóa.");
+        System.out.println("[AdminGetBannedList] Admin [" + adminEmail + "] đang yêu cầu lấy danh sách tài khoản bị hạn chế (BANNED & BLACKLIST).");
 
         try {
-            // Lấy danh sách từ DB
-            List<User> bannedUsers = userDao.getUsersByStatus("BANNED");
+            // Lấy danh sách tài khoản BANNED từ DB
+            List<User> restrictedUsers = userDao.getUsersByStatus("BANNED");
+
+            // THÊM MỚI: Lấy thêm danh sách tài khoản BLACKLIST từ DB
+            List<User> blacklistUsers = userDao.getUsersByStatus("BLACKLIST");
+
+            // Gộp danh sách tài khoản BLACKLIST vào chung danh sách kết quả
+            if (blacklistUsers != null && !blacklistUsers.isEmpty()) {
+                restrictedUsers.addAll(blacklistUsers);
+            }
 
             responseMap.put("status", "SUCCESS");
-            responseMap.put("message", "Lấy danh sách tài khoản bị khóa thành công!");
+            responseMap.put("message", "Lấy danh sách tài khoản bị hạn chế thành công!");
 
             // GIẢI PHÁP TẬN GỐC: Tạo một Map con đại diện cho trường "data"
             Map<String, Object> dataMap = new HashMap<>();
 
-            // Nhét cái List vào trong Map con này thông qua key "list"
-            dataMap.put("list", bannedUsers);
+            // Nhét cái List đã gộp vào trong Map con này thông qua key "list"
+            dataMap.put("list", restrictedUsers);
 
             // Đưa Map con vào Map tổng. Lúc này data hoàn toàn là một JSON Object { } đúng ý Client!
             responseMap.put("data", dataMap);
 
             // Tiến hành gửi chuỗi JSON đi
             conn.send(gson.toJson(responseMap));
-            System.out.println("[AdminGetBannedList] Đã gửi thành công " + bannedUsers.size() + " tài khoản bị khóa cho Admin.");
+            System.out.println("[AdminGetBannedList] Đã gửi thành công tổng cộng " + restrictedUsers.size() + " tài khoản (BANNED/BLACKLIST) cho Admin.");
 
         } catch (Exception e) {
             System.err.println("[AdminGetBannedList] Lỗi hệ thống: " + e.getMessage());

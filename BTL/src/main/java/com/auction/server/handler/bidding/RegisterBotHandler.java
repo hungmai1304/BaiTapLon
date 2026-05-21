@@ -2,6 +2,8 @@ package com.auction.server.handler.bidding;
 
 import com.auction.common.model.auction.Auction;
 import com.auction.common.model.auction.AutoBidConfig;
+import com.auction.common.model.user.User;
+import com.auction.server.dao.UserDao;
 import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
@@ -26,6 +28,22 @@ public class RegisterBotHandler implements IMessageHandler {
             String userEmail = context.getUserByConn(conn);
             if (userEmail == null) {
                 sendError(conn, gson, "Bạn chưa đăng nhập!");
+                return;
+            }
+
+            // =========================================================================
+            // KIỂM TRA TRẠNG THÁI BLACKLIST TRƯỚC KHI CHO PHÉP ĐĂNG KÝ BOT
+            // =========================================================================
+            User currentUser = UserDao.getInstance().getUserByEmail(userEmail);
+            if (currentUser == null) {
+                sendError(conn, gson, "Lỗi hệ thống: Không tìm thấy thông tin tài khoản của bạn!");
+                return;
+            }
+
+            // Chặn ngay lập tức nếu user thuộc danh sách đen
+            if ("BLACKLIST".equalsIgnoreCase(currentUser.getStatus())) {
+                System.err.println("[RegisterBotHandler] Từ chối: Tài khoản BLACKLIST " + userEmail + " cố ý đăng ký Bot tự động!");
+                sendError(conn, gson, "Tài khoản của bạn đang nằm trong danh sách đen (BLACKLIST). Không thể sử dụng tính năng Bot đấu giá!");
                 return;
             }
 

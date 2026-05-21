@@ -55,7 +55,7 @@ public class ServerContext {
     public AuctionWebSocketServer getServer() { return server; }
 
     // --- Quản lý Phiên đấu giá (Có Broadcast) ---
-    public List<Auction> getActiveAuctions() { return activeAuctions; }
+    public  List<Auction> getActiveAuctions() { return activeAuctions; }
 
     public void addAuction(Auction auction) {
         if (auction != null) {

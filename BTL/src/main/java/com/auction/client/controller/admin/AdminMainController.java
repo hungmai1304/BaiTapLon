@@ -48,7 +48,11 @@ public class AdminMainController implements Initializable {
     @FXML
     private void handleOnlineAuctionsClick(ActionEvent event) {
         System.out.println("Chuyển sang màn hình quản lý đấu giá trực tuyến");
-        // loadCenterView("/com/auction/client/view/adminOnlineAuctions.fxml");
+        loadCenterView("/com/auction/client/view/adminOnlineAuctions.fxml");
+        System.out.println("(AdminMainController) dang gui ADMIN_GET_ONLINE_AUCTIONS_REQUEST");
+        RequestSender.send("ADMIN_GET_ONLINE_AUCTIONS",null);
+
+
     }
 
     /**
@@ -57,7 +61,9 @@ public class AdminMainController implements Initializable {
     @FXML
     private void handleAllShopClick(ActionEvent event) {
         System.out.println("Chuyển sang màn hình quản lý toàn bộ cửa hàng");
-        // loadCenterView("/com/auction/client/view/adminAllShop.fxml");
+        loadCenterView("/com/auction/client/view/adminAllShop.fxml");
+        System.out.println("(AdminMainController) dang gui ADMIN_GET_ALL_SHOP");
+        RequestSender.send("ADMIN_GET_ALL_SHOP",null);
     }
 
     /**

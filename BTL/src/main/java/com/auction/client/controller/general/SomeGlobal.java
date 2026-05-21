@@ -1,8 +1,6 @@
 package com.auction.client.controller.general;
 
-import com.auction.client.controller.admin.AdminMainController;
-import com.auction.client.controller.admin.AdminUserOnlineController;
-import com.auction.client.controller.admin.BannedListController;
+import com.auction.client.controller.admin.*;
 import com.auction.client.controller.mainHome.BankController;
 import com.auction.client.controller.mainHome.HomeController;
 import com.auction.client.controller.mainHome.MainController;
@@ -30,8 +28,16 @@ public class SomeGlobal {
     private static AdminUserOnlineController adminUserOnlineController;
     private static AdminMainController adminMainController;
     private static BannedListController bannedListController;
+    private static AllShopController allShopController; // BỔ SUNG: Quản lý danh sách Shop
 
-    // Hàm set và get cho BannedListController (Đúng chuẩn form mẫu)
+    public static void setAllShopController(AllShopController controller) {
+        allShopController = controller;
+    }
+
+    public static AllShopController getAllShopController() {
+        return allShopController;
+    }
+
     public static void setBannedListController(BannedListController controller) {
         bannedListController = controller;
     }
@@ -97,10 +103,6 @@ public class SomeGlobal {
         return mainController;
     }
 
-    /**
-     * BỔ SUNG THÊM: Hàm dọn dẹp sạch sẽ dữ liệu Global khi Logout.
-     * Tránh việc lưu vết Controller cũ gây lỗi logic khi đăng nhập bằng tài khoản khác.
-     */
     public static void clearAll() {
         homeController = null;
         mainController = null;
@@ -110,6 +112,20 @@ public class SomeGlobal {
         adminUserOnlineController = null;
         adminMainController = null;
         bannedListController = null;
+        allShopController = null; // BỔ SUNG KHỬ BIẾN KHI LOGOUT
         System.out.println("[SomeGlobal] Đã xoá toàn bộ references của các bộ điều khiển hệ thống (Clear session thành công).");
     }
+    // Thêm vào danh mục các biến static của SomeGlobal
+    private static AdminOnlineAuctions adminOnlineAuctionsController;
+
+    public static void setAdminOnlineAuctionsController(AdminOnlineAuctions controller) {
+        adminOnlineAuctionsController = controller;
+    }
+
+    public static AdminOnlineAuctions getAdminOnlineAuctionsController() {
+        return adminOnlineAuctionsController;
+    }
+
+// Đừng quên bổ sung vào hàm clearAll() khi logout:
+// adminOnlineAuctionsController = null;
 }
