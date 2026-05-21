@@ -39,7 +39,7 @@ public class ServerContext {
     // KỸ THUẬT MỚI: Bản đồ ngược để biến hàm getUserByConn từ O(N) thành O(1) tuyệt đối
     private final Map<WebSocket, String> connToUserKey = new ConcurrentHashMap<>();
 
-    // 2. Quản lý thông tin User kết hợp với kết nối WebSocket tương ứng (Dạng Object)
+    // 2. Quản lý thông tin User kết hợp với kết nối WebSocket tương ứng (Dạng Object làm RAM CACHE)
     private final Map<WebSocket, User> onlineUserObjects = new ConcurrentHashMap<>();
 
     // Danh sách phiên đấu giá đang diễn ra trên RAM (Chuyển sang Map để đạt O(1) khi update/remove)
@@ -67,7 +67,7 @@ public class ServerContext {
         return server;
     }
 
-    // --- Quản lý Phiên đấu giá (Cũ trả về List, ta giữ nguyên kiểu List để không lỗi code chỗ khác) ---
+    // --- Quản lý Phiên Đấu giá ---
     public List<Auction> getActiveAuctions() {
         return new ArrayList<>(activeAuctionsMap.values());
     }
@@ -92,7 +92,6 @@ public class ServerContext {
     public void updateAuction(Auction updatedAuction) {
         if (updatedAuction == null || updatedAuction.getId() == null) return;
 
-        // Thao tác ghi đè trực tiếp Map tốn O(1), loại bỏ hoàn toàn vòng lặp for và synchronized cũ
         activeAuctionsMap.put(updatedAuction.getId(), updatedAuction);
         System.out.println("[ServerContext] Đã cập nhật Auction ID: " + updatedAuction.getId());
         broadcastAuctionUpdate();
@@ -100,7 +99,6 @@ public class ServerContext {
 
     public Auction getAuctionByProductId(String productId) {
         if (productId == null) return null;
-        // Do tìm theo ProductId (không phải key chính), ta quét Stream trên values của Map (An toàn, không lo Crash)
         return activeAuctionsMap.values().stream()
                 .filter(a -> a.getProduct() != null && productId.equals(a.getProduct().getId()))
                 .findFirst()
@@ -109,11 +107,11 @@ public class ServerContext {
 
     // --- Quản lý TikTok Listeners ---
     public void addTikTokListener(WebSocket conn) {
-        tiktokListeners.add(conn);
+        if (conn != null) tiktokListeners.add(conn);
     }
 
     public void removeTikTokListener(WebSocket conn) {
-        tiktokListeners.remove(conn);
+        if (conn != null) tiktokListeners.remove(conn);
     }
 
     public Set<WebSocket> getTikTokListeners() {
@@ -121,12 +119,11 @@ public class ServerContext {
     }
 
     /**
-     * Broadcast danh sách đấu giá mới nhất tới tất cả Listeners (Nâng cấp chạy ASYNC ngầm)
+     * Broadcast danh sách đấu giá mới nhất tới tất cả Listeners (Chạy ASYNC ngầm)
      */
     private void broadcastAuctionUpdate() {
         if (tiktokListeners.isEmpty()) return;
 
-        // Đẩy toàn bộ tác vụ dịch JSON và gửi qua mạng vào Thread Pool để không làm nghẽn luồng xử lý chính
         asyncExecutor.submit(() -> {
             try {
                 Response response = new Response(MessageType.GET_ACTIVE_AUCTIONS_RESPONSE, "SUCCESS", "Cập nhật danh sách đấu giá.");
@@ -161,15 +158,14 @@ public class ServerContext {
     public void removeUser(WebSocket conn) {
         if (conn == null) return;
 
-        // Xóa bằng bản đồ ngược cực nhanh
         String userId = connToUserKey.remove(conn);
         if (userId != null) {
             onlineUsers.remove(userId);
         } else {
-            // Cơ chế phòng thủ phụ nếu bản đồ ngược chưa kịp lưu
             onlineUsers.entrySet().removeIf(entry -> entry.getValue().equals(conn));
         }
-        removeTikTokListener(conn); // Dọn dẹp cả listener nếu có
+        removeOnlineUserObject(conn); // Đồng bộ dọn dẹp luôn object cache bên dưới
+        removeTikTokListener(conn);
     }
 
     /**
@@ -177,7 +173,7 @@ public class ServerContext {
      */
     public String getUserByConn(WebSocket conn) {
         if (conn == null) return null;
-        return connToUserKey.get(conn); // Lấy trực tiếp từ Map, không duyệt Stream giải phóng CPU hoàn toàn
+        return connToUserKey.get(conn);
     }
 
     public Collection<WebSocket> getConnectedClients() {
@@ -185,7 +181,35 @@ public class ServerContext {
     }
 
 
-    // --- QUẢN LÝ DANH SÁCH USER DẠNG OBJECT ---
+    // --- BỔ SUNG & QUẢN LÝ DANH SÁCH USER DẠNG OBJECT (RAM CACHE) ---
+
+    /**
+     * TỐI ƯU BỔ SUNG: Hàm lấy thông tin User Cache nhanh từ RAM thông qua Email (Tốc độ O(1))
+     * Phục vụ đắc lực cho các hàm xử lý Broadcast của Handler mà không cần chọc DB.
+     */
+    public User getUserCacheByEmail(String email) {
+        if (email == null || email.trim().isEmpty()) return null;
+
+        // Cách tìm O(1): Lấy Connection thông qua email, rồi dùng Connection lấy Object User ra
+        WebSocket conn = onlineUsers.get(email);
+        if (conn != null) {
+            return onlineUserObjects.get(conn);
+        }
+
+        // Dự phòng (Fallback): Nếu cơ chế map chéo bị lệch, duyệt mảng trên RAM (Vẫn nhanh hơn chọc DB)
+        return onlineUserObjects.values().stream()
+                .filter(u -> u != null && email.equalsIgnoreCase(u.getEmail()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * TỐI ƯU BỔ SUNG: Hàm lấy thông tin User Cache nhanh bằng Object WebSocket
+     */
+    public User getUserCacheByConn(WebSocket conn) {
+        if (conn == null) return null;
+        return onlineUserObjects.get(conn);
+    }
 
     /**
      * Thêm đối tượng User online vào RAM ứng với kết nối mạng
@@ -202,10 +226,12 @@ public class ServerContext {
      * Xóa đối tượng User ra khỏi RAM khi ngắt kết nối mạng dựa trên WebSocket
      */
     public void removeOnlineUserObject(WebSocket conn) {
-        if (conn != null && onlineUserObjects.containsKey(conn)) {
+        if (conn != null) {
             User removedUser = onlineUserObjects.remove(conn);
-            System.out.println("[ServerContext] Đã xóa đối tượng User khỏi RAM: " + (removedUser != null ? removedUser.getUsername() : "Ẩn danh"));
-            broadcastOnlineUsersToAdmins(); // Tự động đồng bộ tới Admin khi có người ra
+            if (removedUser != null) {
+                System.out.println("[ServerContext] Đã xóa đối tượng User khỏi RAM: " + removedUser.getUsername());
+                broadcastOnlineUsersToAdmins(); // Tự động đồng bộ tới Admin khi có người ra
+            }
         }
     }
 
@@ -216,12 +242,8 @@ public class ServerContext {
         return new ArrayList<>(onlineUserObjects.values());
     }
 
-    /**
-     * Tìm kiếm đối tượng thông tin User dựa trên kết nối mạng WebSocket hiện tại
-     */
     public User getUserByConnObject(WebSocket conn) {
-        if (conn == null) return null;
-        return onlineUserObjects.get(conn);
+        return getUserCacheByConn(conn); // Điều hướng về hàm tối ưu
     }
 
     /**
@@ -230,13 +252,11 @@ public class ServerContext {
     public void updateUserStatusInRam(String email, String newStatus) {
         if (email == null || email.trim().isEmpty()) return;
 
-        for (User user : onlineUserObjects.values()) {
-            if (user != null && email.equalsIgnoreCase(user.getEmail())) {
-                user.setStatus(newStatus);
-                System.out.println("[ServerContext] Đã cập nhật trạng thái của User [" + email + "] trên RAM thành: " + newStatus);
-                broadcastOnlineUsersToAdmins(); // Đồng bộ ngay lập tức sang Admin Client
-                break;
-            }
+        User user = getUserCacheByEmail(email);
+        if (user != null) {
+            user.setStatus(newStatus);
+            System.out.println("[ServerContext] Đã cập nhật trạng thái của User [" + email + "] trên RAM thành: " + newStatus);
+            broadcastOnlineUsersToAdmins(); // Đồng bộ ngay lập tức sang Admin Client
         }
     }
 
@@ -246,44 +266,23 @@ public class ServerContext {
     public void removeOnlineUserByEmail(String email) {
         if (email == null || email.trim().isEmpty()) return;
 
-        WebSocket connToRemove = null;
+        WebSocket connToRemove = onlineUsers.remove(email);
 
-        // 1. Kiểm tra và xóa trong bản đồ onlineUsers
-        if (onlineUsers.containsKey(email)) {
-            connToRemove = onlineUsers.remove(email);
-            if (connToRemove != null) {
-                connToUserKey.remove(connToRemove);
-            }
-        } else {
-            // Quét tìm trong danh sách Object để lấy kết nối ra
-            for (Map.Entry<WebSocket, User> entry : onlineUserObjects.entrySet()) {
-                if (entry.getValue() != null && email.equalsIgnoreCase(entry.getValue().getEmail())) {
-                    connToRemove = entry.getKey();
-                    break;
-                }
-            }
-            if (connToRemove != null) {
-                onlineUsers.values().remove(connToRemove);
-                connToUserKey.remove(connToRemove);
-            }
-        }
-
-        // 2. Xóa khỏi bản đồ đối tượng onlineUserObjects và các dịch vụ lắng nghe
         if (connToRemove != null) {
+            connToUserKey.remove(connToRemove);
             onlineUserObjects.remove(connToRemove);
             removeTikTokListener(connToRemove); // Dọn dẹp luôn các bộ lắng nghe TikTok nếu có
-            System.out.println("[ServerContext] Đã xóa hoàn toàn User có email [" + email + "] khỏi cả 2 danh sách online.");
+            System.out.println("[ServerContext] Đã xóa hoàn toàn User có email [" + email + "] khỏi các danh sách online.");
 
-            // 3. Phát tín hiệu cập nhật (Broadcast) đồng bộ danh sách mới về cho tất cả Admin
+            // Phát tín hiệu cập nhật (Broadcast) đồng bộ danh sách mới về cho tất cả Admin
             broadcastOnlineUsersToAdmins();
         }
     }
 
     /**
-     * Hàm Broadcast gửi danh sách toàn bộ người dùng đang online tới tất cả các kết nối là ADMIN (Nâng cấp chạy ASYNC)
+     * Hàm Broadcast gửi danh sách toàn bộ người dùng đang online tới tất cả các kết nối là ADMIN (Chạy ASYNC)
      */
     public void broadcastOnlineUsersToAdmins() {
-        // Đẩy việc xử lý quét và gửi tin cho Admin sang Thread Pool riêng biệt
         asyncExecutor.submit(() -> {
             try {
                 Response response = new Response(MessageType.GET_ONLINE_USERS_RESPONSE, "SUCCESS", "Cập nhật danh sách user online.");
@@ -291,9 +290,13 @@ public class ServerContext {
                 String jsonResponse = gson.toJson(response);
 
                 onlineUsers.forEach((email, conn) -> {
-                    if (conn != null && conn.isOpen() && email.toLowerCase().endsWith("@admin.com")) {
-                        conn.send(jsonResponse);
-                        System.out.println("[AsyncAdminBroadcast] Đã đẩy danh sách Online Users tới Admin: " + email);
+                    if (conn != null && conn.isOpen()) {
+                        // Check quyền admin trực tiếp từ RAM Cache thay vì chọc DB
+                        User cachedUser = onlineUserObjects.get(conn);
+                        if (cachedUser != null && "ADMIN".equalsIgnoreCase(cachedUser.getRole())) {
+                            conn.send(jsonResponse);
+                            System.out.println("[AsyncAdminBroadcast] Đã đẩy danh sách Online Users tới Admin: " + email);
+                        }
                     }
                 });
             } catch (Exception e) {

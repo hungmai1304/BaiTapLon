@@ -22,28 +22,32 @@ public class RegisterBotHandler implements IMessageHandler {
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
         try {
             String productId = (String) data.get("productId");
-            double maxPrice = ((Number) data.get("maxPrice")).doubleValue();
-            double botStep = ((Number) data.get("botStep")).doubleValue();
 
-            // Lấy email từ session để đảm bảo tính bảo mật
-            String userEmail = context.getUserByConn(conn);
-            if (userEmail == null) {
-                sendError(conn, gson, "Bạn chưa đăng nhập!");
+            if (data.get("maxPrice") == null || data.get("botStep") == null) {
+                sendError(conn, gson, "Lỗi: Thiếu cấu hình hạn mức giá tối đa hoặc bước giá của Bot!");
                 return;
             }
 
-            // KIỂM TRA TRẠNG THÁI BLACKLIST TRƯỚC KHI CHO PHÉP ĐĂNG KÝ BOT
+            double maxPrice = ((Number) data.get("maxPrice")).doubleValue();
+            double botStep = ((Number) data.get("botStep")).doubleValue();
 
+            // BẢO MẬT: Lấy email từ session kết nối kết nối Websocket
+            String userEmail = context.getUserByConn(conn);
+            if (userEmail == null) {
+                sendError(conn, gson, "Lỗi bảo mật: Bạn chưa đăng nhập hoặc phiên làm việc hết hạn!");
+                return;
+            }
+
+            // KIỂM TRA TRẠNG THÁI BLACKLIST TRƯỚC KHI CHO PHÉP ĐĂNG KÝ
             User currentUser = UserDao.getInstance().getUserByEmail(userEmail);
             if (currentUser == null) {
                 sendError(conn, gson, "Lỗi hệ thống: Không tìm thấy thông tin tài khoản của bạn!");
                 return;
             }
 
-            // Chặn ngay lập tức nếu user thuộc danh sách đen
             if ("BLACKLIST".equalsIgnoreCase(currentUser.getStatus())) {
-                System.err.println("[RegisterBotHandler] Từ chối: Tài khoản BLACKLIST " + userEmail + " cố ý đăng ký Bot tự động!");
-                sendError(conn, gson, "Tài khoản của bạn đang nằm trong danh sách đen (BLACKLIST). Không thể sử dụng tính năng Bot đấu giá!");
+                System.err.println("[RegisterBotHandler] Từ chối tài khoản BLACKLIST " + userEmail + " cố ý cài Bot!");
+                sendError(conn, gson, "Tài khoản của bạn đã bị khóa (BLACKLIST). Không thể sử dụng tính năng Bot tự động!");
                 return;
             }
 
@@ -53,30 +57,36 @@ public class RegisterBotHandler implements IMessageHandler {
                 return;
             }
 
-            // Khởi tạo an toàn nếu danh sách Bot của phiên đấu giá bị null
-            if (currentAuction.getRegisteredBots() == null) {
-                currentAuction.setRegisteredBots(new ArrayList<>());
+            // =========================================================================
+            // THAO TÁC THÊM/SỬA BOT THREAD-SAFE: Khóa đối tượng tránh xung đột với luồng Bidding
+            // =========================================================================
+            synchronized (currentAuction) {
+                if (currentAuction.getRegisteredBots() == null) {
+                    currentAuction.setRegisteredBots(new ArrayList<>());
+                }
+
+                // Nếu người dùng này đã từng cài Bot cho phiên này, xóa cấu hình Bot cũ đi để ghi đè Bot mới
+                currentAuction.getRegisteredBots().removeIf(bot -> bot.getEmail().equals(userEmail));
+
+                // Đóng gói cấu hình Bot mới
+                AutoBidConfig newBot = new AutoBidConfig(userEmail, maxPrice, botStep);
+                currentAuction.getRegisteredBots().add(newBot);
             }
 
-            // KIỂM TRA: Nếu người này đã từng cài Bot cho phiên này rồi thì xóa Bot cũ đi (Cập nhật cấu hình Bot mới)
-            currentAuction.getRegisteredBots().removeIf(bot -> bot.getEmail().equals(userEmail));
-
-            // Đóng gói cấu hình Bot mới và đưa vào phiên đấu giá trên RAM
-            AutoBidConfig newBot = new AutoBidConfig(userEmail, maxPrice, botStep);
-            currentAuction.addBot(newBot);
-
-            // Phản hồi về Client đăng ký thành công
-            Response successRes = new Response(MessageType.REGISTER_BOT_RESPONSE, "SUCCESS", "Đã thiết lập Bot tự động thành công!");
+            // Phản hồi về Client đăng ký thành công trước để tối ưu trải nghiệm UI mượt mà
+            Response successRes = new Response(MessageType.REGISTER_BOT_RESPONSE, "SUCCESS", "Đã thiết lập cấu hình Bot tự động thành công!");
             conn.send(gson.toJson(successRes));
 
-            System.out.println("[BOT REGISTER] " + userEmail + " đã cài Bot cho SP: " + productId + " (Hạn mức Max: " + maxPrice + ")");
+            System.out.println("[BOT REGISTER] " + userEmail + " đã cài Bot thành công cho SP: " + productId + " (Trần giá Max: " + maxPrice + ")");
 
-            // Kích hoạt Bot nhảy vào so kè hoặc đặt giá khởi điểm ngay khi vừa đăng ký thành công
-            new PlaceBidHandler().triggerBotWar(context, gson, productId, currentAuction);
+            // =========================================================================
+            // KÍCH HOẠT CHIẾN TRƯỜNG BOT: Gọi hàm static xử lý bất đồng bộ qua Thread Pool an toàn
+            // =========================================================================
+            PlaceBidHandler.triggerBotWar(context, gson, productId, currentAuction);
 
         } catch (Exception e) {
-            e.printStackTrace();
-            sendError(conn, gson, "Lỗi khi đăng ký Bot tự động: " + e.getMessage());
+            System.err.println("[RegisterBotHandler] Lỗi hệ thống: " + e.getMessage());
+            sendError(conn, gson, "Lỗi hệ thống khi đăng ký Bot: " + e.getMessage());
         }
     }
 
