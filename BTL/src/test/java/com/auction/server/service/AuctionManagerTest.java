@@ -53,7 +53,7 @@ class AuctionManagerTest {
         p1.setStatus(ProductStatus.AVAILABLE);
         
         Auction a1 = new Auction();
-        a1.setId(1);
+        a1.setId("1");
         a1.setProduct(p1);
         a1.setStatus("PENDING");
         
@@ -62,7 +62,7 @@ class AuctionManagerTest {
         Auction picked = auctionManager.pickNextProduct();
 
         assertNotNull(picked);
-        assertEquals(1, picked.getId());
+        assertEquals("1", picked.getId());
         assertEquals("ACTIVE", picked.getStatus());
         assertEquals(ProductStatus.ON_AUCTION, picked.getProduct().getStatus());
         assertNotNull(picked.getStartTime());
@@ -80,7 +80,7 @@ class AuctionManagerTest {
         p1.setStatus(ProductStatus.ON_AUCTION);
         
         Auction a1 = new Auction();
-        a1.setId(1);
+        a1.setId("1");
         a1.setProduct(p1);
         a1.setStartPrice(100);
         a1.setCurrentPrice(150); // Price increased
@@ -102,7 +102,7 @@ class AuctionManagerTest {
         p1.setStatus(ProductStatus.ON_AUCTION);
         
         Auction a1 = new Auction();
-        a1.setId(1);
+        a1.setId("1");
         a1.setProduct(p1);
         a1.setStartPrice(100);
         a1.setCurrentPrice(100); // No price increase
