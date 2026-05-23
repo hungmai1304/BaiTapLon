@@ -53,68 +53,73 @@ public class PlaceBidHandler implements IMessageHandler {
                 return;
             }
 
-            // 3. Kiểm tra trạng thái Phiên đấu giá
-            if ("PENDING".equals(currentAuction.getStatus())) {
-                sendError(conn, gson, "Chưa đến giờ! Sản phẩm đang trong 30 phút quảng cáo.");
-                return;
-            } else if ("COMPLETED".equals(currentAuction.getStatus())) {
-                sendError(conn, gson, "Muộn rồi! Phiên đấu giá này đã kết thúc.");
-                return;
+            // 3. KIỂM TRA & CẬP NHẬT TRẠNG THÁI (Thread-safe trên RAM)
+            // CHIẾN THUẬT HOLD/REFUND: Tạm giữ tiền của người đặt giá mới và hoàn trả người cũ
+            synchronized (currentAuction) {
+                // Kiểm tra trạng thái Phiên đấu giá
+                if ("PENDING".equals(currentAuction.getStatus())) {
+                    sendError(conn, gson, "Chưa đến giờ! Sản phẩm đang trong 30 phút quảng cáo.");
+                    return;
+                } else if ("COMPLETED".equals(currentAuction.getStatus())) {
+                    sendError(conn, gson, "Muộn rồi! Phiên đấu giá này đã kết thúc.");
+                    return;
+                }
+
+                // 4. KIỂM TRA LUẬT ĐẤU GIÁ (Giá mới phải >= Giá hiện tại + Bước giá)
+                double minRequiredPrice = (currentAuction.getHighestBidder() == null)
+                        ? currentAuction.getStartPrice()
+                        : (currentAuction.getCurrentPrice() + currentAuction.getStepPrice());
+
+                if (bidAmount < minRequiredPrice) {
+                    sendError(conn, gson, "Giá bạn đưa ra quá thấp! Phải lớn hơn hoặc bằng: " + String.format("%,.0fđ", minRequiredPrice));
+                    return;
+                }
+
+                // 5. CHIẾN THUẬT HOLD/REFUND: Tạm giữ tiền của người đặt giá mới
+                // [HOLD] Thử trừ tiền người đặt giá mới (Atomic SQL check)
+                boolean isHoldSuccess = UserDao.getInstance().withdrawMoney(userEmail, bidAmount);
+                if (!isHoldSuccess) {
+                    sendError(conn, gson, "Số dư ví không đủ để thực hiện lượt đặt giá " + String.format("%,.0fđ", bidAmount) + "!");
+                    return;
+                }
+
+                // [REFUND] Nếu có người dẫn đầu trước đó -> Hoàn tiền cho họ
+                User previousLeader = currentAuction.getHighestBidder();
+                double previousBid = currentAuction.getCurrentPrice();
+                if (previousLeader != null) {
+                    UserDao.getInstance().depositMoney(previousLeader.getEmail(), previousBid);
+                    System.out.println("   [Refund] Đã hoàn trả " + String.format("%,.0fđ", previousBid) + " cho người cũ: " + previousLeader.getEmail());
+                }
+
+                // 6. Cập nhật dữ liệu vào Phiên Đấu Giá (RAM)
+                User newLeader = new User();
+                newLeader.setEmail(userEmail);
+                newLeader.setUsername(userEmail);
+
+                currentAuction.setCurrentPrice(bidAmount);
+                currentAuction.setHighestBidder(newLeader);
+                currentAuction.setLeaderName(newLeader.getUsername());
+
+                // Ghi sổ lịch sử bằng BidTransaction
+                BidTransaction transaction = new BidTransaction();
+                transaction.setId(String.valueOf(currentAuction.getId()));
+                transaction.setBidder(newLeader);
+                transaction.setBidAmount(bidAmount);
+                transaction.setTimeCreated(LocalDateTime.now());
+
+                if (currentAuction.getBiddingHistory() == null) {
+                    currentAuction.setBiddingHistory(new ArrayList<>());
+                }
+                currentAuction.getBiddingHistory().add(transaction);
+
+                // Lưu lại vào RAM
+                context.updateAuction(currentAuction);
             }
 
-            // 4. KIỂM TRA LUẬT ĐẤU GIÁ (Giá mới phải >= Giá hiện tại + Bước giá)
-            double minRequiredPrice = (currentAuction.getHighestBidder() == null)
-                    ? currentAuction.getStartPrice()
-                    : (currentAuction.getCurrentPrice() + currentAuction.getStepPrice());
-
-            if (bidAmount < minRequiredPrice) {
-                sendError(conn, gson, "Giá bạn đưa ra quá thấp! Phải lớn hơn hoặc bằng: " + minRequiredPrice);
-                return;
-            }
-
-            //  4.5 KIỂM TRA VÍ TIỀN TRƯỚC KHI CHO ĐẶT GIÁ
-            User currentUser = UserDao.getInstance().getUserByEmail(userEmail);
-            if (currentUser == null) {
-                sendError(conn, gson, "Lỗi hệ thống: Không tìm thấy thông tin ví của bạn!");
-                return;
-            }
-
-            // Kiểm tra xem tiền trong ví có đủ để trả mức giá vừa nhập không
-            if (currentUser.getBalance() < bidAmount) {
-                sendError(conn, gson, "Số dư ví không đủ (" + String.format("%,.0fđ", currentUser.getBalance()) + ")! Vui lòng nạp thêm tiền để đấu giá.");
-                return;
-            }
-
-            // 5. Cập nhật dữ liệu vào Phiên Đấu Giá (RAM)
-            User newLeader = new User();
-            newLeader.setEmail(userEmail);
-            newLeader.setUsername(userEmail);
-
-            //Cập nhật thông tin phiên đấu giá (RAM)
-            currentAuction.setCurrentPrice(bidAmount);
-            currentAuction.setHighestBidder(newLeader);
-            currentAuction.setLeaderName(newLeader.getUsername());
-
-            // Ghi sổ lịch sử bằng BidTransaction
-            BidTransaction transaction = new BidTransaction();
-            transaction.setId(String.valueOf(currentAuction.getId()));
-            transaction.setBidder(newLeader);
-            transaction.setBidAmount(bidAmount);
-            transaction.setTimeCreated(LocalDateTime.now());
-
-            // Kiểm tra an toàn trước khi add vào list
-            if (currentAuction.getBiddingHistory() == null) {
-                currentAuction.setBiddingHistory(new ArrayList<>());
-            }
-            currentAuction.getBiddingHistory().add(transaction);
-
-            // Lưu lại vào RAM
-            context.updateAuction(currentAuction);
-
-            // 6. PHÁT LOA CHO CẢ SÀN THEO ĐÚNG GIAO KÈO
+            // 7. PHÁT LOA CHO CẢ SÀN THEO ĐÚNG GIAO KÈO
             broadcastNewBid(context, gson, productId, bidAmount, userEmail);
 
-            // 7. Gửi phản hồi riêng cho người vừa đấu giá thành công
+            // 8. Gửi phản hồi riêng cho người vừa đấu giá thành công
             Response successRes = new Response(MessageType.PLACE_BID_RESPONSE, "SUCCESS", "Chúc mừng! Bạn đang là người dẫn đầu!");
             conn.send(gson.toJson(successRes));
 

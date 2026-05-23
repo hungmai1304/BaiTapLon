@@ -247,25 +247,15 @@ public class UserDao {
             return false;
         }
 
-        // Bước 1: Kiểm tra số dư tài khoản hiện tại trước khi cho phép rút
-        User user = getUserByEmail(email);
-        if (user == null) {
-            System.err.println("❌ Lỗi: Không tìm thấy người dùng!");
-            return false;
-        }
-
-        if (user.getBalance() < amount) {
-            System.err.println("❌ Lỗi: Tài khoản " + email + " không đủ số dư để rút (" + user.getBalance() + " < " + amount + ")");
-            return false; // Trả về false luôn để Handler biết là do không đủ tiền
-        }
-
-        // Bước 2: Thực hiện trừ tiền trong Database
-        String sql = "UPDATE users SET balance = balance - ? WHERE email = ?";
+        // Bước 1: Thực hiện trừ tiền trong Database (Atomic)
+        // Câu lệnh SQL: Trừ tiền với điều kiện số dư hiện tại phải lớn hơn hoặc bằng số tiền cần rút
+        String sql = "UPDATE users SET balance = balance - ? WHERE email = ? AND balance >= ?";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setDouble(1, amount);
             pstmt.setString(2, email);
+            pstmt.setDouble(3, amount);
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {

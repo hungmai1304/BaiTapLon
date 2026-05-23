@@ -132,13 +132,11 @@ public class SellProductHandler implements IMessageHandler {
                                     p.setStatus(ProductStatus.SOLD);
                                     // Ghi nhận giá chốt đơn cuối cùng vào trường giá hiện tại dưới DB
                                     p.setCurrentPrice(auctionToEnd.getCurrentPrice());
-                                    // TRỪ TIỀN :
+
                                     String winnerEmail = auctionToEnd.getHighestBidder().getEmail();
                                     double finalPrice = auctionToEnd.getCurrentPrice();
 
-                                    UserDao.getInstance().deductBalance(winnerEmail, finalPrice);
-
-                                    System.out.println("Đã trừ " + finalPrice + " từ ví của " + winnerEmail);
+                                    System.out.println("Sản phẩm chốt đơn thành công cho: " + winnerEmail);
                                     String thongBao = " Chúc mừng " + winnerEmail + " đã chốt đơn sản phẩm '" + p.getName() + "' với giá " + String.format("%,.0fđ", finalPrice) + "!";
                                     broadcastAuctionResult(context, safeGson, thongBao);
 
