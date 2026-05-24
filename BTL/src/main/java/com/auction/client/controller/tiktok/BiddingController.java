@@ -126,9 +126,9 @@ public class BiddingController {
                 return;
             }
 
-            if ((bidAmount - currentPrice) % stepPrice != 0) {
+            if ((bidAmount - currentPrice) < stepPrice) {
                 lblNotification.setStyle("-fx-text-fill: #e74c3c;");
-                lblNotification.setText("Sai bước giá! Phải tăng theo bội số của " + String.format("%,.0fđ", stepPrice));
+                lblNotification.setText("Sai bước giá! Giá đặt mới phải cao hơn giá cũ tối thiểu là " + String.format("%,.0fđ", stepPrice));
                 return;
             }
 
