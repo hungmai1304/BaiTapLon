@@ -20,20 +20,21 @@ public class NewBidClientHandler implements IClientHandler {
                     double newPrice = ((Number) response.getData().get("newPrice")).doubleValue();
                     String leaderName = (String) response.getData().get("leaderName");
                     String productId = (String) response.getData().get("productId");
+                    String newEndTime = (String) response.getData().get("newEndTime");
 
-                    System.out.println("[Client] Nhận giá mới: " + newPrice + " từ " + leaderName);
+                    System.out.println("[Client] Nhận giá mới: " + newPrice + " từ " + leaderName + (newEndTime != null ? " [GIA HẠN]" : ""));
 
                     // GỌI CONTROLLER QUA REGISTRY ĐỂ NHẢY SỐ UI
 
                     TikTokAuctionController controller = (TikTokAuctionController) ControllerRegistry.get("TikTokAuctionController");
                     BiddingController biddingCtrl = (BiddingController) ControllerRegistry.get("BiddingController");
                     if (biddingCtrl != null) {
-                        biddingCtrl.updateRealtimeBid(productId, newPrice, leaderName);
+                        biddingCtrl.updateRealtimeBid(productId, newPrice, leaderName, newEndTime);
                     }
 
                     if (controller != null) {
                         // Truyền dữ liệu sang UI để nó tự nhảy số
-                        controller.updateRealtimeBid(productId, newPrice, leaderName);
+                        controller.updateRealtimeBid(productId, newPrice, leaderName, newEndTime);
                     } else {
                         System.out.println("[Client] Giao diện TikTok chưa mở, không cần nhảy số.");
                     }

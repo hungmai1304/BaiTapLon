@@ -112,12 +112,27 @@ public class PlaceBidHandler implements IMessageHandler {
                 }
                 currentAuction.getBiddingHistory().add(transaction);
 
+                // =========================================================================
+                // TÍNH NĂNG ANTI-SNIPING: Tự động gia hạn nếu Bid ở giây cuối
+                // =========================================================================
+                LocalDateTime now = LocalDateTime.now();
+                long secondsLeft = java.time.Duration.between(now, currentAuction.getEndTime()).getSeconds();
+                boolean isExtended = false;
+
+                if (secondsLeft <= 30 && secondsLeft > 0) {
+                    // Gia hạn thêm 30 giây
+                    LocalDateTime newEndTime = currentAuction.getEndTime().plusSeconds(30);
+                    currentAuction.setEndTime(newEndTime);
+                    isExtended = true;
+                    System.out.println("🔥 [Anti-Sniping] Phiên " + currentAuction.getId() + " được gia hạn thêm 30s. Kết thúc mới: " + newEndTime);
+                }
+
                 // Lưu lại vào RAM
                 context.updateAuction(currentAuction);
-            }
 
-            // 7. PHÁT LOA CHO CẢ SÀN THEO ĐÚNG GIAO KÈO
-            broadcastNewBid(context, gson, productId, bidAmount, userEmail);
+                // PHÁT LOA CHO CẢ SÀN (Đính kèm endTime mới nếu có gia hạn)
+                broadcastNewBidWithExtension(context, gson, productId, bidAmount, userEmail, isExtended ? currentAuction.getEndTime() : null);
+            }
 
             // 8. Gửi phản hồi riêng cho người vừa đấu giá thành công
             Response successRes = new Response(MessageType.PLACE_BID_RESPONSE, "SUCCESS", "Chúc mừng! Bạn đang là người dẫn đầu!");
@@ -131,17 +146,17 @@ public class PlaceBidHandler implements IMessageHandler {
         }
     }
 
-    // HÀM PHÁT LOA NHẢY SỐ
+    // HÀM PHÁT LOA NHẢY SỐ (Hỗ trợ gia hạn Anti-Sniping)
 
-    private void broadcastNewBid(ServerContext context, Gson gson, String productId, double newPrice, String leaderName) {
-
+    private void broadcastNewBidWithExtension(ServerContext context, Gson gson, String productId, double newPrice, String leaderName, LocalDateTime newEndTime) {
         Response broadcastRes = new Response(MessageType.BROADCAST_NEW_BID, "SUCCESS", "Có mức giá mới!");
-
         broadcastRes.getData().put("newPrice", newPrice);
         broadcastRes.getData().put("leaderName", leaderName);
-
-        // Tặng kèm productId để Client biết màn hình nào cần nhảy số
         broadcastRes.getData().put("productId", productId);
+
+        if (newEndTime != null) {
+            broadcastRes.getData().put("newEndTime", newEndTime.toString());
+        }
 
         String message = gson.toJson(broadcastRes);
         for (WebSocket client : context.getConnectedClients()) {
@@ -149,7 +164,7 @@ public class PlaceBidHandler implements IMessageHandler {
                 client.send(message);
             }
         }
-        System.out.println("   -> [Broadcast Bid] Đã thông báo giá mới (" + newPrice + ") cho toàn Server.");
+        System.out.println("   -> [Broadcast Bid] Đã thông báo giá mới (" + newPrice + ") cho toàn Server." + (newEndTime != null ? " [GIA HẠN]" : ""));
     }
 
     private void sendError(WebSocket conn, Gson gson, String msg) {

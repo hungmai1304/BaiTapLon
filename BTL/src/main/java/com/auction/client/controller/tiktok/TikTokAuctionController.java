@@ -133,7 +133,7 @@ public class TikTokAuctionController {
 
     // THÊM HÀM NÀY ĐỂ XỬ LÝ NHẢY SỐ REAL-TIME TỪ SERVER GỬI VỀ
 
-    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName, String newEndTime) {
         Platform.runLater(() -> {
             // Lấy món đồ đang được hiển thị trên màn hình hiện tại
             Auction currentAuction = ClientContext.getInstance().getCurrentAuction();
@@ -149,6 +149,20 @@ public class TikTokAuctionController {
                 if (lblTopBidder != null) {
                     lblTopBidder.setText(leaderName + " - " + String.format("%,.0f VNĐ", newPrice));
                 }
+
+                // 3. Cập nhật thời gian kết thúc (Gia hạn Anti-Sniping) nếu có
+                if (newEndTime != null && !newEndTime.isEmpty()) {
+                    try {
+                        java.time.LocalDateTime extendedTime = java.time.LocalDateTime.parse(newEndTime);
+                        currentAuction.setEndTime(extendedTime);
+                        if (currentAuction.getProduct() instanceof Product) {
+                            ((Product)currentAuction.getProduct()).setEndTime(extendedTime);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("[TikTok UI] Lỗi parse thời gian gia hạn: " + e.getMessage());
+                    }
+                }
+
                 System.out.println("[TikTok UI] Đã nhảy số trực tiếp trên màn hình: " + newPrice);
             }
         });

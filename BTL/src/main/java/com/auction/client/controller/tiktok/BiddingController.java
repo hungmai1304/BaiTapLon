@@ -88,8 +88,8 @@ public class BiddingController {
             Product p = (Product) currentAuctionData.getProduct();
             LocalDateTime now = LocalDateTime.now();
 
-            LocalDateTime fixedStart = p.getStartTime() != null ? p.getStartTime().plusHours(7) : null;
-            LocalDateTime fixedEnd = p.getEndTime() != null ? p.getEndTime().plusHours(7) : null;
+            LocalDateTime fixedStart = p.getStartTime() != null ? p.getStartTime() : null;
+            LocalDateTime fixedEnd = p.getEndTime() != null ? p.getEndTime() : null;
 
             if (fixedStart != null && now.isBefore(fixedStart)) {
                 lblNotification.setStyle("-fx-text-fill: #e74c3c;");
@@ -208,7 +208,7 @@ public class BiddingController {
         ControllerRegistry.unregister("BiddingController");
         NavigationService.setCenterView("/com/auction/client/view/tiktokAuction.fxml");
     }
-    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName, String newEndTime) {
         Platform.runLater(() -> {
             // 1. Kiểm tra ID:
             if (this.currentAuctionData != null && this.currentAuctionData.getProduct().getId().equals(productId)) {
@@ -223,7 +223,21 @@ public class BiddingController {
                 this.currentAuctionData.setCurrentPrice(newPrice);
                 this.currentAuctionData.setLeaderName(leaderName);
 
-                // 5. Cập nhật biểu đồ
+                // 5. Cập nhật thời gian kết thúc (Gia hạn Anti-Sniping)
+                if (newEndTime != null && !newEndTime.isEmpty()) {
+                    try {
+                        LocalDateTime extendedTime = LocalDateTime.parse(newEndTime);
+                        this.currentAuctionData.setEndTime(extendedTime);
+                        if (this.currentAuctionData.getProduct() != null) {
+                            ((Product)this.currentAuctionData.getProduct()).setEndTime(extendedTime);
+                        }
+                        System.out.println("[Bidding UI] Đã gia hạn thời gian kết thúc: " + extendedTime);
+                    } catch (Exception e) {
+                        System.err.println("[Bidding UI] Lỗi parse thời gian gia hạn: " + e.getMessage());
+                    }
+                }
+
+                // 6. Cập nhật biểu đồ
                 bidCount++;
                 priceSeries.getData().add(new XYChart.Data<>(String.valueOf(bidCount), newPrice));
 
@@ -243,8 +257,8 @@ public class BiddingController {
         countdownTimeline = new Timeline(new KeyFrame(javafx.util.Duration.millis(1000), event -> {
             LocalDateTime now = LocalDateTime.now();
 
-            LocalDateTime startTime = p.getStartTime() != null ? p.getStartTime().plusHours(7) : null;
-            LocalDateTime endTime = p.getEndTime() != null ? p.getEndTime().plusHours(7) : null;
+            LocalDateTime startTime = p.getStartTime() != null ? p.getStartTime() : null;
+            LocalDateTime endTime = p.getEndTime() != null ? p.getEndTime() : null;
 
             if (startTime == null || endTime == null) {
                 if (lblCountdown != null) lblCountdown.setText("Không xác định được thời gian!");

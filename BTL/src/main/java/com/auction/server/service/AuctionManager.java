@@ -6,6 +6,8 @@ import com.auction.common.model.product.ProductStatus;
 import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
 import com.auction.server.model.ServerContext;
+import com.auction.server.dao.ProductDao;
+import com.auction.server.dao.AuctionDao;
 import com.auction.common.utils.LocalDateTimeAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -110,39 +112,65 @@ public class AuctionManager {
     // ========== KẾT THÚC PHIÊN ĐẤU GIÁ ==========
 
     /**
-     * Kết thúc phiên đấu giá hiện tại
+     * Kết thúc phiên đấu giá hiện tại (Thread-safe)
      * @param auction Phiên đấu giá cần kết thúc
      */
     public void endAuction(Auction auction) {
         if (auction == null) return;
 
-        ServerContext context = ServerContext.getInstance();
-
-        // Đổi trạng thái phiên đấu giá sang COMPLETED
-        auction.setStatus("COMPLETED");
-
-        // Xử lý cập nhật trạng thái Product bên trong object Auction
-        Product product = auction.getProduct();
-        if (product != null) {
-            if (auction.getCurrentPrice() > auction.getStartPrice()) {
-                product.setStatus(ProductStatus.SOLD);
-                System.out.println("[AuctionManager] Sản phẩm " + product.getName() +
-                        " ĐÃ BÁN với giá: " + auction.getCurrentPrice());
-            } else {
-                product.setStatus(ProductStatus.CANCELLED);
-                System.out.println("[AuctionManager] Sản phẩm " + product.getName() +
-                        " KHÔNG CÓ AI ĐẤU GIÁ -> Hủy bỏ");
+        synchronized (auction) {
+            // Kiểm tra lại trạng thái để tránh chốt đơn 2 lần (Double closing)
+            if ("COMPLETED".equals(auction.getStatus())) {
+                return;
             }
+
+            ServerContext context = ServerContext.getInstance();
+            auction.setStatus("COMPLETED");
+
+            Product product = auction.getProduct();
+            if (product != null) {
+                String winnerEmail = null;
+                double finalPrice = auction.getCurrentPrice();
+
+                if (auction.getHighestBidder() != null) {
+                    winnerEmail = auction.getHighestBidder().getEmail();
+                    product.setStatus(ProductStatus.SOLD);
+                    product.setCurrentPrice(finalPrice);
+
+                    System.out.println("[CHỐT ĐƠN] SP: " + product.getName() + " | Winner: " + winnerEmail + " | Giá: " + finalPrice);
+                    String thongBao = "🎉 Chúc mừng " + winnerEmail + " đã đấu giá thành công '" + product.getName() + "' với giá " + String.format("%,.0fđ", finalPrice) + "!";
+                    broadcastAuctionResultNotification(context, thongBao);
+                } else {
+                    product.setStatus(ProductStatus.AVAILABLE);
+                    product.setStartTime(null);
+                    product.setEndTime(null);
+                    finalPrice = product.getStartPrice();
+
+                    System.out.println("[CHỐT ĐƠN] SP: " + product.getName() + " | KHÔNG CÓ NGƯỜI MUA");
+                    String thongBao = "Rất tiếc, phiên đấu giá '" + product.getName() + "' đã kết thúc mà không có ai đặt lệnh!";
+                    broadcastAuctionResultNotification(context, thongBao);
+                }
+
+                // Lưu Database
+                ProductDao.getInstance().editProduct(product);
+                AuctionDao.getInstance().saveCompletedAuction(auction.getId(), product.getId(), winnerEmail, finalPrice);
+            }
+
+            // Xóa khỏi RAM và Broadcast update
+            context.removeAuction(auction.getId());
+            broadcastAuctionEnd(auction);
         }
-
-        // Cập nhật sự thay đổi của Auction lên RAM ServerContext
-        context.updateAuction(auction);
-
-        // Broadcast kết quả phiên đấu giá kết thúc
-        broadcastAuctionEnd(auction);
 
         // Chọn phiên đấu giá tiếp theo (sau 10 giây)
         scheduleNextAuction();
+    }
+
+    private void broadcastAuctionResultNotification(ServerContext context, String thongBao) {
+        Response res = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBao);
+        String msg = gson.toJson(res);
+        for (WebSocket client : context.getServer().getConnections()) {
+            if (client.isOpen()) client.send(msg);
+        }
     }
 
     /**
