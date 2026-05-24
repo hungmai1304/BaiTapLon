@@ -4,6 +4,9 @@ public class ServerLauncher {
 
     public static void main(String[] args) {
 
+        // Ép Server luôn chạy ở múi giờ Việt Nam (GMT+7) để tránh lệch giờ khi deploy lên Cloud
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+
         try {
 
             // Render c?p port qua bi?n m�i tr??ng
