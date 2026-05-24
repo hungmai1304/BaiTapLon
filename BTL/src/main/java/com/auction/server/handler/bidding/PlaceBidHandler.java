@@ -68,19 +68,19 @@ public class PlaceBidHandler implements IMessageHandler {
                 return;
             }
 
-            if ("PENDING".equals(currentAuction.getStatus())) {
-                sendError(conn, gson, "Chưa đến giờ! Sản phẩm đang trong thời gian chờ mở sàn.");
-                return;
-            } else if ("COMPLETED".equals(currentAuction.getStatus())) {
-                sendError(conn, gson, "Muộn rồi! Phiên đấu giá này đã kết thúc.");
-                return;
-            }
-
-            // =========================================================================
-            // ĐỒNG BỘ HÓA LUỒNG (THREAD-SAFE): Tránh Race Condition khi nhiều người cùng Bid một mili-giây
-            // =========================================================================
+            // 3. KIỂM TRA & CẬP NHẬT TRẠNG THÁI (Thread-safe trên RAM)
+            // CHIẾN THUẬT HOLD/REFUND: Tạm giữ tiền của người đặt giá mới và hoàn trả người cũ
             synchronized (currentAuction) {
-                // Phải tính toán lại mức giá tối thiểu ngay bên trong khối synchronized
+                // Kiểm tra trạng thái Phiên đấu giá
+                if ("PENDING".equals(currentAuction.getStatus())) {
+                    sendError(conn, gson, "Chưa đến giờ! Sản phẩm đang trong thời gian chờ mở sàn.");
+                    return;
+                } else if ("COMPLETED".equals(currentAuction.getStatus())) {
+                    sendError(conn, gson, "Muộn rồi! Phiên đấu giá này đã kết thúc.");
+                    return;
+                }
+
+                // 4. KIỂM TRA LUẬT ĐẤU GIÁ (Giá mới phải >= Giá hiện tại + Bước giá)
                 double minRequiredPrice = (currentAuction.getHighestBidder() == null)
                         ? currentAuction.getStartPrice()
                         : (currentAuction.getCurrentPrice() + currentAuction.getStepPrice());
@@ -90,13 +90,23 @@ public class PlaceBidHandler implements IMessageHandler {
                     return;
                 }
 
-                // Kiểm tra ví tiền thực tế
-                if (currentUser.getBalance() < bidAmount) {
-                    sendError(conn, gson, "Số dư ví không đủ để thực hiện lượt đặt giá này!");
+                // 5. CHIẾN THUẬT HOLD/REFUND: Tạm giữ tiền của người đặt giá mới
+                // [HOLD] Thử trừ tiền người đặt giá mới (Atomic SQL check)
+                boolean isHoldSuccess = UserDao.getInstance().withdrawMoney(userEmail, bidAmount);
+                if (!isHoldSuccess) {
+                    sendError(conn, gson, "Số dư ví không đủ để thực hiện lượt đặt giá " + String.format("%,.0fđ", bidAmount) + "!");
                     return;
                 }
 
-                // Tiến hành ghi nhận người dẫn đầu mới lên RAM
+                // [REFUND] Nếu có người dẫn đầu trước đó -> Hoàn tiền cho họ
+                User previousLeader = currentAuction.getHighestBidder();
+                double previousBid = currentAuction.getCurrentPrice();
+                if (previousLeader != null) {
+                    UserDao.getInstance().depositMoney(previousLeader.getEmail(), previousBid);
+                    System.out.println("   [Refund] Đã hoàn trả " + String.format("%,.0fđ", previousBid) + " cho người cũ: " + previousLeader.getEmail());
+                }
+
+                // 6. Cập nhật dữ liệu vào Phiên Đấu Giá (RAM)
                 User newLeader = new User();
                 newLeader.setEmail(userEmail);
                 newLeader.setUsername(currentUser.getUsername()); // Lấy tên hiển thị thực tế thay vì gán email
@@ -105,9 +115,9 @@ public class PlaceBidHandler implements IMessageHandler {
                 currentAuction.setHighestBidder(newLeader);
                 currentAuction.setLeaderName(newLeader.getUsername());
 
-                // Ghi nhận lịch sử giao dịch
+                // Ghi sổ lịch sử bằng BidTransaction
                 BidTransaction transaction = new BidTransaction();
-                transaction.setId(currentAuction.getId());
+                transaction.setId(String.valueOf(currentAuction.getId()));
                 transaction.setBidder(newLeader);
                 transaction.setBidAmount(bidAmount);
                 transaction.setTimeCreated(LocalDateTime.now());
@@ -117,15 +127,17 @@ public class PlaceBidHandler implements IMessageHandler {
                 }
                 currentAuction.getBiddingHistory().add(transaction);
 
+                // Lưu lại vào RAM
                 context.updateAuction(currentAuction);
             }
 
-            // Phát loa Real-time cho toàn bộ client nhận số liệu nhảy mới
+            // 7. PHÁT LOA CHO CẢ SÀN THEO ĐÚNG GIAO KÈO
             broadcastNewBid(context, gson, productId, bidAmount, userEmail);
 
-            // Kích hoạt cuộc chiến Bot thông qua Executor điều phối luồng an toàn
+            // 8. Kích hoạt cuộc chiến Bot thông qua Executor điều phối luồng an toàn
             triggerBotWar(context, gson, productId, currentAuction);
 
+            // 9. Gửi phản hồi riêng cho người vừa đấu giá thành công
             Response successRes = new Response(MessageType.PLACE_BID_RESPONSE, "SUCCESS", "Chúc mừng! Bạn đang là người dẫn đầu!");
             conn.send(gson.toJson(successRes));
 

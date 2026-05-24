@@ -28,8 +28,8 @@ public class TikTokAuctionController {
         ControllerRegistry.register("TikTokAuctionController", this);
 
         // Đăng ký listener và lấy danh sách đấu giá mới nhất
-        RequestSender.send("TIK_TOK_LISTENER_REQUEST", null);
-        RequestSender.send(MessageType.GET_ACTIVE_AUCTIONS_REQUEST, null);
+        RequestSender.send(MessageType.TIK_TOK_LISTENER_REQUEST, new java.util.HashMap<>());
+        RequestSender.sendGetActiveAuctionsRequest();
 
         renderCurrentAuction();
     }
@@ -123,13 +123,13 @@ public class TikTokAuctionController {
             renderCurrentAuction();
         } else {
             System.out.println("[TikTokController] Hết danh sách! Đang tải thêm...");
-            RequestSender.send(MessageType.GET_ACTIVE_AUCTIONS_REQUEST, null);
+            RequestSender.sendGetActiveAuctionsRequest();
         }
     }
 
     public void cleanup() {
         ControllerRegistry.unregister("TikTokAuctionController");
-        RequestSender.send("STOP_TIK_TOK_LISTENER_REQUEST", null);
+        RequestSender.send(MessageType.STOP_TIK_TOK_LISTENER_REQUEST, new java.util.HashMap<>());
     }
 
     @FXML

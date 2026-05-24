@@ -214,6 +214,8 @@ public class UserDao {
 
     /**
      * ĐÃ TỐI ƯU TUYỆT ĐỐI: Rút tiền khỏi tài khoản (Chỉ tốn 1 database hit và chống Race Condition)
+     * TỐI ƯU: Gộp điều kiện kiểm tra số dư trực tiếp vào câu UPDATE (Atomic Operation)
+     * Loại bỏ hoàn toàn bước getUserByEmail cũ để giảm tải 50% thời gian kết nối mạng xuống DB
      */
     public boolean withdrawMoney(String email, double amount) {
         if (amount <= 0) {
@@ -221,8 +223,8 @@ public class UserDao {
             return false;
         }
 
-        // TỐI ƯU: Gộp điều kiện kiểm tra số dư trực tiếp vào câu UPDATE (Atomic Operation)
-        // Loại bỏ hoàn toàn bước getUserByEmail cũ để giảm tải 50% thời gian kết nối mạng xuống DB
+        // Bước 1: Thực hiện trừ tiền trong Database (Atomic)
+        // Câu lệnh SQL: Trừ tiền với điều kiện số dư hiện tại phải lớn hơn hoặc bằng số tiền cần rút
         String sql = "UPDATE users SET balance = balance - ? WHERE email = ? AND balance >= ?";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
