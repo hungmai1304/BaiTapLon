@@ -7,6 +7,7 @@ import com.auction.client.utils.NavigationService;
 import com.auction.client.controller.general.SomeGlobal;
 import com.auction.common.model.product.Product;
 import com.auction.common.model.auction.Auction;
+import com.auction.common.model.user.User; // Import thêm model User để kiểm tra quyền sở hữu
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -19,7 +20,7 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.scene.control.Button;
-import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 public class BiddingController {
 
@@ -63,6 +64,21 @@ public class BiddingController {
             lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0fđ", currentAuctionData.getCurrentPrice()));
 
             updateLeaderUI(currentAuctionData.getLeaderName(), currentAuctionData.getCurrentPrice());
+
+            // =========================================================================
+            // NGHIỆP VỤ MỚI: Khóa toàn bộ tính năng ra giá nếu người dùng là chủ sản phẩm
+            // =========================================================================
+            User currentUser = SomeGlobal.getCurrentUser();
+            if (currentUser != null && p.getOwner() != null) {
+                if (currentUser.getEmail().equalsIgnoreCase(p.getOwner().getEmail())) {
+                    txtBidAmount.setDisable(true);
+                    btnPlaceBid.setDisable(true);
+                    lblNotification.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+                    lblNotification.setText("Bạn là người bán sản phẩm này, không có quyền tham gia đấu giá!");
+                }
+            }
+            // =========================================================================
+
         } else {
             lblNotification.setStyle("-fx-text-fill: #e74c3c;");
             lblNotification.setText("Lỗi: Không tìm thấy thông tin phiên đấu giá!");
@@ -80,17 +96,30 @@ public class BiddingController {
     public void handlePlaceBidForAuction(ActionEvent event) {
         if (currentAuctionData != null && currentAuctionData.getProduct() != null) {
             Product p = (Product) currentAuctionData.getProduct();
-            LocalDateTime now = LocalDateTime.now();
 
-            LocalDateTime fixedStart = p.getStartTime() != null ? p.getStartTime().plusHours(7) : null;
-            LocalDateTime fixedEnd = p.getEndTime() != null ? p.getEndTime().plusHours(7) : null;
+            // -------------------------------------------------------------------------
+            // KIỂM TRA BẢO MẬT: Double check từ chối gửi request mạng nếu cố tình bấm nút
+            // -------------------------------------------------------------------------
+            User currentUser = SomeGlobal.getCurrentUser();
+            if (currentUser != null && p.getOwner() != null) {
+                if (currentUser.getEmail().equalsIgnoreCase(p.getOwner().getEmail())) {
+                    lblNotification.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+                    lblNotification.setText("Vi phạm quy chế: Chủ sản phẩm không được tự đấu giá!");
+                    return;
+                }
+            }
+            // -------------------------------------------------------------------------
 
-            if (fixedStart != null && now.isBefore(fixedStart)) {
+            long nowMillis = System.currentTimeMillis();
+            long startMillis = p.getStartTime() != null ? p.getStartTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() : 0;
+            long endMillis = p.getEndTime() != null ? p.getEndTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() : 0;
+
+            if (startMillis > 0 && nowMillis < startMillis) {
                 lblNotification.setStyle("-fx-text-fill: #e74c3c;");
                 lblNotification.setText("Đang trong thời gian quảng cáo, không thể ra giá!");
                 return;
             }
-            if (fixedEnd != null && now.isAfter(fixedEnd)) {
+            if (endMillis > 0 && nowMillis > endMillis) {
                 lblNotification.setStyle("-fx-text-fill: #e74c3c;");
                 lblNotification.setText("Phiên đấu giá đã kết thúc!");
                 return;
@@ -135,7 +164,6 @@ public class BiddingController {
             lblNotification.setText("Đang kiểm tra ví và gửi yêu cầu...");
             txtBidAmount.clear();
 
-
         } catch (NumberFormatException e) {
             lblNotification.setStyle("-fx-text-fill: #e74c3c;");
             lblNotification.setText("Vui lòng nhập con số hợp lệ!");
@@ -173,15 +201,11 @@ public class BiddingController {
         if (name != null && !name.isEmpty()) {
             lblLeaderName.setText(name);
             lblLeaderPrice.setText("- " + String.format("%,.0fđ", price));
-            // KIỂM TRA XEM MÌNH CÓ CÒN DẪN ĐẦU KHÔNG
             if (SomeGlobal.getCurrentUser() != null) {
                 String myEmail = SomeGlobal.getCurrentUser().getEmail();
                 String myUsername = SomeGlobal.getCurrentUser().getUsername();
-                // Nếu người dẫn đầu hiện tại KHÔNG PHẢI là email hoặc username của mình
                 if (!name.trim().equals(myEmail) && !name.trim().equals(myUsername)) {
-                    // Và trên màn hình vẫn còn sót lại chữ "dẫn đầu" từ lượt đặt giá trước
                     if (lblNotification.getText() != null && lblNotification.getText().contains("dẫn đầu")) {
-                        // Xóa ngay đi để tránh gây hiểu lầm cho người dùng
                         lblNotification.setText("");
                     }
                 }
@@ -194,6 +218,15 @@ public class BiddingController {
 
     @FXML
     public void handleClear(ActionEvent event) {
+        // Nếu là chủ sở hữu, chặn không cho clear để tránh việc mở lại giao diện nhập liệu
+        if (currentAuctionData != null && currentAuctionData.getProduct() != null) {
+            Product p = (Product) currentAuctionData.getProduct();
+            User currentUser = SomeGlobal.getCurrentUser();
+            if (currentUser != null && p.getOwner() != null
+                    && currentUser.getEmail().equalsIgnoreCase(p.getOwner().getEmail())) {
+                return;
+            }
+        }
         txtBidAmount.clear();
         lblNotification.setText("");
     }
@@ -233,38 +266,45 @@ public class BiddingController {
         Product p = (Product) currentAuctionData.getProduct();
 
         countdownTimeline = new Timeline(new KeyFrame(javafx.util.Duration.millis(1000), event -> {
-            LocalDateTime now = LocalDateTime.now();
+            long nowMillis = System.currentTimeMillis();
+            long startMillis = p.getStartTime() != null ? p.getStartTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() : 0;
+            long endMillis = p.getEndTime() != null ? p.getEndTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() : 0;
 
-            LocalDateTime startTime = p.getStartTime() != null ? p.getStartTime().plusHours(7) : null;
-            LocalDateTime endTime = p.getEndTime() != null ? p.getEndTime().plusHours(7) : null;
-
-            if (startTime == null || endTime == null) {
+            if (startMillis == 0 || endMillis == 0) {
                 if (lblCountdown != null) lblCountdown.setText("Không xác định được thời gian!");
                 return;
             }
 
-            if (now.isBefore(startTime)) {
+            // Chỉ thay đổi trạng thái Disable của nút bấm nếu người dùng HIỆN TẠI KHÔNG PHẢI người bán
+            User currentUser = SomeGlobal.getCurrentUser();
+            boolean isSeller = (currentUser != null && p.getOwner() != null && currentUser.getEmail().equalsIgnoreCase(p.getOwner().getEmail()));
+
+            if (nowMillis < startMillis) {
                 if (btnPlaceBid != null) btnPlaceBid.setDisable(true);
-                long diff = java.time.Duration.between(now, startTime).getSeconds();
-                if (diff < 0) diff = 0;
+                long diffSeconds = (startMillis - nowMillis) / 1000;
+                if (diffSeconds < 0) diffSeconds = 0;
+
                 if (lblCountdown != null) {
-                    lblCountdown.setText(String.format("Đợi quảng cáo: %02d:%02d", diff / 60, diff % 60));
+                    lblCountdown.setText(String.format("Đợi quảng cáo: %02d:%02d", diffSeconds / 60, diffSeconds % 60));
                     lblCountdown.setStyle("-fx-text-fill: #f39c12;");
                 }
-                if (lblNotification != null) {
+                if (lblNotification != null && !isSeller) {
                     lblNotification.setStyle("-fx-text-fill: #e74c3c;");
                     lblNotification.setText("Phiên đấu giá chưa bắt đầu! Hãy xem thông tin sản phẩm.");
                 }
 
-            } else if (now.isAfter(startTime) && now.isBefore(endTime)) {
-                if (btnPlaceBid != null) btnPlaceBid.setDisable(false);
-                long diff = java.time.Duration.between(now, endTime).getSeconds();
-                if (diff < 0) diff = 0;
+            } else if (nowMillis >= startMillis && nowMillis < endMillis) {
+                // Nếu là Seller thì giữ nguyên disable, ngược lại mới cho kích hoạt nút
+                if (btnPlaceBid != null) btnPlaceBid.setDisable(isSeller);
+
+                long diffSeconds = (endMillis - nowMillis) / 1000;
+                if (diffSeconds < 0) diffSeconds = 0;
+
                 if (lblCountdown != null) {
-                    lblCountdown.setText(String.format("Thời gian còn lại: %02d:%02d", diff / 60, diff % 60));
+                    lblCountdown.setText(String.format("Thời gian còn lại: %02d:%02d", diffSeconds / 60, diffSeconds % 60));
                     lblCountdown.setStyle("-fx-text-fill: #2ecc71;");
                 }
-                if (lblNotification != null && lblNotification.getText().contains("chưa bắt đầu")) {
+                if (lblNotification != null && lblNotification.getText().contains("chưa bắt đầu") && !isSeller) {
                     lblNotification.setText("");
                 }
 
@@ -274,7 +314,7 @@ public class BiddingController {
                     lblCountdown.setText("Phiên đấu giá ĐÃ KẾT THÚC!");
                     lblCountdown.setStyle("-fx-text-fill: #95a5a6;");
                 }
-                if (lblNotification != null) {
+                if (lblNotification != null && !isSeller) {
                     lblNotification.setStyle("-fx-text-fill: #e74c3c;");
                     lblNotification.setText("Hết giờ! Bạn không thể đưa ra mức giá nào nữa.");
                 }
