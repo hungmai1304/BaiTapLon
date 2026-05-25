@@ -24,9 +24,7 @@ import java.time.LocalDateTime;
 public class BiddingController {
 
     @FXML private Label lblProductName;
-    // --- CHỈ THÊM: Biến điều khiển thẻ Label mô tả sản phẩm ---
     @FXML private Label lblProductDesc;
-    // --- HẾT PHẦN THÊM ---
     @FXML private Label lblStartPrice;
     @FXML private Label lblPriceStep;
     @FXML private Label lblCurrentPrice;
@@ -55,12 +53,10 @@ public class BiddingController {
 
             lblProductName.setText("Tên sản phẩm: " + p.getName());
 
-            // --- CHỈ THÊM: Lấy mô tả từ Product đẩy lên giao diện (Nếu null thì báo Không có) ---
             if (lblProductDesc != null) {
                 String desc = p.getDescription();
                 lblProductDesc.setText("Mô tả: " + (desc != null && !desc.isEmpty() ? desc : "Không có mô tả"));
             }
-            // --- HẾT PHẦN THÊM ---
 
             lblStartPrice.setText("Giá khởi điểm: " + String.format("%,.0fđ", p.getStartPrice()));
             lblPriceStep.setText("Bước giá tối thiểu: " + String.format("%,.0fđ", p.getStepPrice()));
@@ -126,9 +122,9 @@ public class BiddingController {
                 return;
             }
 
-            if ((bidAmount - currentPrice) % stepPrice != 0) {
+            if ((bidAmount - currentPrice) < stepPrice) {
                 lblNotification.setStyle("-fx-text-fill: #e74c3c;");
-                lblNotification.setText("Sai bước giá! Phải tăng theo bội số của " + String.format("%,.0fđ", stepPrice));
+                lblNotification.setText("Sai bước giá! Giá đặt mới phải cao hơn giá cũ tối thiểu là " + String.format("%,.0fđ", stepPrice));
                 return;
             }
 
@@ -177,6 +173,19 @@ public class BiddingController {
         if (name != null && !name.isEmpty()) {
             lblLeaderName.setText(name);
             lblLeaderPrice.setText("- " + String.format("%,.0fđ", price));
+            // KIỂM TRA XEM MÌNH CÓ CÒN DẪN ĐẦU KHÔNG
+            if (SomeGlobal.getCurrentUser() != null) {
+                String myEmail = SomeGlobal.getCurrentUser().getEmail();
+                String myUsername = SomeGlobal.getCurrentUser().getUsername();
+                // Nếu người dẫn đầu hiện tại KHÔNG PHẢI là email hoặc username của mình
+                if (!name.trim().equals(myEmail) && !name.trim().equals(myUsername)) {
+                    // Và trên màn hình vẫn còn sót lại chữ "dẫn đầu" từ lượt đặt giá trước
+                    if (lblNotification.getText() != null && lblNotification.getText().contains("dẫn đầu")) {
+                        // Xóa ngay đi để tránh gây hiểu lầm cho người dùng
+                        lblNotification.setText("");
+                    }
+                }
+            }
         } else {
             lblLeaderName.setText("Chưa có");
             lblLeaderPrice.setText("0đ");

@@ -45,14 +45,8 @@ public class WithdrawHandler implements IMessageHandler {
                 return;
             }
 
-            // Lấy thông tin user hiện tại để kiểm tra nhanh trên RAM/DB trước khi chạy câu lệnh SQL
-            User currentUser = UserDao.getInstance().getUserByEmail(userEmail);
-            if (currentUser != null && currentUser.getBalance() < amount) {
-                sendError(conn, gson, "Số dư tài khoản không đủ để thực hiện giao dịch này! (Hiện có: " + currentUser.getBalance() + ")");
-                return;
-            }
-
-            // 3. Gọi DAO xử lý trừ tiền trong DB
+            // 3. Gọi DAO xử lý trừ tiền trong DB (Atomic Operation)
+            // Tối ưu: Không cần kiểm tra số dư trước bằng Java vì UserDao.withdrawMoney đã thực hiện kiểm tra Atomic dưới SQL
             boolean isUpdated = UserDao.getInstance().withdrawMoney(userEmail, amount);
 
             if (isUpdated) {

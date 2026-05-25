@@ -198,8 +198,10 @@ public class SellProductHandler implements IMessageHandler {
                                     AuctionDao.getInstance().saveCompletedAuction(auctionToEnd.getId(), p.getId(), null, p.getStartPrice());
                                 }
 
-                                p.setStartTime(null);
-                                p.setEndTime(null);
+                                if (p.getStatus() != ProductStatus.SOLD) {
+                                    p.setStartTime(null);
+                                    p.setEndTime(null);
+                                }
 
                                 // Đồng bộ trạng thái cuối cùng (SOLD hoặc AVAILABLE) xuống DB
                                 ProductDao.getInstance().editProduct(p);
