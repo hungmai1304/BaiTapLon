@@ -70,6 +70,9 @@ public class BotBiddingController {
         }
 
         priceSeries.setName("Lịch sử giá");
+        String timeNowInit = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
+        priceSeries.getData().add(new XYChart.Data<>(timeNowInit, currentAuction.getCurrentPrice()));
+
         priceChart.getData().add(priceSeries);
 
         // Khởi động cỗ máy đếm ngược thời gian giống hệt màn hình Bidding
@@ -81,6 +84,13 @@ public class BotBiddingController {
             lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0f VNĐ", newPrice));
             if (currentAuction != null) {
                 currentAuction.setCurrentPrice(newPrice);
+            }
+            String timeNow = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
+            priceSeries.getData().add(new XYChart.Data<>(timeNow, newPrice));
+
+            // Dọn bớt điểm cũ đi nếu nó vẽ quá 20 lần để khỏi tràn màn hình
+            if (priceSeries.getData().size() > 20) {
+                priceSeries.getData().remove(0);
             }
         });
     }
