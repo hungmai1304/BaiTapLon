@@ -2,6 +2,7 @@ package com.auction.server.service;
 
 import com.auction.common.model.auction.Auction;
 import com.auction.common.model.product.Product;
+import com.auction.common.model.user.User;
 import com.auction.server.dao.ProductDao;
 import com.auction.server.dao.AuctionDao;
 import com.auction.common.model.product.ProductStatus;
@@ -148,30 +149,45 @@ public class AuctionManager {
                 System.out.println("[AuctionManager] Sản phẩm " + product.getName() + " ĐÃ BÁN cho " + winnerEmail);
 
 
-                // XỬ LÝ RIÊNG TƯ CHO NGƯỜI BÁN (SELLER)
+                // =========================================================
+                // 🚀 XỬ LÝ RIÊNG TƯ CHO NGƯỜI BÁN (SELLER) - BẢN ĐÃ FIX LỖI EMAIL
+                // =========================================================
+                String sellerId = null;
+                if (product.getOwner() != null && product.getOwner().getId() != null) {
+                    sellerId = product.getOwner().getId();
+                }
 
-                if (product.getOwner() != null) {
-                    String sellerEmail = product.getOwner().getEmail();
+                if (sellerId != null) {
 
-                    // A. Cộng tiền vào Database cho Seller
-                    UserDao.getInstance().depositMoney(sellerEmail, finalPrice);
-                    System.out.println("💰 [Payout] Đã chuyển " + String.format("%,.0fđ", finalPrice) + " cho Seller: " + sellerEmail);
+                    User seller = com.auction.server.dao.UserDao.getInstance().findById(sellerId);
 
-                    // B. Nháy số dư trên màn hình Seller
-                    PlaceBidHandler.updateClientBalance(context, gson, sellerEmail);
+                    if (seller != null && seller.getEmail() != null) {
+                        String sellerEmail = seller.getEmail();
 
-                    // C. Đóng gói thông báo RIÊNG TƯ chỉ dành cho Seller
-                    String thongBaoRieng = "Sản phẩm '" + product.getName() + "' của bạn đã bán thành công cho " + winnerName + ". Nhận được: " + String.format("%,.0fđ", finalPrice);
-                    Response sellerRes = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBaoRieng);
-                    String sellerMsg = gson.toJson(sellerRes);
+                        // A. Cộng tiền vào Database cho Seller
+                        UserDao.getInstance().depositMoney(sellerEmail, finalPrice);
+                        System.out.println("💰 [Payout] Đã chuyển " + String.format("%,.0fđ", finalPrice) + " cho Seller: " + sellerEmail);
 
-                    // D. Truy tìm đúng đường truyền của Seller để gửi thông báo mật
-                    for (WebSocket client : context.getServer().getConnections()) {
-                        if (sellerEmail.equals(context.getUserByConn(client))) {
-                            if (client.isOpen()) client.send(sellerMsg);
-                            break; // Gửi xong là thoát vòng lặp luôn
+                        // B. Nháy số dư trên màn hình Seller
+                        PlaceBidHandler.updateClientBalance(context, gson, sellerEmail);
+
+                        // C. Đóng gói thông báo RIÊNG TƯ chỉ dành cho Seller
+                        String thongBaoRieng = "Sản phẩm '" + product.getName() + "' của bạn đã bán thành công. Bạn nhận được: " + String.format("%,.0fđ", finalPrice);
+                        Response sellerRes = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBaoRieng);
+                        String sellerMsg = gson.toJson(sellerRes);
+
+                        // D. Bắn thông báo mật
+                        for (WebSocket client : context.getServer().getConnections()) {
+                            if (sellerEmail.equals(context.getUserByConn(client))) {
+                                if (client.isOpen()) client.send(sellerMsg);
+                                break;
+                            }
                         }
+                    } else {
+                        System.err.println("LỖI PAYOUT: Không tìm thấy Seller trong DB với ID: " + sellerId);
                     }
+                } else {
+                    System.err.println("LỖI PAYOUT: Sản phẩm Không có thông tin Owner ID!");
                 }
 
             } else {
