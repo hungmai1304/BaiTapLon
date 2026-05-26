@@ -11,6 +11,7 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea; // 1. NHỚ IMPORT THÊM TEXTAREA
 
 public class TikTokAuctionController {
 
@@ -19,17 +20,18 @@ public class TikTokAuctionController {
     @FXML private Label step;
     @FXML private Label lblTopBidder;
     @FXML private javafx.scene.image.ImageView productImage;
-
-    // 1. CHỈ KHAI BÁO BIẾN Ở ĐÂY LÀ ĐÚNG
     @FXML private Label lblProductDesc;
+
+    // 2. KHAI BÁO THÊM BIẾN ĐỂ ÁNH XẠ VỚI TEXTAREA TRÊN FXML
+    @FXML private TextArea des;
 
     @FXML
     public void initialize() {
         ControllerRegistry.register("TikTokAuctionController", this);
 
         // Đăng ký listener và lấy danh sách đấu giá mới nhất
-        RequestSender.send("TIK_TOK_LISTENER_REQUEST", null);
-        RequestSender.send(MessageType.GET_ACTIVE_AUCTIONS_REQUEST, null);
+        RequestSender.send(MessageType.TIK_TOK_LISTENER_REQUEST, new java.util.HashMap<>());
+        RequestSender.sendGetActiveAuctionsRequest();
 
         renderCurrentAuction();
     }
@@ -50,6 +52,9 @@ public class TikTokAuctionController {
                 price.setText("0 VNĐ");
                 step.setText("Bước giá: 0 VNĐ");
                 if (lblProductDesc != null) lblProductDesc.setText("Không có mô tả");
+
+                // 3. THÊM RESET TEXTAREA KHI KHÔNG CÓ PHIÊN ĐẤU GIÁ
+                if (des != null) des.setText("Đang đợi phiên đấu giá tiếp theo...");
             });
         }
     }
@@ -66,10 +71,16 @@ public class TikTokAuctionController {
                 price.setText(String.format("%,.0f VNĐ", auction.getCurrentPrice()));
                 step.setText(String.format("Bước giá: %,.0f VNĐ", product.getStepPrice()));
 
-                // 2. ĐÃ CHUYỂN ĐOẠN LẤY MÔ TẢ VÀO ĐÚNG HÀM CỦA NÓ
+                // Đoạn lấy mô tả ngắn (nếu có) vào Label
                 if (lblProductDesc != null) {
                     String desc = product.getDescription();
                     lblProductDesc.setText(desc != null && !desc.isEmpty() ? desc : "Không có mô tả");
+                }
+
+                // 4. THÊM ĐIỀN MÔ TẢ CHI TIẾT VÀO TEXTAREA 'des' VÀO ĐÂY
+                if (des != null) {
+                    String desc = product.getDescription();
+                    des.setText(desc != null && !desc.isEmpty() ? desc : "Sản phẩm này chưa có mô tả chi tiết.");
                 }
 
                 if (lblTopBidder != null) {
@@ -123,13 +134,13 @@ public class TikTokAuctionController {
             renderCurrentAuction();
         } else {
             System.out.println("[TikTokController] Hết danh sách! Đang tải thêm...");
-            RequestSender.send(MessageType.GET_ACTIVE_AUCTIONS_REQUEST, null);
+            RequestSender.sendGetActiveAuctionsRequest();
         }
     }
 
     public void cleanup() {
         ControllerRegistry.unregister("TikTokAuctionController");
-        RequestSender.send("STOP_TIK_TOK_LISTENER_REQUEST", null);
+        RequestSender.send(MessageType.STOP_TIK_TOK_LISTENER_REQUEST, new java.util.HashMap<>());
     }
 
     @FXML
@@ -143,7 +154,6 @@ public class TikTokAuctionController {
     }
 
     // THÊM HÀM NÀY ĐỂ XỬ LÝ NHẢY SỐ REAL-TIME TỪ SERVER GỬI VỀ
-
     public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
         Platform.runLater(() -> {
             // Lấy món đồ đang được hiển thị trên màn hình hiện tại
