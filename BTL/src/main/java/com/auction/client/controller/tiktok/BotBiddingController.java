@@ -1,6 +1,6 @@
 package com.auction.client.controller.tiktok;
 
-import com.auction.client.controller.general.SomeGlobal; // Import SomeGlobal để lấy thông tin session
+import com.auction.client.controller.general.SomeGlobal;
 import com.auction.client.network.RequestSender;
 import com.auction.client.utils.ClientContext;
 import com.auction.client.utils.ControllerRegistry;
@@ -11,10 +11,16 @@ import com.auction.common.model.user.User;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
+
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import java.time.ZoneId;
 
 public class BotBiddingController {
 
@@ -23,12 +29,18 @@ public class BotBiddingController {
     @FXML private Label lblPriceStep;
     @FXML private Label lblCurrentPrice;
     @FXML private Label lblBotNotification;
+
+    // Đã thêm ánh xạ UI cho tính năng Đồng hồ và Khóa nút
+    @FXML private Label lblCountdown;
+    @FXML private Button btnRegisterBot;
+
     @FXML private TextField txtMaxBidPrice;
     @FXML private TextField txtBotPriceStep;
     @FXML private LineChart<String, Number> priceChart;
 
     private Auction currentAuction;
     private XYChart.Series<String, Number> priceSeries = new XYChart.Series<>();
+    private static Timeline countdownTimeline;
 
     @FXML
     public void initialize() {
@@ -44,14 +56,13 @@ public class BotBiddingController {
             lblPriceStep.setText("Bước giá hệ thống: " + String.format("%,.0f VNĐ", product.getStepPrice()));
             lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0f VNĐ", currentAuction.getCurrentPrice()));
 
-            // =========================================================================
             // NGHIỆP VỤ: Đóng băng ô nhập liệu nếu User hiện tại (từ SomeGlobal) chính là Seller
-            // =========================================================================
             User currentUser = SomeGlobal.getCurrentUser();
             if (currentUser != null && product.getOwner() != null) {
                 if (currentUser.getEmail().equalsIgnoreCase(product.getOwner().getEmail())) {
                     txtMaxBidPrice.setDisable(true);
                     txtBotPriceStep.setDisable(true);
+                    if (btnRegisterBot != null) btnRegisterBot.setDisable(true);
                     lblBotNotification.setText("Bạn là người bán sản phẩm này, không có quyền đặt Bot!");
                     lblBotNotification.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
                 }
@@ -60,6 +71,9 @@ public class BotBiddingController {
 
         priceSeries.setName("Lịch sử giá");
         priceChart.getData().add(priceSeries);
+
+        // Khởi động cỗ máy đếm ngược thời gian giống hệt màn hình Bidding
+        startAuctionCountdown();
     }
 
     public void updatePrice(double newPrice) {
@@ -105,7 +119,6 @@ public class BotBiddingController {
                     return;
                 }
 
-                // Trích xuất Email thực tế từ phiên làm việc tập trung SomeGlobal
                 String email = "bot_user@auction.com";
                 if (SomeGlobal.getCurrentUser() != null) {
                     email = SomeGlobal.getCurrentUser().getEmail();
@@ -129,7 +142,6 @@ public class BotBiddingController {
 
     @FXML
     public void handleClear(ActionEvent event) {
-        // Nếu là người bán thì đóng băng, không cho dùng tính năng Clear
         if (currentAuction != null && currentAuction.getProduct() instanceof Product) {
             Product product = (Product) currentAuction.getProduct();
             User currentUser = SomeGlobal.getCurrentUser();
@@ -146,7 +158,71 @@ public class BotBiddingController {
 
     @FXML
     public void handleBackToTikTok(ActionEvent event) {
+
+        if (countdownTimeline != null) {
+            countdownTimeline.stop();
+        }
         ControllerRegistry.unregister("BotBiddingController");
         NavigationService.setCenterView("/com/auction/client/view/tiktokAuction.fxml");
+    }
+
+    private void startAuctionCountdown() {
+        if (countdownTimeline != null) {
+            countdownTimeline.stop();
+        }
+
+        if (currentAuction == null || currentAuction.getProduct() == null) return;
+        Product p = (Product) currentAuction.getProduct();
+
+        countdownTimeline = new Timeline(new KeyFrame(javafx.util.Duration.millis(1000), event -> {
+            long nowMillis = System.currentTimeMillis();
+            long startMillis = p.getStartTime() != null ? p.getStartTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() : 0;
+            long endMillis = p.getEndTime() != null ? p.getEndTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() : 0;
+
+            if (startMillis == 0 || endMillis == 0) {
+                if (lblCountdown != null) lblCountdown.setText("Không xác định được thời gian!");
+                return;
+            }
+
+            // Chỉ thay đổi trạng thái Disable của nút nếu user khong phải người bán
+            User currentUser = SomeGlobal.getCurrentUser();
+            boolean isSeller = (currentUser != null && p.getOwner() != null && currentUser.getEmail().equalsIgnoreCase(p.getOwner().getEmail()));
+
+            if (nowMillis < startMillis) {
+                // Trong thời gian quảng cáo sẽ khóa nút đăng ký Bot
+                if (btnRegisterBot != null) btnRegisterBot.setDisable(true);
+                long diffSeconds = (startMillis - nowMillis) / 1000;
+                if (diffSeconds < 0) diffSeconds = 0;
+
+                if (lblCountdown != null) {
+                    lblCountdown.setText(String.format("Đợi quảng cáo: %02d:%02d", diffSeconds / 60, diffSeconds % 60));
+                    lblCountdown.setStyle("-fx-text-fill: #f39c12;"); // Màu vàng cam
+                }
+
+            } else if (nowMillis >= startMillis && nowMillis < endMillis) {
+                // Đang trong phiên đấu giá mở khóa nút đăng ký Bot
+                if (btnRegisterBot != null) btnRegisterBot.setDisable(isSeller);
+
+                long diffSeconds = (endMillis - nowMillis) / 1000;
+                if (diffSeconds < 0) diffSeconds = 0;
+
+                if (lblCountdown != null) {
+                    lblCountdown.setText(String.format("Thời gian còn lại: %02d:%02d", diffSeconds / 60, diffSeconds % 60));
+                    lblCountdown.setStyle("-fx-text-fill: #2ecc71;"); // Màu xanh lá
+                }
+
+            } else {
+                // Phiên đấu giá kết thúc khóa vĩnh viễn nút đăng ký Bot
+                if (btnRegisterBot != null) btnRegisterBot.setDisable(true);
+                if (lblCountdown != null) {
+                    lblCountdown.setText("Phiên đấu giá ĐÃ KẾT THÚC!");
+                    lblCountdown.setStyle("-fx-text-fill: #e74c3c;"); // Màu đỏ
+                }
+                countdownTimeline.stop();
+            }
+        }));
+
+        countdownTimeline.setCycleCount(Animation.INDEFINITE);
+        countdownTimeline.play();
     }
 }

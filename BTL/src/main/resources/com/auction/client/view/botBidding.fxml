@@ -39,6 +39,17 @@
                         <Label fx:id="lblStartPrice" text="Giá khởi điểm: 1,000,000đ" textFill="#bdc3c7" />
                         <Label fx:id="lblPriceStep" text="Bước giá hệ thống: 50,000đ" textFill="#bdc3c7" />
                         <Label fx:id="lblCurrentPrice" style="-fx-font-weight: bold; -fx-font-size: 20;" text="Giá hiện tại: 1,250,000đ" textFill="#2ecc71" />
+
+                        <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-padding: 10 0 0 0;">
+                            <children>
+                                <Label text="⏳" textFill="#f39c12">
+                                    <font><Font size="24.0" /></font>
+                                </Label>
+                                <Label fx:id="lblCountdown" text="Đang đợi tải..." textFill="#f39c12">
+                                    <font><Font name="System Bold" size="20.0" /></font>
+                                </Label>
+                            </children>
+                        </HBox>
                     </children>
                 </VBox>
 
