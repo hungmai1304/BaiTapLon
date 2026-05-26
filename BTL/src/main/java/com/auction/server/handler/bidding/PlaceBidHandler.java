@@ -68,9 +68,9 @@ public class PlaceBidHandler implements IMessageHandler {
                 return;
             }
 
-            // =========================================================================
+
             // NGHIỆP VỤ MỚI: CHẶN NGƯỜI BÁN TỰ ĐẶT GIÁ SẢN PHẨM CỦA CHÍNH MÌNH
-            // =========================================================================
+
             if (currentAuction.getProduct() != null) {
                 Product product = (Product) currentAuction.getProduct();
                 if (product.getOwner() != null) {
@@ -207,9 +207,10 @@ public class PlaceBidHandler implements IMessageHandler {
                             continue;
                         }
 
+                        // code mới sửa bước giá theo bot
                         double nextBotPrice = (currentAuction.getHighestBidder() == null)
                                 ? currentAuction.getStartPrice()
-                                : (currentAuction.getCurrentPrice() + currentAuction.getStepPrice());
+                                : (currentAuction.getCurrentPrice() + bot.getStepPrice());
 
                         User botUserInfo = UserDao.getInstance().getUserByEmail(bot.getEmail());
                         if (botUserInfo == null || botUserInfo.getBalance() < nextBotPrice) {
