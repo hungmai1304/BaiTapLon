@@ -215,7 +215,7 @@ public class UserDao {
      */
     public boolean depositMoney(String email, double amount) {
         if (amount <= 0) {
-            System.err.println("❌ Lỗi: Số tiền nạp phải lớn hơn 0!");
+            System.err.println(" Lỗi: Số tiền nạp phải lớn hơn 0!");
             return false;
         }
 
@@ -229,7 +229,7 @@ public class UserDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("❌ Lỗi khi thực hiện nạp tiền cho: " + email + " - " + e.getMessage());
+            System.err.println(" Lỗi khi thực hiện nạp tiền cho: " + email + " - " + e.getMessage());
             return false;
         }
     }
@@ -260,11 +260,11 @@ public class UserDao {
                 return true;
             } else {
                 // Nếu update thất bại (0 dòng bị ảnh hưởng), có thể do không đủ tiền hoặc tài khoản không tồn tại
-                System.err.println("❌ Lỗi: Rút tiền thất bại cho [" + email + "]. Lý do: Không đủ số dư hoặc tài khoản không tồn tại.");
+                System.err.println(" Lỗi: Rút tiền thất bại cho [" + email + "]. Lý do: Không đủ số dư hoặc tài khoản không tồn tại.");
                 return false;
             }
         } catch (SQLException e) {
-            System.err.println("❌ Lỗi khi thực hiện rút tiền cho: " + email + " - " + e.getMessage());
+            System.err.println(" Lỗi khi thực hiện rút tiền cho: " + email + " - " + e.getMessage());
             return false;
         }
 
@@ -286,7 +286,7 @@ public class UserDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Lỗi getBalanceByEmail: " + e.getMessage());
+            System.err.println(" Lỗi getBalanceByEmail: " + e.getMessage());
         }
         return 0.0;
     }

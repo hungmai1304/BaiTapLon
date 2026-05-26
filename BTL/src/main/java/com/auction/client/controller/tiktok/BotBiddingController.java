@@ -118,7 +118,7 @@ public class BotBiddingController {
                         email
                 );
 
-                lblBotNotification.setText("Đã gửi yêu cầu đăng ký Bot lên Server...");
+                lblBotNotification.setText("Đã đăng ký Bot thành công!");
                 lblBotNotification.setStyle("-fx-text-fill: green;");
             }
         } catch (NumberFormatException e) {
