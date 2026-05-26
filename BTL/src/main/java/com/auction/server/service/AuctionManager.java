@@ -7,6 +7,8 @@ import com.auction.server.dao.AuctionDao;
 import com.auction.common.model.product.ProductStatus;
 import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
+import com.auction.server.dao.UserDao;
+import com.auction.server.handler.bidding.PlaceBidHandler;
 import com.auction.server.model.ServerContext;
 import com.auction.common.utils.LocalDateTimeAdapter;
 import com.google.gson.Gson;
@@ -18,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
+
+import static com.auction.server.handler.bidding.PlaceBidHandler.updateClientBalance;
 
 public class AuctionManager {
 
@@ -109,8 +113,6 @@ public class AuctionManager {
                 context.getServer().getConnections().size() + " client!");
     }
 
-    // ========== KẾT THÚC PHIÊN ĐẤU GIÁ ==========
-
     /**
      * Kết thúc phiên đấu giá hiện tại
      * @param auction Phiên đấu giá cần kết thúc
@@ -127,33 +129,81 @@ public class AuctionManager {
         Product product = auction.getProduct();
         if (product != null) {
             String winnerEmail = null;
+            String winnerName = "Không có"; // Khởi tạo mặc định tránh lỗi null
             double finalPrice = auction.getCurrentPrice();
-            String thongBaoClient = "";
+            String thongBaoChung = "";
 
             if (auction.getHighestBidder() != null) {
-                // TRƯỜNG HỢP CÓ NGƯỜI MUA
+                // 1. TRƯỜNG HỢP CÓ NGƯỜI MUA (CHỐT ĐƠN)
+
                 winnerEmail = auction.getHighestBidder().getEmail();
+                // FIX LỖI TÊN "Không có": Lấy Username, nếu trống thì lấy Email
+                winnerName = auction.getHighestBidder().getUsername() != null ? auction.getHighestBidder().getUsername() : winnerEmail;
+                auction.setLeaderName(winnerName);
+
                 product.setStatus(ProductStatus.SOLD);
                 product.setCurrentPrice(finalPrice);
 
-                thongBaoClient = "Chúc mừng " + winnerEmail + " đã chốt đơn sản phẩm '" + product.getName() + "' với giá " + String.format("%,.0fđ", finalPrice) + "!";
+                thongBaoChung = "Chúc mừng " + winnerName + " đã chốt đơn sản phẩm '" + product.getName() + "' với giá " + String.format("%,.0fđ", finalPrice) + "!";
                 System.out.println("[AuctionManager] Sản phẩm " + product.getName() + " ĐÃ BÁN cho " + winnerEmail);
 
+
+                // XỬ LÝ RIÊNG TƯ CHO NGƯỜI BÁN (SELLER)
+
+                if (product.getOwner() != null) {
+                    String sellerEmail = product.getOwner().getEmail();
+
+                    // A. Cộng tiền vào Database cho Seller
+                    UserDao.getInstance().depositMoney(sellerEmail, finalPrice);
+                    System.out.println("💰 [Payout] Đã chuyển " + String.format("%,.0fđ", finalPrice) + " cho Seller: " + sellerEmail);
+
+                    // B. Nháy số dư trên màn hình Seller
+                    PlaceBidHandler.updateClientBalance(context, gson, sellerEmail);
+
+                    // C. Đóng gói thông báo RIÊNG TƯ chỉ dành cho Seller
+                    String thongBaoRieng = "Sản phẩm '" + product.getName() + "' của bạn đã bán thành công cho " + winnerName + ". Nhận được: " + String.format("%,.0fđ", finalPrice);
+                    Response sellerRes = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBaoRieng);
+                    String sellerMsg = gson.toJson(sellerRes);
+
+                    // D. Truy tìm đúng đường truyền của Seller để gửi thông báo mật
+                    for (WebSocket client : context.getServer().getConnections()) {
+                        if (sellerEmail.equals(context.getUserByConn(client))) {
+                            if (client.isOpen()) client.send(sellerMsg);
+                            break; // Gửi xong là thoát vòng lặp luôn
+                        }
+                    }
+                }
+
             } else {
-                // TRƯỜNG HỢP Ế HÀNG
-                product.setStatus(ProductStatus.AVAILABLE); // Hoặc CANCELLED tùy logic nhóm anh
+                // 2. TRƯỜNG HỢP Ế HÀNG
+                
+                product.setStatus(ProductStatus.AVAILABLE);
                 finalPrice = product.getStartPrice();
 
-                thongBaoClient = "Rất tiếc, sản phẩm '" + product.getName() + "' đã hết giờ mà không có ai chốt đơn!";
+                thongBaoChung = "Rất tiếc, sản phẩm '" + product.getName() + "' đã hết giờ mà không có ai chốt đơn!";
                 System.out.println("[AuctionManager] Sản phẩm " + product.getName() + " Ế HÀNG -> Hủy bỏ");
+
+                // (Tùy chọn) Gửi thông báo ế hàng riêng cho Seller
+                if (product.getOwner() != null) {
+                    String sellerEmail = product.getOwner().getEmail();
+                    String thongBaoRieng = "Sản phẩm '" + product.getName() + "' của bạn đã kết thúc mà không có ai đặt giá.";
+                    Response sellerRes = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBaoRieng);
+                    String sellerMsg = gson.toJson(sellerRes);
+                    for (WebSocket client : context.getServer().getConnections()) {
+                        if (sellerEmail.equals(context.getUserByConn(client))) {
+                            if (client.isOpen()) client.send(sellerMsg);
+                            break;
+                        }
+                    }
+                }
             }
 
-            // BỔ SUNG SỐ 1: LƯU TRẠNG THÁI SẢN PHẨM XUỐNG DB ĐỂ KHÔNG BỊ TREO TRÊN GIAO DIỆN
+            // 3. LƯU TRẠNG THÁI SẢN PHẨM XUỐNG DB
             product.setStartTime(null);
             product.setEndTime(null);
             ProductDao.getInstance().editProduct(product);
 
-            // BỔ SUNG SỐ 2: LƯU VÀO SỔ CÁI ĐẤU GIÁ AUCTIONS DB
+            // 4. LƯU VÀO SỔ CÁI ĐẤU GIÁ
             AuctionDao.getInstance().saveCompletedAuction(
                     String.valueOf(auction.getId()),
                     product.getId(),
@@ -161,18 +211,23 @@ public class AuctionManager {
                     finalPrice
             );
 
-            // BỔ SUNG SỐ 3: PHÁT LOA ĐÚNG MÃ LỆNH ĐỂ CLIENT HIỆN DÒNG CHỮ CHẠY
-            Response res = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBaoClient);
-            String msg = gson.toJson(res);
+
+            // 5. PHÁT LOA CHUNG CHO CẢ SÀN (Kèm theo tên người thắng)
+
+            Response publicRes = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBaoChung);
+            publicRes.getData().put("auction", auction);
+            publicRes.getData().put("winnerName", winnerName); // Đóng gói tên để Client đọc
+
+            String publicMsg = gson.toJson(publicRes);
             for (WebSocket client : context.getServer().getConnections()) {
-                if (client.isOpen()) client.send(msg);
+                if (client.isOpen()) client.send(publicMsg);
             }
         }
 
-        // BỔ SUNG SỐ 4: XÓA SẠCH PHIÊN NÀY KHỎI RAM ĐỂ CLIENT ẨN KHỎI DANH SÁCH
+        // 6. DỌN DẸP RAM
         context.removeAuction(auction.getId());
 
-        // Chọn phiên đấu giá tiếp theo (sau 10 giây)
+        // Chọn phiên tiếp theo
         scheduleNextAuction();
     }
 
