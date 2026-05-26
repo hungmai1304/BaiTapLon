@@ -17,7 +17,7 @@ public class UserDao {
 
     private UserDao() {}
 
-    // Synchronized đảm bảo an toàn đa luồng khi khởi tạo Singleton
+    // Synchronized đảm bảo an toàn đa luồng trên Server
     public static synchronized UserDao getInstance() {
         if (instance == null) {
             instance = new UserDao();
@@ -26,20 +26,21 @@ public class UserDao {
     }
 
     /**
-     * Thêm người dùng phân hệ Bidder - Tối ưu check trùng bằng EXISTS (Nhanh hơn lấy cả Object)
+     * Thêm người dùng phân hệ Bidder (hoặc role tùy biến như ADMIN_REQUEST) có mã hóa mật khẩu BCrypt
      */
     public boolean insertBidder(String email, String password, String name, String id, Timestamp timeCreated, double balance, String role, String status) {
-        // TỐI ƯU: Chỉ kiểm tra sự tồn tại của Email bằng câu lệnh siêu nhẹ, không cần lôi cả bản ghi lên RAM
-        if (isEmailExists(email)) {
-            System.err.println("[UserDao] Lỗi: Email " + email + " đã tồn tại!");
+        // Check trùng email trước khi insert
+        if (getUserByEmail(email) != null) {
+            System.err.println("[UserDao]Lỗi: Email " + email + " đã tồn tại!");
             return false;
         }
 
+        // CẬP NHẬT SQL: Thêm cột status vào lệnh INSERT
         String sql = "INSERT INTO users (id, email, password, name, time_created, role, balance, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // Mã hóa mật khẩu BCrypt
+            // Mã hóa mật khẩu trước khi lưu
             String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
 
             pstmt.setString(1, id);
@@ -47,9 +48,9 @@ public class UserDao {
             pstmt.setString(3, hashedPassword);
             pstmt.setString(4, name);
             pstmt.setTimestamp(5, timeCreated);
-            pstmt.setString(6, role);
-            pstmt.setDouble(7, balance);
-            pstmt.setString(8, status);
+            pstmt.setString(6, role);    // Thiết lập role động
+            pstmt.setDouble(7, balance); // Đưa số dư vào statement
+            pstmt.setString(8, status);  // CẬP NHẬT: Thiết lập status động ("NORMAL")
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -59,18 +60,22 @@ public class UserDao {
     }
 
     /**
-     * Thêm người dùng phân hệ Seller - Tối ưu check trùng bằng EXISTS
+     * Thêm người dùng phân hệ Seller có mã hóa mật khẩu BCrypt
+     * CẬP NHẬT: Thêm tham số status nhận trạng thái mặc định từ Handler
      */
     public boolean insertSeller(String email, String password, String name, String id, Timestamp timeCreated, String shopName, double balance, String status) {
-        if (isEmailExists(email)) {
+        // Check trùng email trước khi insert
+        if (getUserByEmail(email) != null) {
             System.err.println("[UserDao] Lỗi: Email " + email + " đã tồn tại!");
             return false;
         }
 
+        // CẬP NHẬT SQL: Thêm cột status vào lệnh INSERT
         String sql = "INSERT INTO users (id, email, password, name, time_created, role, shop_name, balance, status) VALUES (?, ?, ?, ?, ?, 'SELLER', ?, ?, ?)";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
+            // Mã hóa mật khẩu trước khi lưu
             String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
 
             pstmt.setString(1, id);
@@ -79,8 +84,8 @@ public class UserDao {
             pstmt.setString(4, name);
             pstmt.setTimestamp(5, timeCreated);
             pstmt.setString(6, shopName);
-            pstmt.setDouble(7, balance);
-            pstmt.setString(8, status);
+            pstmt.setDouble(7, balance); // Đưa số dư vào statement
+            pstmt.setString(8, status);  // CẬP NHẬT: Thiết lập status động ("NORMAL")
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -107,7 +112,10 @@ public class UserDao {
     }
 
     /**
-     * Xác thực tài khoản linh hoạt: Hỗ trợ cả mật khẩu băm và thô
+     * Xác thực tài khoản dựa trên BCrypt mật khẩu băm
+     */
+    /**
+     * Xác thực tài khoản linh hoạt: Hỗ trợ cả mật khẩu đã băm (BCrypt) và mật khẩu thô
      */
     public User authenticate(String email, String password) {
         User user = getUserByEmail(email);
@@ -115,27 +123,30 @@ public class UserDao {
             return null;
         }
 
+
         if ("BANNED".equalsIgnoreCase(user.getStatus())) {
             System.err.println("[UserDao] Từ chối xác thực: Tài khoản [" + email + "] đang bị khóa (BANNED)!");
             return null;
         }
 
-        // Trường hợp 1: Kiểm tra theo chuẩn mật khẩu đã mã hóa BCrypt
+        // Trường hợp 1: Kiểm tra theo chuẩn mật khẩu đã mã hóa BCrypt (Bản 2)
         try {
             if (BCrypt.checkpw(password, user.getPassword())) {
                 return user;
             }
         } catch (IllegalArgumentException e) {
-            // Bỏ qua lỗi định dạng nếu DB chứa mật khẩu chuỗi thô (dữ liệu cũ)
+            // Nhảy vào đây nếu mật khẩu trong DB là chuỗi thô (không phải định dạng hash của BCrypt)
+            // Ta sẽ bỏ qua lỗi này để xuống kiểm tra trường hợp 2
         }
 
-        // Trường hợp 2: So sánh chuỗi thô trực tiếp
+        // Trường hợp 2: Kiểm tra so sánh chuỗi thô trực tiếp (Bản 1 - dành cho dữ liệu cũ)
         if (password.equals(user.getPassword())) {
             return user;
         }
         return null;
     }
 
+    // 3. CẬP NHẬT: Lấy dữ liệu balance từ DB gán ngược lại cho Object User
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
         User user;
         String role = rs.getString("role");
@@ -158,15 +169,23 @@ public class UserDao {
         user.setPassword(rs.getString("password"));
         user.setUsername(rs.getString("name"));
         user.setShopName(rs.getString("shop_name"));
+
+        // --- THÊM DÒNG NÀY ĐỂ ĐỌC SỐ DƯ ---
+        user.setRole(role);
         user.setBalance(rs.getDouble("balance"));
+
+        // CẬP NHẬT: Đọc cột dữ liệu status từ DB đẩy vào Object Java mẫu
         user.setStatus(rs.getString("status"));
 
+        // 3. Sử dụng getTimestamp để JDBC tự động parse sang LocalDateTime an toàn hơn
+        // 3. Đọc dữ liệu AVATAR (Từ bytea trong DB sang Base64 cho Client hiển thị)
         byte[] avatarBytes = rs.getBytes("avatar");
         if (avatarBytes != null) {
-            String base64Avatar = Base64.getEncoder().encodeToString(avatarBytes);
+            String base64Avatar = java.util.Base64.getEncoder().encodeToString(avatarBytes);
             user.setAvatar(base64Avatar);
         }
 
+        // FIX DỨT ĐIỂM Ở ĐÂY: Dùng getTimestamp để JDBC tự parse LocalDateTime
         Timestamp ts = rs.getTimestamp("time_created");
         if (ts != null) {
             user.setTimeCreated(ts.toLocalDateTime());
@@ -188,16 +207,19 @@ public class UserDao {
         }
         return null;
     }
-
     /**
      * Cập nhật số dư tài khoản (Nạp tiền vào tài khoản)
+     * @param email Email của người dùng cần nạp tiền
+     * @param amount Số tiền cần nạp (phải > 0)
+     * @return true nếu cập nhật thành công, false nếu thất bại
      */
     public boolean depositMoney(String email, double amount) {
         if (amount <= 0) {
-            System.err.println("❌ Lỗi: Số tiền nạp phải lớn hơn 0!");
+            System.err.println(" Lỗi: Số tiền nạp phải lớn hơn 0!");
             return false;
         }
 
+        // Câu lệnh SQL cộng dồn số tiền hiện tại với số tiền nạp mới
         String sql = "UPDATE users SET balance = balance + ? WHERE email = ?";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -207,15 +229,15 @@ public class UserDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("❌ Lỗi khi thực hiện nạp tiền cho: " + email + " - " + e.getMessage());
+            System.err.println(" Lỗi khi thực hiện nạp tiền cho: " + email + " - " + e.getMessage());
             return false;
         }
     }
-
     /**
-     * ĐÃ TỐI ƯU TUYỆT ĐỐI: Rút tiền khỏi tài khoản (Chỉ tốn 1 database hit và chống Race Condition)
-     * TỐI ƯU: Gộp điều kiện kiểm tra số dư trực tiếp vào câu UPDATE (Atomic Operation)
-     * Loại bỏ hoàn toàn bước getUserByEmail cũ để giảm tải 50% thời gian kết nối mạng xuống DB
+     * Cập nhật số dư tài khoản (Rút tiền khỏi tài khoản)
+     * @param email Email của người dùng cần rút tiền
+     * @param amount Số tiền cần rút (phải > 0 và phải <= số dư hiện tại)
+     * @return true nếu rút thành công, false nếu thất bại hoặc không đủ tiền
      */
     public boolean withdrawMoney(String email, double amount) {
         if (amount <= 0) {
@@ -223,8 +245,8 @@ public class UserDao {
             return false;
         }
 
-        // Bước 1: Thực hiện trừ tiền trong Database (Atomic)
-        // Câu lệnh SQL: Trừ tiền với điều kiện số dư hiện tại phải lớn hơn hoặc bằng số tiền cần rút
+        // TỐI ƯU: Gộp điều kiện kiểm tra số dư trực tiếp vào câu UPDATE (Atomic Operation)
+        // Loại bỏ hoàn toàn bước getUserByEmail cũ để giảm tải 50% thời gian kết nối mạng xuống DB
         String sql = "UPDATE users SET balance = balance - ? WHERE email = ? AND balance >= ?";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -238,17 +260,19 @@ public class UserDao {
                 return true;
             } else {
                 // Nếu update thất bại (0 dòng bị ảnh hưởng), có thể do không đủ tiền hoặc tài khoản không tồn tại
-                System.err.println("❌ Lỗi: Rút tiền thất bại cho [" + email + "]. Lý do: Không đủ số dư hoặc tài khoản không tồn tại.");
+                System.err.println(" Lỗi: Rút tiền thất bại cho [" + email + "]. Lý do: Không đủ số dư hoặc tài khoản không tồn tại.");
                 return false;
             }
         } catch (SQLException e) {
-            System.err.println("❌ Lỗi khi thực hiện rút tiền cho: " + email + " - " + e.getMessage());
+            System.err.println(" Lỗi khi thực hiện rút tiền cho: " + email + " - " + e.getMessage());
             return false;
         }
-    }
 
+    }
     /**
      * Lấy riêng số dư hiện tại của tài khoản dựa trên Email
+     * @param email Email của người dùng cần kiểm tra
+     * @return Số dư tài khoản (trả về 0.0 nếu không tìm thấy user hoặc lỗi)
      */
     public double getBalanceByEmail(String email) {
         String sql = "SELECT balance FROM users WHERE email = ?";
@@ -262,17 +286,18 @@ public class UserDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Lỗi getBalanceByEmail: " + e.getMessage());
+            System.err.println(" Lỗi getBalanceByEmail: " + e.getMessage());
         }
         return 0.0;
     }
 
     /**
-     * Lấy danh sách người dùng dựa theo Role
+     * Lấy danh sách người dùng dựa theo Role (Ví dụ: "ADMIN_REQUEST")
+     * @param role Tên quyền cần tìm kiếm trong DB
+     * @return Danh sách đối tượng User tìm thấy
      */
     public List<User> getUsersByRole(String role) {
         List<User> userList = new ArrayList<>();
-        // TỐI ƯU: Nếu cột 'role' trong DB đã viết hoa chuẩn hóa, hãy bỏ hàm UPPER() đi để DB ăn được INDEX của cột đó nhé!
         String sql = "SELECT * FROM users WHERE UPPER(role) = ? ORDER BY time_created DESC";
 
         try (Connection conn = Db.getConnection();
@@ -290,9 +315,11 @@ public class UserDao {
         }
         return userList;
     }
-
     /**
      * Cập nhật Role (Quyền) của người dùng dựa trên ID
+     * @param id ID của người dùng cần cập nhật
+     * @param newRole Quyền mới muốn gán (Ví dụ: "ADMIN")
+     * @return true nếu cập nhật thành công, false nếu thất bại
      */
     public boolean updateUserRole(String id, String newRole) {
         String sql = "UPDATE users SET role = ? WHERE id = ?";
@@ -311,13 +338,17 @@ public class UserDao {
 
     /**
      * Cập nhật Avatar cho người dùng
+     * @param email Email của người dùng
+     * @param avatarBase64 Chuỗi ảnh Base64
+     * @return true nếu cập nhật thành công
      */
     public boolean updateUserAvatar(String email, String avatarBase64) {
         String sql = "UPDATE users SET avatar = ? WHERE email = ?";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            byte[] avatarBytes = Base64.getDecoder().decode(avatarBase64);
+            // Chuyển Base64 thành byte array để lưu vào cột kiểu bytea
+            byte[] avatarBytes = java.util.Base64.getDecoder().decode(avatarBase64);
             pstmt.setBytes(1, avatarBytes);
             pstmt.setString(2, email);
 
@@ -332,6 +363,7 @@ public class UserDao {
      * Hàm trừ tiền khi chốt đơn đấu giá thành công (Atomic Safe)
      */
     public boolean deductBalance(String email, double amountToDeduct) {
+        // Câu lệnh SQL: Trừ tiền với điều kiện số dư hiện tại phải lớn hơn hoặc bằng số tiền cần trừ (Bảo mật kép dưới DB)
         String sql = "UPDATE users SET balance = balance - ? WHERE email = ? AND balance >= ?";
 
         try (Connection conn = Db.getConnection();
@@ -349,7 +381,11 @@ public class UserDao {
     }
 
     /**
-     * Cập nhật trạng thái (status) cho người dùng tìm theo Email.
+     * VIẾT THÊM: Cập nhật trạng thái (status) cho người dùng tìm theo Email.
+     * Thường dùng khi Admin gửi yêu cầu BAN / LOCK hoặc UNLOCK tài khoản.
+     * @param email Email của người dùng cần thay đổi trạng thái
+     * @param newStatus Trạng thái mới (Ví dụ: "NORMAL", "BANNED")
+     * @return true nếu cập nhật thành công xuống cơ sở dữ liệu, ngược lại là false
      */
     public boolean updateUserStatus(String email, String newStatus) {
         if (email == null || email.trim().isEmpty() || newStatus == null) return false;
@@ -361,7 +397,8 @@ public class UserDao {
             pstmt.setString(1, newStatus);
             pstmt.setString(2, email);
 
-            if (pstmt.executeUpdate() > 0) {
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
                 System.out.println("[UserDao] Cập nhật status tài khoản [" + email + "] thành công sang: " + newStatus);
                 return true;
             }
@@ -370,9 +407,11 @@ public class UserDao {
         }
         return false;
     }
-
     /**
-     * Lấy danh sách người dùng dựa theo Trạng thái
+     * VIẾT THÊM: Lấy danh sách người dùng dựa theo Trạng thái (Ví dụ: "BANNED", "NORMAL")
+     * Thường dùng khi Admin muốn hiển thị danh sách các tài khoản đang bị khóa.
+     * * @param status Trạng thái cần tìm kiếm (Ví dụ: "BANNED")
+     * @return Danh sách các Object User (hoặc lớp con tương ứng) thỏa mãn điều kiện
      */
     public List<User> getUsersByStatus(String status) {
         List<User> userList = new ArrayList<>();
@@ -380,6 +419,7 @@ public class UserDao {
             return userList;
         }
 
+        // Truy vấn sắp xếp theo thời gian tạo mới nhất lên đầu
         String sql = "SELECT * FROM users WHERE UPPER(status) = ? ORDER BY time_created DESC";
 
         try (Connection conn = Db.getConnection();
@@ -389,6 +429,7 @@ public class UserDao {
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
+                    // Tận dụng hàm mapResultSetToUser có sẵn để tự động nhận diện Admin, Seller, Bidder
                     userList.add(mapResultSetToUser(rs));
                 }
             }

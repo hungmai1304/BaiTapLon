@@ -301,4 +301,28 @@ public class ProductDao {
         }
         return product;
     }
+    // tao 1 conbot , 10s chay 1 lan, luon check xem product nao co endtime qua thoi gian hien tai roi thi doi status sang AVAILABLE
+    /**
+     * NGHIỆP VỤ BOT: Tự động quét và hạ sàn các sản phẩm đã quá giờ kết thúc
+     * Chuyển trạng thái từ 'ON_AUCTION' sang 'AVAILABLE'
+     * @return Số lượng sản phẩm đã được xử lý thành công
+     */
+    public int autoExpireProducts() {
+        String sql = "UPDATE products SET status = 'AVAILABLE' WHERE status = 'ON_AUCTION' AND end_time <= ?";
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            // Truyền mốc thời gian hiện tại của Server vào câu lệnh
+            pstmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("[ProductBot] Đã hạ sàn thành công " + rowsAffected + " sản phẩm hết hạn.");
+            }
+            return rowsAffected;
+        } catch (SQLException e) {
+            System.err.println("[ProductDao] Lỗi thực thi autoExpireProducts: " + e.getMessage());
+            return 0;
+        }
+    }
 }

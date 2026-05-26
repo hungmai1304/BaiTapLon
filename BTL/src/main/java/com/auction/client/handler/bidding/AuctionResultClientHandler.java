@@ -1,4 +1,4 @@
-package com.auction.client.handler;
+package com.auction.client.handler.bidding;
 
 import com.auction.client.annotation.ResponseHandler;
 import com.auction.client.network.IClientHandler;

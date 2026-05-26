@@ -4,6 +4,7 @@ import com.auction.common.model.auction.AutoBidConfig;
 import com.auction.protocol.MessageType;
 import com.auction.common.model.auction.Auction;
 import com.auction.common.model.auction.BidTransaction;
+import com.auction.common.model.product.Product; // Import thêm class Product
 import com.auction.common.model.user.User;
 import com.auction.server.dao.UserDao;
 import com.auction.protocol.Response;
@@ -22,7 +23,6 @@ import java.util.concurrent.Executors;
 @CommandMap(value = MessageType.PLACE_BID_REQUEST)
 public class PlaceBidHandler implements IMessageHandler {
 
-    // QUẢN LÝ LUỒNG TẬP TRUNG: Sử dụng Thread Pool cố định thay vì tạo Thread vô tội vạ làm sập Server
     private static final ExecutorService botExecutor = Executors.newFixedThreadPool(4);
 
     @Override
@@ -37,7 +37,7 @@ public class PlaceBidHandler implements IMessageHandler {
             }
             double bidAmount = ((Number) bidAmountObj).doubleValue();
 
-            // BẢO MẬT TUYỆT ĐỐI: Lấy email trực tiếp từ session kết nối Socket
+            // BẢO MẬT: Lấy từ session socket
             String userEmail = context.getUserByConn(conn);
             if (userEmail == null) {
                 sendError(conn, gson, "Lỗi bảo mật: Bạn chưa đăng nhập hoặc phiên làm việc hết hạn!");
@@ -49,7 +49,7 @@ public class PlaceBidHandler implements IMessageHandler {
                 return;
             }
 
-            // Kiểm tra trạng thái Blacklist của tài khoản
+            // Kiểm tra thông tin User và trạng thái Blacklist
             User currentUser = UserDao.getInstance().getUserByEmail(userEmail);
             if (currentUser == null) {
                 sendError(conn, gson, "Lỗi hệ thống: Không tìm thấy thông tin tài khoản!");
@@ -68,19 +68,45 @@ public class PlaceBidHandler implements IMessageHandler {
                 return;
             }
 
-            // 3. KIỂM TRA & CẬP NHẬT TRẠNG THÁI (Thread-safe trên RAM)
-            // CHIẾN THUẬT HOLD/REFUND: Tạm giữ tiền của người đặt giá mới và hoàn trả người cũ
+
+            // NGHIỆP VỤ MỚI: CHẶN NGƯỜI BÁN TỰ ĐẶT GIÁ SẢN PHẨM CỦA CHÍNH MÌNH
+
+            if (currentAuction.getProduct() != null) {
+                Product product = (Product) currentAuction.getProduct();
+                if (product.getOwner() != null) {
+                    String sellerEmail = product.getOwner().getEmail();
+                    String sellerId = product.getOwner().getId();
+
+                    // So sánh email hoặc ID của tài khoản đang kết nối với chủ sản phẩm
+                    if (userEmail.equalsIgnoreCase(sellerEmail) || currentUser.getId().equals(sellerId)) {
+                        System.err.println("[PlaceBidHandler] Từ chối Seller tự đấu giá: " + userEmail);
+                        sendError(conn, gson, "Lỗi quy định: Bạn là người bán sản phẩm này, không được phép tự đặt giá!");
+                        return;
+                    }
+                }
+            }
+            // =========================================================================
+
+            if ("PENDING".equals(currentAuction.getStatus())) {
+                sendError(conn, gson, "Chưa đến giờ! Sản phẩm đang trong thời gian chờ mở sàn.");
+                return;
+            } else if ("COMPLETED".equals(currentAuction.getStatus())) {
+                sendError(conn, gson, "Muộn rồi! Phiên đấu giá này đã kết thúc.");
+                return;
+            }
+
+            User previousLeader = null;
+            double previousBid = 0;
+
+            // ĐỒNG BỘ HÓA LUỒNG TRÊN RAM (NHANH CHÓNG): Chống Race Condition
             synchronized (currentAuction) {
-                // Kiểm tra trạng thái Phiên đấu giá
-                if ("PENDING".equals(currentAuction.getStatus())) {
-                    sendError(conn, gson, "Chưa đến giờ! Sản phẩm đang trong thời gian chờ mở sàn.");
-                    return;
-                } else if ("COMPLETED".equals(currentAuction.getStatus())) {
-                    sendError(conn, gson, "Muộn rồi! Phiên đấu giá này đã kết thúc.");
+                // FIX LỖI TỰ ĐÈ GIÁ CHÍNH MÌNH: Đang top 1 thì cấm đặt thêm
+                if (currentAuction.getHighestBidder() != null
+                        && currentAuction.getHighestBidder().getEmail().equalsIgnoreCase(userEmail)) {
+                    sendError(conn, gson, "Bạn đang là người dẫn đầu, không cần phải đặt thêm giá!");
                     return;
                 }
 
-                // 4. KIỂM TRA LUẬT ĐẤU GIÁ (Giá mới phải >= Giá hiện tại + Bước giá)
                 double minRequiredPrice = (currentAuction.getHighestBidder() == null)
                         ? currentAuction.getStartPrice()
                         : (currentAuction.getCurrentPrice() + currentAuction.getStepPrice());
@@ -90,34 +116,28 @@ public class PlaceBidHandler implements IMessageHandler {
                     return;
                 }
 
-                // 5. CHIẾN THUẬT HOLD/REFUND: Tạm giữ tiền của người đặt giá mới
-                // [HOLD] Thử trừ tiền người đặt giá mới (Atomic SQL check)
+                // Thực hiện trừ tiền người mới qua DB IO
                 boolean isHoldSuccess = UserDao.getInstance().withdrawMoney(userEmail, bidAmount);
                 if (!isHoldSuccess) {
                     sendError(conn, gson, "Số dư ví không đủ để thực hiện lượt đặt giá " + String.format("%,.0fđ", bidAmount) + "!");
                     return;
                 }
 
-                // [REFUND] Nếu có người dẫn đầu trước đó -> Hoàn tiền cho họ
-                User previousLeader = currentAuction.getHighestBidder();
-                double previousBid = currentAuction.getCurrentPrice();
-                if (previousLeader != null) {
-                    UserDao.getInstance().depositMoney(previousLeader.getEmail(), previousBid);
-                    System.out.println("   [Refund] Đã hoàn trả " + String.format("%,.0fđ", previousBid) + " cho người cũ: " + previousLeader.getEmail());
-                }
+                previousLeader = currentAuction.getHighestBidder();
+                previousBid = currentAuction.getCurrentPrice();
 
-                // 6. Cập nhật dữ liệu vào Phiên Đấu Giá (RAM)
+                // Tiến hành ghi nhận người dẫn đầu mới lên RAM
                 User newLeader = new User();
                 newLeader.setEmail(userEmail);
-                newLeader.setUsername(currentUser.getUsername()); // Lấy tên hiển thị thực tế thay vì gán email
+                newLeader.setUsername(currentUser.getUsername());
 
                 currentAuction.setCurrentPrice(bidAmount);
                 currentAuction.setHighestBidder(newLeader);
                 currentAuction.setLeaderName(newLeader.getUsername());
 
-                // Ghi sổ lịch sử bằng BidTransaction
+                // Ghi nhận lịch sử giao dịch
                 BidTransaction transaction = new BidTransaction();
-                transaction.setId(String.valueOf(currentAuction.getId()));
+                transaction.setId(currentAuction.getId());
                 transaction.setBidder(newLeader);
                 transaction.setBidAmount(bidAmount);
                 transaction.setTimeCreated(LocalDateTime.now());
@@ -127,17 +147,29 @@ public class PlaceBidHandler implements IMessageHandler {
                 }
                 currentAuction.getBiddingHistory().add(transaction);
 
-                // Lưu lại vào RAM
                 context.updateAuction(currentAuction);
+                // báo là tiền đang bị giam
+                updateClientBalance(context, gson, userEmail);
             }
 
-            // 7. PHÁT LOA CHO CẢ SÀN THEO ĐÚNG GIAO KÈO
+            // HOÀN TIỀN CHO NGƯỜI CŨ (Xử lý ngoài khối synchronized để tối ưu hiệu năng)
+            if (previousLeader != null) {
+                final User finalPreviousLeader = previousLeader;
+                final double finalPreviousBid = previousBid;
+                botExecutor.submit(() -> {
+                    UserDao.getInstance().depositMoney(finalPreviousLeader.getEmail(), finalPreviousBid);
+                    System.out.println("[Refund Async] Đã trả lại " + String.format("%,.0fđ", finalPreviousBid) + " cho: " + finalPreviousLeader.getEmail());
+                    updateClientBalance(context, gson, finalPreviousLeader.getEmail());
+
+                });
+            }
+
+            // Phát loa Real-time cho toàn sàn nhận giá mới
             broadcastNewBid(context, gson, productId, bidAmount, userEmail);
 
-            // 8. Kích hoạt cuộc chiến Bot thông qua Executor điều phối luồng an toàn
+            // Kích hoạt cuộc chiến Bot
             triggerBotWar(context, gson, productId, currentAuction);
 
-            // 9. Gửi phản hồi riêng cho người vừa đấu giá thành công
             Response successRes = new Response(MessageType.PLACE_BID_RESPONSE, "SUCCESS", "Chúc mừng! Bạn đang là người dẫn đầu!");
             conn.send(gson.toJson(successRes));
 
@@ -163,46 +195,51 @@ public class PlaceBidHandler implements IMessageHandler {
         }
     }
 
-    // TỐI ƯU TOÀN DIỆN LUỒNG CHẠY BOT: Sử dụng Pool luồng tách biệt, chặn lặp vô hạn
     public static void triggerBotWar(ServerContext context, Gson gson, String productId, Auction currentAuction) {
         if (currentAuction.getRegisteredBots() == null || currentAuction.getRegisteredBots().isEmpty()) {
             return;
         }
 
-        // Đẩy tác vụ chạy ngầm vào Executor quản lý tập trung, không sinh Thread rác bừa bãi
         botExecutor.submit(() -> {
             boolean keepFighting = true;
-            int safetyCounter = 0; // Chống vòng lặp vô hạn chết người
+            int safetyCounter = 0;
 
             while (keepFighting && safetyCounter < 100) {
                 keepFighting = false;
                 safetyCounter++;
 
-                // Đồng bộ hóa phiên đấu giá khi kiểm tra và nâng giá trong Bot
                 synchronized (currentAuction) {
-                    // Kiểm tra trạng thái phiên còn hợp lệ không trước khi Bot tự nâng
                     if (!"ACTIVE".equals(currentAuction.getStatus())) {
                         break;
                     }
 
                     for (AutoBidConfig bot : currentAuction.getRegisteredBots()) {
-                        // Nếu Bot này đang dẫn đầu rồi thì bỏ qua không tự nâng giá của mình
                         if (currentAuction.getHighestBidder() != null && bot.getEmail().equals(currentAuction.getHighestBidder().getEmail())) {
                             continue;
                         }
 
+                        // code mới sửa bước giá theo bot
                         double nextBotPrice = (currentAuction.getHighestBidder() == null)
                                 ? currentAuction.getStartPrice()
-                                : (currentAuction.getCurrentPrice() + currentAuction.getStepPrice());
+                                : (currentAuction.getCurrentPrice() + bot.getStepPrice());
 
-                        // Kiểm tra ví tiền thực tế của Bot từ DB
                         User botUserInfo = UserDao.getInstance().getUserByEmail(bot.getEmail());
                         if (botUserInfo == null || botUserInfo.getBalance() < nextBotPrice) {
                             continue;
                         }
 
-                        // Kiểm tra trần giá của Bot cấu hình
                         if (nextBotPrice <= bot.getMaxPrice()) {
+                            boolean botHold = UserDao.getInstance().withdrawMoney(bot.getEmail(), nextBotPrice);
+                            if(!botHold) continue;
+
+                            User prevLeaderBeforeBot = currentAuction.getHighestBidder();
+                            double prevPriceBeforeBot = currentAuction.getCurrentPrice();
+
+                            if (prevLeaderBeforeBot != null) {
+                                UserDao.getInstance().depositMoney(prevLeaderBeforeBot.getEmail(), prevPriceBeforeBot);
+                                updateClientBalance(context, gson, prevLeaderBeforeBot.getEmail());
+                            }
+
                             User botUser = new User();
                             botUser.setEmail(bot.getEmail());
                             botUser.setUsername(botUserInfo.getUsername());
@@ -225,23 +262,50 @@ public class PlaceBidHandler implements IMessageHandler {
                             context.updateAuction(currentAuction);
 
                             broadcastNewBid(context, gson, productId, nextBotPrice, bot.getEmail());
+                            updateClientBalance(context, gson, bot.getEmail());
+
                             System.out.println("[BOT WAR] Bot " + bot.getEmail() + " đã kích giá lên: " + String.format("%,.0f", nextBotPrice));
 
                             keepFighting = true;
-                            break; // Thoát ra ngoài vòng lặp for để cập nhật lại dữ liệu vòng lặp while mới
+                            break;
                         }
                     }
                 }
 
                 if (keepFighting) {
                     try {
-                        Thread.sleep(500); // Nghỉ nửa giây tránh block nghẽn CPU
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
                 }
             }
         });
+    }
+
+    //  HÀM BẮN TÍN HIỆU CẬP NHẬT SỐ DƯ RIÊNG CHO TỪNG USER
+
+    public static void updateClientBalance(ServerContext context, Gson gson, String email) {
+        try {
+            // Lấy số dư mới nhất từ DB
+            User u = UserDao.getInstance().getUserByEmail(email);
+            if (u == null) return;
+
+            // Đóng gói gói tin báo số dư
+            Response res = new Response("GET_BALANCE_RESPONSE", "SUCCESS", "Cập nhật số dư");
+            res.getData().put("balance", u.getBalance());
+            String msg = gson.toJson(res);
+
+            // Bắn tin về đúng cái màn hình (WebSocket) của người dùng đó
+            for (WebSocket client : context.getConnectedClients()) {
+                if (email.equals(context.getUserByConn(client))) {
+                    if (client.isOpen()) client.send(msg);
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[BalanceUpdate] Lỗi khi cập nhật số dư: " + e.getMessage());
+        }
     }
 
     private void sendError(WebSocket conn, Gson gson, String msg) {
