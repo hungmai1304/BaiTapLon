@@ -20,11 +20,11 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.ZoneId;
 
+
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.scene.control.Button;
-import java.time.ZoneId;
 
 public class BiddingController {
 
@@ -69,9 +69,9 @@ public class BiddingController {
 
             updateLeaderUI(currentAuctionData.getLeaderName(), currentAuctionData.getCurrentPrice());
 
-            // =========================================================================
+
             // NGHIỆP VỤ MỚI: Khóa toàn bộ tính năng ra giá nếu người dùng là chủ sản phẩm
-            // =========================================================================
+
             User currentUser = SomeGlobal.getCurrentUser();
             if (currentUser != null && p.getOwner() != null) {
                 if (currentUser.getEmail().equalsIgnoreCase(p.getOwner().getEmail())) {
@@ -88,11 +88,28 @@ public class BiddingController {
             lblNotification.setText("Lỗi: Không tìm thấy thông tin phiên đấu giá!");
         }
 
+        //  KHÔI PHỤC LỊCH SỬ BIỂU ĐỒ BÊN ĐẤU GIÁ THƯỜNG KHI QUAY LẠI MÀN HÌNH
         if (priceSeries.getName() == null) {
             priceSeries.setName("Giá đấu");
+
+            if (currentAuctionData != null && currentAuctionData.getProduct() != null) {
+                bidCount = 0; // Reset bộ đếm
+                Product p = (Product) currentAuctionData.getProduct();
+
+                // Điểm khởi đầu (Giá khởi điểm)
+                priceSeries.getData().add(new XYChart.Data<>("0", p.getStartPrice()));
+
+                // Quét lịch sử cũ vẽ lại
+                if (currentAuctionData.getBiddingHistory() != null) {
+                    for (BidTransaction tx : currentAuctionData.getBiddingHistory()) {
+                        bidCount++;
+                        priceSeries.getData().add(new XYChart.Data<>(String.valueOf(bidCount), tx.getBidAmount()));
+                    }
+                }
+            }
+
             priceChart.getData().add(priceSeries);
         }
-
         startAuctionCountdown();
     }
 
