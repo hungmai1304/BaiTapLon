@@ -12,6 +12,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea; // 1. NHỚ IMPORT THÊM TEXTAREA
+import javafx.animation.Timeline;
+import javafx.animation.KeyFrame;
 
 public class TikTokAuctionController {
 
@@ -19,6 +21,7 @@ public class TikTokAuctionController {
     @FXML private Label price;
     @FXML private Label step;
     @FXML private Label lblTopBidder;
+    @FXML private Label lblNotifyMsg;
     @FXML private javafx.scene.image.ImageView productImage;
     @FXML private Label lblProductDesc;
 
@@ -171,6 +174,23 @@ public class TikTokAuctionController {
                     lblTopBidder.setText(leaderName + " - " + String.format("%,.0f VNĐ", newPrice));
                 }
                 System.out.println("[TikTok UI] Đã nhảy số trực tiếp trên màn hình: " + newPrice);
+            }
+        });
+    }
+    // HÀM HIỂN THỊ THÔNG BÁO TẠM THỜI (TỰ MẤT SAU 3 GIÂY)
+    public void showNotification(String message, boolean isError) {
+        Platform.runLater(() -> {
+            if (lblNotifyMsg != null) {
+                lblNotifyMsg.setText(message);
+                lblNotifyMsg.setStyle(isError ? "-fx-text-fill: red; -fx-font-weight: bold;" : "-fx-text-fill: green;");
+
+                // Sử dụng Timeline để xóa chữ sau 3 giây
+                Timeline timeline = new Timeline(new KeyFrame(javafx.util.Duration.seconds(3), ae -> {
+                    lblNotifyMsg.setText("");
+                }));
+                timeline.play();
+            } else {
+                System.out.println("[Notification] " + message);
             }
         });
     }

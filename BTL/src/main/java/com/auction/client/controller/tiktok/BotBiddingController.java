@@ -16,6 +16,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
+import com.auction.common.model.auction.BidTransaction;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -70,27 +73,50 @@ public class BotBiddingController {
         }
 
         priceSeries.setName("Lịch sử giá");
-        String timeNowInit = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
-        priceSeries.getData().add(new XYChart.Data<>(timeNowInit, currentAuction.getCurrentPrice()));
+        if (currentAuction != null && currentAuction.getProduct() != null) {
+            Product p = (Product) currentAuction.getProduct();
+            // Mốc xuất phát
+            priceSeries.getData().add(new XYChart.Data<>("Mở sàn", p.getStartPrice()));
 
+            // Quét lịch sử cũ
+            if (currentAuction.getBiddingHistory() != null && !currentAuction.getBiddingHistory().isEmpty()) {
+                for (BidTransaction tx : currentAuction.getBiddingHistory()) {
+                    String timeStr = tx.getTimeCreated() != null
+                            ? tx.getTimeCreated().atZone(ZoneId.systemDefault()).toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                            : LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+                    priceSeries.getData().add(new XYChart.Data<>(timeStr, tx.getBidAmount()));
+                }
+            } else {
+                // Nếu chưa ai đặt giá
+                String timeNowInit = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+                priceSeries.getData().add(new XYChart.Data<>(timeNowInit, currentAuction.getCurrentPrice()));
+            }
+        }
         priceChart.getData().add(priceSeries);
 
         // Khởi động cỗ máy đếm ngược thời gian giống hệt màn hình Bidding
         startAuctionCountdown();
     }
 
-    public void updatePrice(double newPrice) {
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
         Platform.runLater(() -> {
-            lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0f VNĐ", newPrice));
-            if (currentAuction != null) {
-                currentAuction.setCurrentPrice(newPrice);
-            }
-            String timeNow = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
-            priceSeries.getData().add(new XYChart.Data<>(timeNow, newPrice));
+            if (currentAuction != null && currentAuction.getProduct() != null
+                    && currentAuction.getProduct().getId().equals(productId)) {
 
-            // Dọn bớt điểm cũ đi nếu nó vẽ quá 20 lần để khỏi tràn màn hình
-            if (priceSeries.getData().size() > 20) {
-                priceSeries.getData().remove(0);
+                // 1. Cập nhật chữ trên giao diện
+                lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0f VNĐ", newPrice));
+
+                // 2. Cập nhật RAM
+                currentAuction.setCurrentPrice(newPrice);
+
+                // 3. Vẽ thêm điểm mới vào đồ thị
+                String timeNow = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+                priceSeries.getData().add(new XYChart.Data<>(timeNow, newPrice));
+
+                // Dọn bớt biểu đồ nếu dài quá (tùy chọn)
+                if (priceSeries.getData().size() > 20) {
+                    priceSeries.getData().remove(0);
+                }
             }
         });
     }
