@@ -15,6 +15,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
+import com.auction.common.model.auction.BidTransaction;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.ZoneId;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;

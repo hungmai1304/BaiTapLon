@@ -24,6 +24,8 @@ import java.util.concurrent.Executors;
 public class PlaceBidHandler implements IMessageHandler {
 
     private static final ExecutorService botExecutor = Executors.newFixedThreadPool(4);
+    //  BỔ SUNG: Sổ ghi chép thời gian đập búa để chống Spam (15 giây)
+    private static final java.util.Map<String, Long> userCooldowns = new java.util.concurrent.ConcurrentHashMap<>();
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -66,6 +68,16 @@ public class PlaceBidHandler implements IMessageHandler {
             if (currentAuction == null) {
                 sendError(conn, gson, "Thất bại: Sản phẩm hiện không nằm trong phiên đấu giá nào!");
                 return;
+            }
+            long currentTime = System.currentTimeMillis();
+            if (userCooldowns.containsKey(userEmail)) {
+                long lastBidTime = userCooldowns.get(userEmail);
+                long timePassed = currentTime - lastBidTime;
+                if (timePassed < 15000) { // 15000 mili-giây = 15 giây
+                    long timeLeft = (15000 - timePassed) / 1000;
+                    sendError(conn, gson, "Thao tác quá nhanh! Vui lòng chờ " + timeLeft + " giây nữa để đặt giá tiếp.");
+                    return;
+                }
             }
 
 
@@ -169,6 +181,8 @@ public class PlaceBidHandler implements IMessageHandler {
 
             // Kích hoạt cuộc chiến Bot
             triggerBotWar(context, gson, productId, currentAuction);
+            // Ghi nhận thời điểm vừa đập búa thành công để bắt đầu tính 15s
+            userCooldowns.put(userEmail, System.currentTimeMillis());
 
             Response successRes = new Response(MessageType.PLACE_BID_RESPONSE, "SUCCESS", "Chúc mừng! Bạn đang là người dẫn đầu!");
             conn.send(gson.toJson(successRes));
@@ -242,11 +256,16 @@ public class PlaceBidHandler implements IMessageHandler {
 
                             User botUser = new User();
                             botUser.setEmail(bot.getEmail());
-                            botUser.setUsername(botUserInfo.getUsername());
+                            String safeBotName = (botUserInfo != null && botUserInfo.getUsername() != null && !botUserInfo.getUsername().isEmpty())
+                                    ? botUserInfo.getUsername()
+                                    : bot.getEmail();
+                            botUser.setUsername(safeBotName);
+                            //botUser.setUsername(botUserInfo.getUsername());
 
                             currentAuction.setCurrentPrice(nextBotPrice);
                             currentAuction.setHighestBidder(botUser);
-                            currentAuction.setLeaderName(botUser.getUsername());
+                            currentAuction.setLeaderName(safeBotName);
+                            //currentAuction.setLeaderName(botUser.getUsername());
 
                             BidTransaction transaction = new BidTransaction();
                             transaction.setId(currentAuction.getId());
@@ -274,7 +293,7 @@ public class PlaceBidHandler implements IMessageHandler {
 
                 if (keepFighting) {
                     try {
-                        Thread.sleep(500);
+                        Thread.sleep(15000);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }

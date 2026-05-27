@@ -117,8 +117,10 @@
                                         <Label fx:id="lblTopBidder" style="-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: #f1c40f;" styleClass="leader-name" text="Đang đợi sản phẩm..." />
                                     </children>
                                 </HBox>
+                                <Label fx:id="lblNotifyMsg" style="-fx-font-weight: bold; -fx-font-size: 14px;" text="" />
                             </children>
                         </VBox>
+
 
                         <VBox spacing="10.0" VBox.vgrow="ALWAYS">
                             <children>
