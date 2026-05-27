@@ -4,7 +4,7 @@ import com.auction.client.network.RequestSender;
 import com.auction.client.utils.ClientContext;
 import com.auction.client.utils.ControllerRegistry;
 import com.auction.client.utils.NavigationService;
-import com.auction.client.controller.general.SomeGlobal; // Đảm bảo đã import đúng class này
+import com.auction.client.controller.general.SomeGlobal;
 import com.auction.common.model.product.Product;
 import com.auction.common.model.auction.Auction;
 import javafx.application.Platform;
@@ -15,21 +15,16 @@ import javafx.scene.control.TextField;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 
-// --- CHỈ THÊM: Các thư viện bổ sung phục vụ đếm ngược ---
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.scene.control.Button;
 import java.time.LocalDateTime;
-// --- HẾT PHẦN THÊM THƯ VIỆN ---
 
-/**
- * Controller quản lý màn hình đấu giá chi tiết.
- * Đã được tối ưu để tránh lỗi null và hiển thị thông báo chính xác.
- */
 public class BiddingController {
 
     @FXML private Label lblProductName;
+    @FXML private Label lblProductDesc;
     @FXML private Label lblStartPrice;
     @FXML private Label lblPriceStep;
     @FXML private Label lblCurrentPrice;
@@ -39,11 +34,9 @@ public class BiddingController {
     @FXML private TextField txtBidAmount;
     @FXML private LineChart<String, Number> priceChart;
 
-    // --- CHỈ THÊM: Thành phần UI điều khiển đếm ngược và khóa nút ---
     @FXML private Label lblCountdown;
     @FXML private Button btnPlaceBid;
     private static Timeline countdownTimeline;
-    // --- HẾT PHẦN THÊM THÀNH PHẦN ---
 
     private Auction currentAuctionData;
     private XYChart.Series<String, Number> priceSeries = new XYChart.Series<>();
@@ -53,14 +46,18 @@ public class BiddingController {
     public void initialize() {
         ControllerRegistry.register("BiddingController", this);
 
-        // Lấy dữ liệu phiên đấu giá hiện tại từ Context
         currentAuctionData = ClientContext.getInstance().getCurrentAuction();
 
-        // KIỂM TRA DỮ LIỆU: Nếu TikTokController chưa lưu Auction vào Context, ta báo lỗi luôn
         if (currentAuctionData != null && currentAuctionData.getProduct() != null) {
             Product p = (Product) currentAuctionData.getProduct();
 
             lblProductName.setText("Tên sản phẩm: " + p.getName());
+
+            if (lblProductDesc != null) {
+                String desc = p.getDescription();
+                lblProductDesc.setText("Mô tả: " + (desc != null && !desc.isEmpty() ? desc : "Không có mô tả"));
+            }
+
             lblStartPrice.setText("Giá khởi điểm: " + String.format("%,.0fđ", p.getStartPrice()));
             lblPriceStep.setText("Bước giá tối thiểu: " + String.format("%,.0fđ", p.getStepPrice()));
             lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0fđ", currentAuctionData.getCurrentPrice()));
@@ -76,20 +73,17 @@ public class BiddingController {
             priceChart.getData().add(priceSeries);
         }
 
-        // --- CHỈ THÊM: Kích hoạt cỗ máy đếm ngược tự động khi mở màn hình ---
         startAuctionCountdown();
-        // --- HẾT PHẦN THÊM ---
     }
 
     @FXML
     public void handlePlaceBidForAuction(ActionEvent event) {
-        // --- CHỈ THÊM: Chặn thô bạo bằng code nếu cố tình bấm nút lúc đang khóa (Đã xóa icon) ---
         if (currentAuctionData != null && currentAuctionData.getProduct() != null) {
             Product p = (Product) currentAuctionData.getProduct();
             LocalDateTime now = LocalDateTime.now();
 
-            LocalDateTime fixedStart = p.getStartTime() != null ? p.getStartTime() : null;
-            LocalDateTime fixedEnd = p.getEndTime() != null ? p.getEndTime() : null;
+            LocalDateTime fixedStart = p.getStartTime() != null ? p.getStartTime().plusHours(7) : null;
+            LocalDateTime fixedEnd = p.getEndTime() != null ? p.getEndTime().plusHours(7) : null;
 
             if (fixedStart != null && now.isBefore(fixedStart)) {
                 lblNotification.setStyle("-fx-text-fill: #e74c3c;");
@@ -102,10 +96,8 @@ public class BiddingController {
                 return;
             }
         }
-        // --- HẾT PHẦN THÊM ---
 
         try {
-            // 1. KIỂM TRA DỮ LIỆU CỐT LÕI (Tránh lỗi văng đỏ lòm do null)
             if (currentAuctionData == null || currentAuctionData.getProduct() == null) {
                 lblNotification.setStyle("-fx-text-fill: #e74c3c;");
                 lblNotification.setText("Lỗi dữ liệu! Vui lòng quay lại màn hình trước.");
@@ -124,24 +116,21 @@ public class BiddingController {
             Product p = (Product) currentAuctionData.getProduct();
             double stepPrice = p.getStepPrice();
 
-            // 2. KIỂM TRA LOGIC ĐẤU GIÁ
             if (bidAmount <= currentPrice) {
                 lblNotification.setStyle("-fx-text-fill: #e74c3c;");
                 lblNotification.setText("Giá phải cao hơn giá hiện hành!");
                 return;
             }
 
-            if ((bidAmount - currentPrice) % stepPrice != 0) {
+            if ((bidAmount - currentPrice) < stepPrice) {
                 lblNotification.setStyle("-fx-text-fill: #e74c3c;");
-                lblNotification.setText("Sai bước giá! Phải tăng theo bội số của " + String.format("%,.0fđ", stepPrice));
+                lblNotification.setText("Sai bước giá! Giá đặt mới phải cao hơn giá cũ tối thiểu là " + String.format("%,.0fđ", stepPrice));
                 return;
             }
 
-            // 3. GỬI YÊU CẦU LÊN SERVER
             String email = SomeGlobal.getCurrentUser().getEmail();
             RequestSender.sendPlaceBidRequest(p.getId(), bidAmount, email);
 
-            //  đang chờ Server check ví!
             lblNotification.setStyle("-fx-text-fill: #f39c12;");
             lblNotification.setText("Đang kiểm tra ví và gửi yêu cầu...");
             txtBidAmount.clear();
@@ -151,7 +140,6 @@ public class BiddingController {
             lblNotification.setStyle("-fx-text-fill: #e74c3c;");
             lblNotification.setText("Vui lòng nhập con số hợp lệ!");
         } catch (Exception e) {
-            // Đây là nơi bắt các lỗi kết nối thật sự
             lblNotification.setStyle("-fx-text-fill: #e74c3c;");
             lblNotification.setText("Lỗi hệ thống: " + e.getMessage());
             e.printStackTrace();
@@ -176,7 +164,6 @@ public class BiddingController {
                 currentAuctionData.setLeaderName(leaderName);
             }
 
-            // Vẽ biểu đồ tự động nhảy khi có giá mới
             bidCount++;
             priceSeries.getData().add(new XYChart.Data<>(String.valueOf(bidCount), newPrice));
         });
@@ -186,6 +173,19 @@ public class BiddingController {
         if (name != null && !name.isEmpty()) {
             lblLeaderName.setText(name);
             lblLeaderPrice.setText("- " + String.format("%,.0fđ", price));
+            // KIỂM TRA XEM MÌNH CÓ CÒN DẪN ĐẦU KHÔNG
+            if (SomeGlobal.getCurrentUser() != null) {
+                String myEmail = SomeGlobal.getCurrentUser().getEmail();
+                String myUsername = SomeGlobal.getCurrentUser().getUsername();
+                // Nếu người dẫn đầu hiện tại KHÔNG PHẢI là email hoặc username của mình
+                if (!name.trim().equals(myEmail) && !name.trim().equals(myUsername)) {
+                    // Và trên màn hình vẫn còn sót lại chữ "dẫn đầu" từ lượt đặt giá trước
+                    if (lblNotification.getText() != null && lblNotification.getText().contains("dẫn đầu")) {
+                        // Xóa ngay đi để tránh gây hiểu lầm cho người dùng
+                        lblNotification.setText("");
+                    }
+                }
+            }
         } else {
             lblLeaderName.setText("Chưa có");
             lblLeaderPrice.setText("0đ");
@@ -200,44 +200,22 @@ public class BiddingController {
 
     @FXML
     public void handleBackToTikTok(ActionEvent event) {
-        // --- CHỈ THÊM: Tắt bộ đếm thời gian chạy ngầm khi thoát màn hình để giải phóng RAM ---
         if (countdownTimeline != null) {
             countdownTimeline.stop();
         }
-        // --- HẾT PHẦN THÊM ---
         ControllerRegistry.unregister("BiddingController");
         NavigationService.setCenterView("/com/auction/client/view/tiktokAuction.fxml");
     }
-    public void updateRealtimeBid(String productId, double newPrice, String leaderName, String newEndTime) {
+
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
         Platform.runLater(() -> {
-            // 1. Kiểm tra ID:
             if (this.currentAuctionData != null && this.currentAuctionData.getProduct().getId().equals(productId)) {
-
-                // 2. Cập nhật giá chữ to
                 lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0fđ", newPrice));
-
-                // 3. Cập nhật tên người dẫn đầu
                 updateLeaderUI(leaderName, newPrice);
 
-                // 4. Lưu vào RAM để lúc back ra back vào nó không bị mất
                 this.currentAuctionData.setCurrentPrice(newPrice);
                 this.currentAuctionData.setLeaderName(leaderName);
 
-                // 5. Cập nhật thời gian kết thúc (Gia hạn Anti-Sniping)
-                if (newEndTime != null && !newEndTime.isEmpty()) {
-                    try {
-                        LocalDateTime extendedTime = LocalDateTime.parse(newEndTime);
-                        this.currentAuctionData.setEndTime(extendedTime);
-                        if (this.currentAuctionData.getProduct() != null) {
-                            ((Product)this.currentAuctionData.getProduct()).setEndTime(extendedTime);
-                        }
-                        System.out.println("[Bidding UI] Đã gia hạn thời gian kết thúc: " + extendedTime);
-                    } catch (Exception e) {
-                        System.err.println("[Bidding UI] Lỗi parse thời gian gia hạn: " + e.getMessage());
-                    }
-                }
-
-                // 6. Cập nhật biểu đồ
                 bidCount++;
                 priceSeries.getData().add(new XYChart.Data<>(String.valueOf(bidCount), newPrice));
 
@@ -257,15 +235,14 @@ public class BiddingController {
         countdownTimeline = new Timeline(new KeyFrame(javafx.util.Duration.millis(1000), event -> {
             LocalDateTime now = LocalDateTime.now();
 
-            LocalDateTime startTime = p.getStartTime() != null ? p.getStartTime() : null;
-            LocalDateTime endTime = p.getEndTime() != null ? p.getEndTime() : null;
+            LocalDateTime startTime = p.getStartTime() != null ? p.getStartTime().plusHours(7) : null;
+            LocalDateTime endTime = p.getEndTime() != null ? p.getEndTime().plusHours(7) : null;
 
             if (startTime == null || endTime == null) {
                 if (lblCountdown != null) lblCountdown.setText("Không xác định được thời gian!");
                 return;
             }
 
-            // TRẠNG THÁI 1: CHƯA ĐẾN GIỜ (Đang quảng cáo)
             if (now.isBefore(startTime)) {
                 if (btnPlaceBid != null) btnPlaceBid.setDisable(true);
                 long diff = java.time.Duration.between(now, startTime).getSeconds();
@@ -279,7 +256,6 @@ public class BiddingController {
                     lblNotification.setText("Phiên đấu giá chưa bắt đầu! Hãy xem thông tin sản phẩm.");
                 }
 
-                // TRẠNG THÁI 2: ĐANG ĐẤU GIÁ
             } else if (now.isAfter(startTime) && now.isBefore(endTime)) {
                 if (btnPlaceBid != null) btnPlaceBid.setDisable(false);
                 long diff = java.time.Duration.between(now, endTime).getSeconds();
@@ -292,7 +268,6 @@ public class BiddingController {
                     lblNotification.setText("");
                 }
 
-                // TRẠNG THÁI 3: HẾT GIỜ
             } else {
                 if (btnPlaceBid != null) btnPlaceBid.setDisable(true);
                 if (lblCountdown != null) {
@@ -310,5 +285,12 @@ public class BiddingController {
         countdownTimeline.setCycleCount(Animation.INDEFINITE);
         countdownTimeline.play();
     }
-    // --- HẾT PHẦN THÊM ---
+
+    public Label getLblProductName() {
+        return this.lblProductName;
+    }
+
+    public com.auction.common.model.auction.Auction getCurrentAuctionData() {
+        return this.currentAuctionData;
+    }
 }

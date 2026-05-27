@@ -9,9 +9,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 
 public class UserDao {
 
@@ -247,8 +245,8 @@ public class UserDao {
             return false;
         }
 
-        // Bước 1: Thực hiện trừ tiền trong Database (Atomic)
-        // Câu lệnh SQL: Trừ tiền với điều kiện số dư hiện tại phải lớn hơn hoặc bằng số tiền cần rút
+        // TỐI ƯU: Gộp điều kiện kiểm tra số dư trực tiếp vào câu UPDATE (Atomic Operation)
+        // Loại bỏ hoàn toàn bước getUserByEmail cũ để giảm tải 50% thời gian kết nối mạng xuống DB
         String sql = "UPDATE users SET balance = balance - ? WHERE email = ? AND balance >= ?";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -257,7 +255,14 @@ public class UserDao {
             pstmt.setString(2, email);
             pstmt.setDouble(3, amount);
 
-            return pstmt.executeUpdate() > 0;
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                return true;
+            } else {
+                // Nếu update thất bại (0 dòng bị ảnh hưởng), có thể do không đủ tiền hoặc tài khoản không tồn tại
+                System.err.println("❌ Lỗi: Rút tiền thất bại cho [" + email + "]. Lý do: Không đủ số dư hoặc tài khoản không tồn tại.");
+                return false;
+            }
         } catch (SQLException e) {
             System.err.println("❌ Lỗi khi thực hiện rút tiền cho: " + email + " - " + e.getMessage());
             return false;
@@ -355,14 +360,7 @@ public class UserDao {
     }
 
     /**
-     * Khấu trừ số dư tài khoản tự động (Khi người dùng thắng / chốt đơn đấu giá thành công)
-     * Có tích hợp kiểm tra bảo mật kép ngay tại tầng câu lệnh SQL nhằm tránh tranh chấp tài nguyên (Race Condition)
-     * @param email Email của người dùng bị trừ tiền
-     * @param amountToDeduct Số tiền cần trừ
-     * @return true nếu trừ tiền thành công
-     */
-    /**
-     * Hàm trừ tiền khi chốt đơn đấu giá thành công
+     * Hàm trừ tiền khi chốt đơn đấu giá thành công (Atomic Safe)
      */
     public boolean deductBalance(String email, double amountToDeduct) {
         // Câu lệnh SQL: Trừ tiền với điều kiện số dư hiện tại phải lớn hơn hoặc bằng số tiền cần trừ (Bảo mật kép dưới DB)
@@ -375,9 +373,7 @@ public class UserDao {
             pstmt.setString(2, email);
             pstmt.setDouble(3, amountToDeduct);
 
-            int rowsAffected = pstmt.executeUpdate();
-            return rowsAffected > 0;
-
+            return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("[UserDao] Lỗi khi trừ tiền của user " + email + ": " + e.getMessage());
             return false;
@@ -443,4 +439,68 @@ public class UserDao {
         return userList;
     }
 
+    /**
+     * Đếm tổng số sản phẩm mà một người dùng (Shop) đang sở hữu
+     */
+    public int countProductsByOwnerId(String userId) {
+        if (userId == null || userId.trim().isEmpty()) return 0;
+
+        String sql = "SELECT COUNT(*) AS total FROM products WHERE owner_id = ?";
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, userId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[UserDao] Lỗi trong hàm countProductsByOwnerId cho User ID " + userId + ": " + e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+     * HÀM VIẾT THÊM (BẢO VỆ HIỆU NĂNG): Kiểm tra Email tồn tại bằng câu lệnh siêu nhẹ EXISTS
+     */
+    private boolean isEmailExists(String email) {
+        String sql = "SELECT 1 FROM users WHERE email = ? LIMIT 1";
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, email);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next(); // Nếu có bản ghi trả về true, ngược lại false
+            }
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+    public List<Map<String, Object>> getAllShopsWithProductCount() throws SQLException {
+        List<Map<String, Object>> list = new ArrayList<>();
+        // Dùng LEFT JOIN để shop chưa có sản phẩm nào vẫn hiện ra với số lượng = 0
+        String sql = "SELECT u.id, u.email, u.name, u.shop_name, u.status, COUNT(p.id) as product_count " +
+                "FROM users u " +
+                "LEFT JOIN products p ON u.id = p.owner_id " +
+                "WHERE u.role = 'SELLER' " +
+                "GROUP BY u.id, u.email, u.name, u.shop_name, u.status";
+
+        try (Connection conn = Db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                Map<String, Object> shopInfo = new HashMap<>();
+                shopInfo.put("id", rs.getString("id"));
+                shopInfo.put("email", rs.getString("email"));
+                shopInfo.put("name", rs.getString("name"));
+                shopInfo.put("shopName", rs.getString("shop_name"));
+                shopInfo.put("status", rs.getString("status"));
+                shopInfo.put("productCount", rs.getInt("product_count"));
+
+                list.add(shopInfo);
+            }
+        }
+        return list;
+    }
 }

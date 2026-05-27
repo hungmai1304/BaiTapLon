@@ -56,7 +56,8 @@ public class BankController {
     public void updateBalanceOnUI(double newBalance) {
         // Đảm bảo chạy trên luồng giao diện (JavaFX Application Thread) tránh crash ứng dụng
         Platform.runLater(() -> {
-            balance_amount.setText(String.format("%,.2f", newBalance)); // Định dạng hiển thị: 1,000,000.00
+            // ĐÃ SỬA: Đổi định dạng từ "%,.2f" sang "%,.0f" để xóa phần thập phân dư thừa ".00"
+            balance_amount.setText(String.format("%,.0f", newBalance));
         });
     }
 

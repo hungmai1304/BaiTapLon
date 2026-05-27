@@ -39,31 +39,31 @@
                         <VBox alignment="CENTER" prefWidth="80.0" spacing="20.0">
                             <children>
                                 <Button onAction="#handleUp">
-                           <graphic>
-                              <ImageView fitHeight="49.0" fitWidth="47.0" pickOnBounds="true" preserveRatio="true" rotate="270.0">
-                                 <image>
-                                    <Image url="@arrow.png" />
-                                 </image>
-                              </ImageView>
-                           </graphic>
-                           <styleClass>
-                              <String fx:value="product-nav-btn" />
-                              <String fx:value="btn-transparent" />
-                           </styleClass></Button>
+                                    <graphic>
+                                        <ImageView fitHeight="49.0" fitWidth="47.0" pickOnBounds="true" preserveRatio="true" rotate="270.0">
+                                            <image>
+                                                <Image url="@arrow.png" />
+                                            </image>
+                                        </ImageView>
+                                    </graphic>
+                                    <styleClass>
+                                        <String fx:value="product-nav-btn" />
+                                        <String fx:value="btn-transparent" />
+                                    </styleClass></Button>
                                 <Separator maxWidth="40" opacity="0.2" />
-                        <Button onAction="#handleDown">
-                           <graphic>
-                              <ImageView fitHeight="49.0" fitWidth="47.0" pickOnBounds="true" preserveRatio="true" rotate="90.0">
-                                 <image>
-                                    <Image url="@arrow.png" />
-                                 </image>
-                              </ImageView>
-                           </graphic>
-                           <styleClass>
-                              <String fx:value="product-nav-btn" />
-                              <String fx:value="btn-transparent" />
-                           </styleClass>
-                        </Button>
+                                <Button onAction="#handleDown">
+                                    <graphic>
+                                        <ImageView fitHeight="49.0" fitWidth="47.0" pickOnBounds="true" preserveRatio="true" rotate="90.0">
+                                            <image>
+                                                <Image url="@arrow.png" />
+                                            </image>
+                                        </ImageView>
+                                    </graphic>
+                                    <styleClass>
+                                        <String fx:value="product-nav-btn" />
+                                        <String fx:value="btn-transparent" />
+                                    </styleClass>
+                                </Button>
                             </children>
                         </VBox>
 
@@ -90,6 +90,11 @@
                                         <HBox spacing="10.0">
                                             <Label styleClass="label-title" style="-fx-font-weight: bold; -fx-font-size: 16px;" text="Bước giá:" />
                                             <Label fx:id="step" styleClass="label-value" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #e67e22;" text="0 VNĐ" />
+                                        </HBox>
+                                        <HBox spacing="10.0">
+                                            <Label styleClass="label-title" style="-fx-font-weight: bold; -fx-font-size: 16px;" text="Mô tả:" />
+
+                                            <Label fx:id="lblProductDesc" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #b0b0b0;" text="Đang đợi tải..." wrapText="true" prefWidth="350.0" />
                                         </HBox>
                                     </children>
                                 </VBox>

@@ -31,6 +31,22 @@ public class ImportProductRequestHandler implements IMessageHandler {
                 return;
             }
 
+            // =========================================================================
+            // KIỂM TRA TRẠNG THÁI BLACKLIST TRƯỚC KHI CHO PHÉP IMPORT SẢN PHẨM
+            // =========================================================================
+            User currentUser = UserDao.getInstance().getUserByEmail(userEmail);
+            if (currentUser == null) {
+                sendError(conn, gson, "Lỗi hệ thống: Không tìm thấy thông tin tài khoản của bạn!");
+                return;
+            }
+
+            // Chặn ngay lập tức nếu Shop/User này nằm trong danh sách đen
+            if ("BLACKLIST".equalsIgnoreCase(currentUser.getStatus())) {
+                System.err.println("[ImportProductRequestHandler] Từ chối: Tài khoản BLACKLIST " + userEmail + " cố ý import sản phẩm!");
+                sendError(conn, gson, "Tài khoản của bạn đã bị đưa vào danh sách đen (BLACKLIST). Bạn không có quyền đăng bán sản phẩm mới!");
+                return;
+            }
+
             // 2. Map data từ Client sang Object Product
             String jsonData = gson.toJson(data);
             Product product = gson.fromJson(jsonData, Product.class);
@@ -56,8 +72,7 @@ public class ImportProductRequestHandler implements IMessageHandler {
             }
 
             // 4. Thiết lập các thông số mặc định
-            User currentUser = UserDao.getInstance().getUserByEmail(userEmail);
-            product.setOwner(currentUser);
+            product.setOwner(currentUser); // Tái sử dụng đối tượng currentUser đã truy vấn ở trên
             product.setStatus(ProductStatus.AVAILABLE);
             product.setTimeCreated(LocalDateTime.now());
             product.setCurrentPrice(product.getStartPrice());

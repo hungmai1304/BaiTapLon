@@ -56,7 +56,7 @@ public class MainController {
 
             String username = user.getUsername();
             about_you_name.setText(username);
-            
+
             // Load Avatar
             updateAvatar(user.getAvatar());
 
@@ -80,7 +80,7 @@ public class MainController {
         if (balance_main != null) {
             // Tự động lắng nghe và định dạng số dư hiển thị dạng: 1,000,000.00
             balance_main.textProperty().bind(
-                    ClientContext.getInstance().userBalanceProperty().asString("%,.2f")
+                    ClientContext.getInstance().userBalanceProperty().asString("%,.0f")
             );
         }
         RequestSender.send(MessageType.GET_SHOP_PRODUCTS_REQUEST, null);

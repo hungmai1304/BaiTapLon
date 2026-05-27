@@ -48,8 +48,6 @@ public class LoginHandler implements IMessageHandler {
                     response.getData().put("name", admin.getUsername());
                     response.getData().put("role", "ADMIN");
                     response.getData().put("avatar", admin.getAvatar());
-
-                    // VIẾT THÊM: Phản hồi trạng thái cho tài khoản Admin
                     response.getData().put("status", admin.getStatus());
 
                     conn.send(gson.toJson(response));
@@ -67,17 +65,39 @@ public class LoginHandler implements IMessageHandler {
                 }
             }
 
-            // --- XỬ LÝ USER THƯỜNG / ADMIN_REQUEST QUA DATABASE ---
+            // --- KIỂM TRA TRẠNG THÁI BANNED TRƯỚC KHI ĐĂNG NHẬP ---
+            User userCheck = UserDao.getInstance().getUserByEmail(email);
+            if (userCheck != null && "BANNED".equalsIgnoreCase(userCheck.getStatus())) {
+                System.err.println("[LoginHandler] Từ chối xác thực: Tài khoản [" + email + "] đang bị khóa (BANNED)!");
+                Response response = new Response(
+                        MessageType.LOGIN_RESPONSE,
+                        "ERROR",
+                        "Bạn đã bị kick!"
+                );
+                conn.send(gson.toJson(response));
+                return;
+            }
+
+            // --- XỬ LÝ USER THƯỜNG / SELLER QUA DATABASE ---
             User loginUser = UserDao.getInstance().authenticate(email, password);
 
             if (loginUser != null) {
                 context.addOnlineUser(email, conn);
                 context.addOnlineUserObject(conn, loginUser);
 
+                // Mặc định lời nhắn thành công
+                String welcomeMessage = "Đăng nhập thành công!";
+
+                // THÊM MỚI: Nếu đăng nhập thành công nhưng tài khoản thuộc BLACKLIST, thay đổi message cảnh báo
+                if ("BLACKLIST".equalsIgnoreCase(loginUser.getStatus())) {
+                    welcomeMessage = "Lưu ý: Bạn đang trong Blacklist!";
+                    System.out.println("[LoginHandler] Cảnh báo: Thành viên nhóm danh sách đen [" + loginUser.getEmail() + "] vừa đăng nhập.");
+                }
+
                 Response response = new Response(
                         MessageType.LOGIN_RESPONSE,
                         "SUCCESS",
-                        "Đăng nhập thành công!"
+                        welcomeMessage
                 );
 
                 // 1. Nhặt dữ liệu chung
@@ -85,14 +105,10 @@ public class LoginHandler implements IMessageHandler {
                 response.getData().put("email", loginUser.getEmail());
                 response.getData().put("name", loginUser.getUsername());
                 response.getData().put("avatar", loginUser.getAvatar());
-
-                // ĐỒNG BỘ MỚI: Lấy trực tiếp role từ thuộc tính của đối tượng thay vì đoán qua instanceof
                 response.getData().put("role", loginUser.getRole());
-
-                // VIẾT THÊM: Phản hồi trạng thái (status) của User về Client (NORMAL, BANNED, v.v...)
                 response.getData().put("status", loginUser.getStatus());
 
-                // 2. Chỉ dùng instanceof để bổ sung các thuộc tính mở rộng chuyên biệt (như shopName)
+                // 2. Bổ sung thuộc tính mở rộng chuyên biệt (như shopName) nếu là Seller
                 if (loginUser instanceof Seller) {
                     response.getData().put("shopName", ((Seller) loginUser).getShopName());
                 }
@@ -101,23 +117,11 @@ public class LoginHandler implements IMessageHandler {
                 System.out.println("[LoginHandler] User [" + loginUser.getUsername() + "] với vai trò [" + loginUser.getRole() + "] và trạng thái [" + loginUser.getStatus() + "] đã vào hệ thống.");
 
             } else {
-                User user = UserDao.getInstance().getUserByEmail(email);
-
-                // VIẾT THÊM: Nếu user có status là BANNED thì lập tức chặn, không cho so khớp mật khẩu nữa
-                if ("BANNED".equalsIgnoreCase(user.getStatus())) {
-                    System.err.println("[UserDao] Từ chối xác thực: Tài khoản [" + email + "] đang bị khóa (BANNED)!");
-                    Response response = new Response(
-                            MessageType.LOGIN_RESPONSE,
-                            "ERROR",
-                            "bạn đã bị kick!"
-                    );
-                    conn.send(gson.toJson(response));
-                    return ;
-                }
+                // Đăng nhập thất bại do sai tài khoản hoặc mật khẩu thông thường
                 Response response = new Response(
                         MessageType.LOGIN_RESPONSE,
                         "ERROR",
-                        "Sai tài khoản hoặc mật khẩu, hoặc bạn đã bị kick!"
+                        "Sai tài khoản hoặc mật khẩu!"
                 );
                 conn.send(gson.toJson(response));
             }

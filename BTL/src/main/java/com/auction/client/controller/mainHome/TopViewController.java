@@ -1,5 +1,6 @@
 package com.auction.client.controller.mainHome;
 
+import com.auction.client.controller.mainHome.GlobalMarqueeController; // Import lớp quản lý chữ chạy
 import com.auction.client.controller.general.SomeGlobal;
 import com.auction.client.network.RequestSender;
 import com.auction.client.utils.ClientContext;
@@ -13,6 +14,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;  // Thêm import này
+import javafx.scene.layout.Pane;  // Thêm import này
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
 
@@ -31,9 +34,18 @@ public class TopViewController {
     @FXML
     private ImageView top_avatar;
 
+    // --- CHỈ THÊM: Biến điều khiển dải chữ chạy toàn Server ---
+    @FXML
+    private HBox marqueeContainer;
+    @FXML
+    private Pane textViewPane;
+
     @FXML
     public void initialize() {
         SomeGlobal.setTopViewController(this);
+
+        // --- CHỈ THÊM: Kích hoạt cỗ máy chữ chạy khi thanh Top hiển thị ---
+        GlobalMarqueeController.initializeMarquee(marqueeContainer, textViewPane);
 
         // Bo tròn avatar
         if (top_avatar != null) {
@@ -43,8 +55,9 @@ public class TopViewController {
 
         // 1. Tự động đồng bộ số dư (Binding) với ClientContext
         if (balance != null) {
+            // ĐÃ SỬA: Đổi định dạng từ "%,.2f" sang "%,.0f" để xóa phần thập phân ".00"
             balance.textProperty().bind(
-                    ClientContext.getInstance().userBalanceProperty().asString("%,.2f")
+                    ClientContext.getInstance().userBalanceProperty().asString("%,.0f")
             );
         }
 
@@ -76,16 +89,9 @@ public class TopViewController {
         }
     }
 
-    /**
-     * Khởi tạo bộ đếm thời gian thực cho đồng hồ (Định dạng HH:mm:ss)
-     */
     private void initClock() {
         if (clock == null) return;
-
-        // Định dạng hiển thị: Giờ:Phút:Giây (Ví dụ: 21:45:02)
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
-
-        // Tạo bộ đếm lặp lại sau mỗi 1 giây
         Timeline timeline = new Timeline(
                 new KeyFrame(Duration.ZERO, e -> {
                     if (clock != null) {
@@ -94,8 +100,6 @@ public class TopViewController {
                 }),
                 new KeyFrame(Duration.seconds(1))
         );
-
-        // Thiết lập chạy vô hạn và bắt đầu kích hoạt
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
     }

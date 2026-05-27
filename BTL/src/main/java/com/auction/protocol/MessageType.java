@@ -115,4 +115,8 @@ public class MessageType {
     // Cập nhật Avatar
     public static final String UPDATE_AVATAR_REQUEST = "UPDATE_AVATAR_REQUEST";
     public static final String UPDATE_AVATAR_RESPONSE = "UPDATE_AVATAR_RESPONSE";
+
+    // botBidding
+    public static final String REGISTER_BOT_REQUEST = "REGISTER_BOT_REQUEST";
+    public static final String REGISTER_BOT_RESPONSE = "REGISTER_BOT_RESPONSE";
 }
