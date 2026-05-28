@@ -12,50 +12,53 @@ import com.google.gson.reflect.TypeToken;
 import javafx.application.Platform;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @ResponseHandler(type = "GET_ACTIVE_AUCTIONS_RESPONSE")
 public class GetActiveAuctionsClientHandler implements IClientHandler {
 
+    // CẬP NHẬT: Bộ Gson an toàn đọc được cả chuỗi Local lẫn chuỗi có Múi giờ (+07:00)
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
                     new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
-            .registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, typeOfT, context) ->
-                    LocalDateTime.parse(json.getAsString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+            .registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, typeOfT, context) -> {
+                String dateStr = json.getAsString();
+                try {
+                    // Thử parse theo chuẩn chuỗi có múi giờ trước (Server mới)
+                    return ZonedDateTime.parse(dateStr).toLocalDateTime();
+                } catch (Exception e) {
+                    // Nếu lỗi, fallback về parse chuỗi không múi giờ (Server cũ hoặc dữ liệu mẫu)
+                    return LocalDateTime.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                }
+            })
             .create();
-
 
     @Override
     public void handle(Response response) {
         try {
             System.out.println(">>> [HANDLER] Nhận dữ liệu auctionList từ Server.");
 
-            // 1. Lấy dữ liệu với key chuẩn "auctionList"
             Object rawData = response.getData().get("auctionList");
 
             if (rawData != null) {
-                // 2. Parse JSON sang List Auction
                 String jsonString = gson.toJson(rawData);
                 java.lang.reflect.Type listType = new TypeToken<List<Auction>>(){}.getType();
                 List<Auction> auctionList = gson.fromJson(jsonString, listType);
 
                 if (auctionList != null) {
-                    // 3. Cập nhật vào danh sách QUẢN LÝ MỚI (Duy nhất) trong ClientContext
                     ClientContext.getInstance().setAuctionList(auctionList);
 
-                    // 4. Cập nhật giao diện TikTok
                     Platform.runLater(() -> {
                         TikTokAuctionController tiktokCtrl = (TikTokAuctionController) ControllerRegistry.get("TikTokAuctionController");
                         if (tiktokCtrl != null) {
                             tiktokCtrl.renderCurrentAuction();
                         }
 
-                        // 5. Cập nhật giao diện Search (Mới)
                         Object searchCtrl = ControllerRegistry.get("SearchController");
                         if (searchCtrl != null) {
                             try {
-                                // Sử dụng reflection để gọi nếu chưa import class SearchController hoặc dùng casting nếu đã tạo
                                 searchCtrl.getClass().getMethod("renderResults", List.class).invoke(searchCtrl, auctionList);
                             } catch (Exception e) {
                                 System.err.println("[Handler] Lỗi gọi renderResults ở SearchController: " + e.getMessage());

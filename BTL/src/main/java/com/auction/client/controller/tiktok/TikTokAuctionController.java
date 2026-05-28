@@ -11,6 +11,9 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea; // 1. NHỚ IMPORT THÊM TEXTAREA
+import javafx.animation.Timeline;
+import javafx.animation.KeyFrame;
 
 public class TikTokAuctionController {
 
@@ -18,10 +21,12 @@ public class TikTokAuctionController {
     @FXML private Label price;
     @FXML private Label step;
     @FXML private Label lblTopBidder;
+    @FXML private Label lblNotifyMsg;
     @FXML private javafx.scene.image.ImageView productImage;
-
-    // 1. CHỈ KHAI BÁO BIẾN Ở ĐÂY LÀ ĐÚNG
     @FXML private Label lblProductDesc;
+
+    // 2. KHAI BÁO THÊM BIẾN ĐỂ ÁNH XẠ VỚI TEXTAREA TRÊN FXML
+    @FXML private TextArea des;
 
     @FXML
     public void initialize() {
@@ -50,6 +55,9 @@ public class TikTokAuctionController {
                 price.setText("0 VNĐ");
                 step.setText("Bước giá: 0 VNĐ");
                 if (lblProductDesc != null) lblProductDesc.setText("Không có mô tả");
+
+                // 3. THÊM RESET TEXTAREA KHI KHÔNG CÓ PHIÊN ĐẤU GIÁ
+                if (des != null) des.setText("Đang đợi phiên đấu giá tiếp theo...");
             });
         }
     }
@@ -66,10 +74,16 @@ public class TikTokAuctionController {
                 price.setText(String.format("%,.0f VNĐ", auction.getCurrentPrice()));
                 step.setText(String.format("Bước giá: %,.0f VNĐ", product.getStepPrice()));
 
-                // 2. ĐÃ CHUYỂN ĐOẠN LẤY MÔ TẢ VÀO ĐÚNG HÀM CỦA NÓ
+                // Đoạn lấy mô tả ngắn (nếu có) vào Label
                 if (lblProductDesc != null) {
                     String desc = product.getDescription();
                     lblProductDesc.setText(desc != null && !desc.isEmpty() ? desc : "Không có mô tả");
+                }
+
+                // 4. THÊM ĐIỀN MÔ TẢ CHI TIẾT VÀO TEXTAREA 'des' VÀO ĐÂY
+                if (des != null) {
+                    String desc = product.getDescription();
+                    des.setText(desc != null && !desc.isEmpty() ? desc : "Sản phẩm này chưa có mô tả chi tiết.");
                 }
 
                 if (lblTopBidder != null) {
@@ -143,8 +157,7 @@ public class TikTokAuctionController {
     }
 
     // THÊM HÀM NÀY ĐỂ XỬ LÝ NHẢY SỐ REAL-TIME TỪ SERVER GỬI VỀ
-
-    public void updateRealtimeBid(String productId, double newPrice, String leaderName, String newEndTime) {
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
         Platform.runLater(() -> {
             // Lấy món đồ đang được hiển thị trên màn hình hiện tại
             Auction currentAuction = ClientContext.getInstance().getCurrentAuction();
@@ -160,21 +173,24 @@ public class TikTokAuctionController {
                 if (lblTopBidder != null) {
                     lblTopBidder.setText(leaderName + " - " + String.format("%,.0f VNĐ", newPrice));
                 }
-
-                // 3. Cập nhật thời gian kết thúc (Gia hạn Anti-Sniping) nếu có
-                if (newEndTime != null && !newEndTime.isEmpty()) {
-                    try {
-                        java.time.LocalDateTime extendedTime = java.time.LocalDateTime.parse(newEndTime);
-                        currentAuction.setEndTime(extendedTime);
-                        if (currentAuction.getProduct() instanceof Product) {
-                            ((Product)currentAuction.getProduct()).setEndTime(extendedTime);
-                        }
-                    } catch (Exception e) {
-                        System.err.println("[TikTok UI] Lỗi parse thời gian gia hạn: " + e.getMessage());
-                    }
-                }
-
                 System.out.println("[TikTok UI] Đã nhảy số trực tiếp trên màn hình: " + newPrice);
+            }
+        });
+    }
+    // HÀM HIỂN THỊ THÔNG BÁO TẠM THỜI (TỰ MẤT SAU 3 GIÂY)
+    public void showNotification(String message, boolean isError) {
+        Platform.runLater(() -> {
+            if (lblNotifyMsg != null) {
+                lblNotifyMsg.setText(message);
+                lblNotifyMsg.setStyle(isError ? "-fx-text-fill: red; -fx-font-weight: bold;" : "-fx-text-fill: green;");
+
+                // Sử dụng Timeline để xóa chữ sau 3 giây
+                Timeline timeline = new Timeline(new KeyFrame(javafx.util.Duration.seconds(3), ae -> {
+                    lblNotifyMsg.setText("");
+                }));
+                timeline.play();
+            } else {
+                System.out.println("[Notification] " + message);
             }
         });
     }

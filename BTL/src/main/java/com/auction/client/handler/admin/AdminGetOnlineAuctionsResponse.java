@@ -51,7 +51,7 @@ public class AdminGetOnlineAuctionsResponse implements IClientHandler {
                         controller.updateTableData(listAuctions);
                         System.out.println("[AdminGetOnlineAuctionsResponse] Đã tải thành công dữ liệu " + listAuctions.size() + " phiên đấu giá trực tuyến lên bảng.");
                     } else {
-                        System.err.println("[AdminGetOnlineAuctionsResponse] Lỗi nghiêm trọng: Chưa khởi tạo hoặc không tìm thấy màn hình AdminOnlineAuctions!");
+                        System.err.println("[AdminGetOnlineAuctionsResponse] chưa mở hoặc Chưa khởi tạo hoặc không tìm thấy màn hình AdminOnlineAuctions!");
                     }
                 });
             }

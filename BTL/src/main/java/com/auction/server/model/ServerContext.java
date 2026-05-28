@@ -105,6 +105,23 @@ public class ServerContext {
                 .orElse(null);
     }
 
+    // =========================================================================
+    // HÀM BỔ SUNG MỚI: Xóa phiên đấu giá trên RAM dựa vào Mã sản phẩm (Product ID)
+    // Phục vụ đắc lực cho Expire Bot đồng bộ hóa từ Database lên RAM
+    // =========================================================================
+    public void removeAuctionByProductId(String productId) {
+        if (productId == null) return;
+
+        Auction targetAuction = getAuctionByProductId(productId);
+        if (targetAuction != null) {
+            activeAuctionsMap.remove(targetAuction.getId());
+            System.out.println("[ServerContext] [ĐỒNG BỘ] Đã xóa Phiên Đấu Giá (ID: "
+                    + targetAuction.getId() + ") của sản phẩm hết hạn (ID: " + productId + ") khỏi RAM.");
+            broadcastAuctionUpdate(); // Đẩy danh sách mới về Client (Mất sàn TikTok)
+        }
+    }
+    // =========================================================================
+
     // --- Quản lý TikTok Listeners ---
     public void addTikTokListener(WebSocket conn) {
         if (conn != null) tiktokListeners.add(conn);
@@ -303,6 +320,10 @@ public class ServerContext {
                 System.err.println("[AsyncAdminBroadcast] Lỗi khi xử lý gửi tin tới Admin: " + e.getMessage());
             }
         });
+    }
+    public WebSocket getConnByUser(String email) {
+        if (email == null) return null;
+        return onlineUsers.get(email); // O(1) cực nhanh
     }
 
     public Map<WebSocket, User> getOnlineUserObjects() {

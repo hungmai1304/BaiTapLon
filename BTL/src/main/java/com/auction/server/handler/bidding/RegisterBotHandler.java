@@ -2,6 +2,7 @@ package com.auction.server.handler.bidding;
 
 import com.auction.common.model.auction.Auction;
 import com.auction.common.model.auction.AutoBidConfig;
+import com.auction.common.model.product.Product; // Import thêm class Product
 import com.auction.common.model.user.User;
 import com.auction.server.dao.UserDao;
 import com.auction.protocol.MessageType;
@@ -56,6 +57,25 @@ public class RegisterBotHandler implements IMessageHandler {
                 sendError(conn, gson, "Phiên đấu giá không tồn tại hoặc đã kết thúc!");
                 return;
             }
+
+            // =========================================================================
+            // NGHIỆP VỤ MỚI: CHẶN CHỦ SẢN PHẨM (SELLER) CÀI BOT ĐẤU GIÁ
+            // =========================================================================
+            if (currentAuction.getProduct() != null) {
+                Product product = (Product) currentAuction.getProduct();
+                if (product.getOwner() != null) {
+                    String sellerEmail = product.getOwner().getEmail();
+                    String sellerId = product.getOwner().getId();
+
+                    // Đối chiếu thông tin tài khoản đang yêu cầu với chủ sở hữu sản phẩm
+                    if (userEmail.equalsIgnoreCase(sellerEmail) || currentUser.getId().equals(sellerId)) {
+                        System.err.println("[RegisterBotHandler] Từ chối Seller cài đặt Bot ảo: " + userEmail);
+                        sendError(conn, gson, "Lỗi quy định: Bạn là người bán sản phẩm này, không được phép cài Bot tự động!");
+                        return;
+                    }
+                }
+            }
+            // =========================================================================
 
             // =========================================================================
             // THAO TÁC THÊM/SỬA BOT THREAD-SAFE: Khóa đối tượng tránh xung đột với luồng Bidding

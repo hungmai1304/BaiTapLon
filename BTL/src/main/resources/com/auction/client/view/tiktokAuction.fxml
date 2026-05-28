@@ -49,7 +49,8 @@
                                     <styleClass>
                                         <String fx:value="product-nav-btn" />
                                         <String fx:value="btn-transparent" />
-                                    </styleClass></Button>
+                                    </styleClass>
+                                </Button>
                                 <Separator maxWidth="40" opacity="0.2" />
                                 <Button onAction="#handleDown">
                                     <graphic>
@@ -72,7 +73,6 @@
                                 <StackPane styleClass="image-container" VBox.vgrow="ALWAYS">
                                     <children>
                                         <Label styleClass="image-placeholder" text="Đang tải ảnh..." />
-
                                         <ImageView fx:id="productImage" fitHeight="400.0" fitWidth="600.0" pickOnBounds="true" preserveRatio="true" />
                                     </children>
                                 </StackPane>
@@ -80,21 +80,20 @@
                                 <VBox spacing="15.0" styleClass="info-section">
                                     <children>
                                         <HBox spacing="10.0">
-                                            <Label styleClass="label-title" style="-fx-font-weight: bold; -fx-font-size: 16px;" text="Tên sản phẩm:" />
-                                            <Label fx:id="name" styleClass="label-value" style="-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: #ffffff;" text="Đang đợi tải..." />
+                                            <Label style="-fx-font-weight: bold; -fx-font-size: 16px;" styleClass="label-title" text="Tên sản phẩm:" />
+                                            <Label fx:id="name" style="-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: #ffffff;" styleClass="label-value" text="Đang đợi tải..." />
                                         </HBox>
                                         <HBox spacing="10.0">
-                                            <Label styleClass="label-title" style="-fx-font-weight: bold; -fx-font-size: 16px;" text="Giá hiện tại:" />
-                                            <Label fx:id="price" styleClass="label-value" style="-fx-font-weight: bold; -fx-font-size: 20px; -fx-text-fill: #2ecc71;" text="0 VNĐ" />
+                                            <Label style="-fx-font-weight: bold; -fx-font-size: 16px;" styleClass="label-title" text="Giá hiện tại:" />
+                                            <Label fx:id="price" style="-fx-font-weight: bold; -fx-font-size: 20px; -fx-text-fill: #2ecc71;" styleClass="label-value" text="0 VNĐ" />
                                         </HBox>
                                         <HBox spacing="10.0">
-                                            <Label styleClass="label-title" style="-fx-font-weight: bold; -fx-font-size: 16px;" text="Bước giá:" />
-                                            <Label fx:id="step" styleClass="label-value" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #e67e22;" text="0 VNĐ" />
+                                            <Label style="-fx-font-weight: bold; -fx-font-size: 16px;" styleClass="label-title" text="Bước giá:" />
+                                            <Label fx:id="step" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #e67e22;" styleClass="label-value" text="0 VNĐ" />
                                         </HBox>
                                         <HBox spacing="10.0">
-                                            <Label styleClass="label-title" style="-fx-font-weight: bold; -fx-font-size: 16px;" text="Mô tả:" />
-
-                                            <Label fx:id="lblProductDesc" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #b0b0b0;" text="Đang đợi tải..." wrapText="true" prefWidth="350.0" />
+                                            <Label style="-fx-font-weight: bold; -fx-font-size: 16px;" styleClass="label-title" text="Mô tả:" />
+                                            <Label fx:id="lblProductDesc" prefWidth="350.0" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #b0b0b0;" text="Đang đợi tải..." wrapText="true" />
                                         </HBox>
                                     </children>
                                 </VBox>
@@ -115,16 +114,18 @@
                                 <Label styleClass="section-title" text="Người dẫn đầu hiện tại" />
                                 <HBox alignment="CENTER_LEFT" styleClass="leader-box">
                                     <children>
-                                        <Label fx:id="lblTopBidder" styleClass="leader-name" style="-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: #f1c40f;" text="Nguyễn Văn A - 1,500,000 VNĐ" />
+                                        <Label fx:id="lblTopBidder" style="-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: #f1c40f;" styleClass="leader-name" text="Đang đợi sản phẩm..." />
                                     </children>
                                 </HBox>
+                                <Label fx:id="lblNotifyMsg" style="-fx-font-weight: bold; -fx-font-size: 14px;" text="" />
                             </children>
                         </VBox>
 
+
                         <VBox spacing="10.0" VBox.vgrow="ALWAYS">
                             <children>
-                                <Label styleClass="section-title" text="Chat:" />
-                                <TextArea editable="false" styleClass="chat-area" text="Hệ thống: Phiên đấu giá bắt đầu!&#10;User123: 1,100,000&#10;Admin: Chúc các bạn may mắn..." VBox.vgrow="ALWAYS" />
+                                <Label styleClass="section-title" text="Description" />
+                                <TextArea fx:id="des" editable="false" wrapText="true" styleClass="chat-area" text="Đang đợi sản phẩm..." VBox.vgrow="ALWAYS" />
                             </children>
                         </VBox>
 

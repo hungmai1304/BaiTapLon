@@ -34,7 +34,7 @@ public class SellProductHandler implements IMessageHandler {
 
     // Giá trị cấu hình mặc định (Fallback phòng trường hợp Client không truyền lên)
     private static final long DEFAULT_TIME_WAITING_TO_START_MINUTES = 1;
-    private static final long DEFAULT_TIME_AUCTION_DURATION_MINUTES = 5;
+    private static final long DEFAULT_TIME_AUCTION_DURATION_MINUTES = 2;
 
     private static final Gson safeGson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
@@ -174,13 +174,13 @@ public class SellProductHandler implements IMessageHandler {
                                         p.setCurrentPrice(finalPrice);
 
                                         System.out.println("[CHỐT ĐƠN THÀNH CÔNG] SP: " + p.getName() + " | Winner: " + winnerEmail + " | Giá chốt: " + finalPrice);
-                                        String thongBao = "🎉 Chúc mừng " + winnerEmail + " đã đấu giá thành công sản phẩm '" + p.getName() + "' với giá " + String.format("%,.0fđ", finalPrice) + "!";
+                                        String thongBao = " Chúc mừng " + winnerEmail + " đã đấu giá thành công sản phẩm '" + p.getName() + "' với giá " + String.format("%,.0fđ", finalPrice) + "!";
                                         broadcastAuctionResult(context, thongBao);
                                     } else {
                                         // BÙNG KÈO / HẾT TIỀN: Chuyển hàng về lại kho cho người khác đấu lại
                                         p.setStatus(ProductStatus.AVAILABLE);
                                         System.out.println("[CHỐT ĐƠN THẤT BẠI - TÀI KHOẢN KHÔNG ĐỦ TIỀN] Tài khoản " + winnerEmail + " bùng kèo sản phẩm " + p.getName());
-                                        String thongBaoGia = "⚠️ Phiên đấu giá '" + p.getName() + "' thất bại do tài khoản người thắng không đủ số dư thanh toán tại thời điểm chốt!";
+                                        String thongBaoGia = "⚠ Phiên đấu giá '" + p.getName() + "' thất bại do tài khoản người thắng không đủ số dư thanh toán tại thời điểm chốt!";
                                         broadcastAuctionResult(context, thongBaoGia);
                                         winnerEmail = null; // Ghi nhận lịch sử không có người mua thực tế
                                     }
@@ -190,7 +190,7 @@ public class SellProductHandler implements IMessageHandler {
 
                                 } else {
                                     // TRƯỜNG HỢP 2: HẾT GIỜ MÀ KHÔNG CÓ AI ĐẶT GIÁ
-                                    System.out.println(" 📢 [PHIÊN KẾT THÚC] Sản phẩm: " + p.getName() + " tự động trả về kho do không có lượt đặt giá.");
+                                    System.out.println(" [PHIÊN KẾT THÚC] Sản phẩm: " + p.getName() + " tự động trả về kho do không có lượt đặt giá.");
                                     p.setStatus(ProductStatus.AVAILABLE);
                                     String thongBaoE = "Rất tiếc, sản phẩm '" + p.getName() + "' đã hết giờ đấu giá mà không có ai đặt lệnh!";
                                     broadcastAuctionResult(context, thongBaoE);
