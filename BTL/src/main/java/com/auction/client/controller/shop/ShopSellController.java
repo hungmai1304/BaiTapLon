@@ -150,8 +150,26 @@ public class ShopSellController {
     }
 
     private void handleSell(Product product) {
-        System.out.println("Sell (Gửi ID lên Server): " + product.getId());
-        RequestSender.sendSellProductRequest(String.valueOf(product.getId()));
+        if (product == null) return;
+
+        System.out.println("-> Đang đóng gói dữ liệu lên sàn cho SP: " + product.getName());
+
+        // Tạo Map gửi đi
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("id", product.getId());
+        payload.put("startPrice", product.getStartPrice());
+
+        // Nếu ở dưới Client bị null hoặc <= 0, tự động lấy 1.0 và 2.0 làm fallback truyền lên Server
+        double waitMin = (product.getWaitingMinutes() != null && product.getWaitingMinutes() > 0)
+                ? product.getWaitingMinutes() : 1.0;
+        double durationMin = (product.getDurationMinutes() != null && product.getDurationMinutes() > 0)
+                ? product.getDurationMinutes() : 2.0;
+
+        payload.put("waitingMinutes", waitMin);
+        payload.put("durationMinutes", durationMin);
+
+        // Bắn sang RequestSender
+        RequestSender.sendSellProductRequest(payload);
     }
 
     @FXML

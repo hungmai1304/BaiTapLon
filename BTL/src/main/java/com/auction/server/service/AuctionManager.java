@@ -81,6 +81,9 @@ public class AuctionManager {
 
         // 5. Broadcast thông báo cho tất cả client
         broadcastNewAuction(selectedAuction);
+        PlaceBidHandler.triggerBotWar(
+                ServerContext.getInstance(), gson, selectedAuction.getProduct().getId(), selectedAuction
+        );
 
         return selectedAuction;
     }

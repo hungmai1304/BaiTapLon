@@ -17,9 +17,9 @@ public class Product extends Item {
     private String imagePath;
     private String imageBase64;
 
-    // --- HAI TRƯỜNG MỚI: Dùng Integer để có thể nhận giá trị null ---
-    private Integer waitingMinutes = null;
-    private Integer durationMinutes = null;
+    // --- ĐÃ ĐỔI SANG DOUBLE (Hỗ trợ null và số thập phân lẻ) ---
+    private Double waitingMinutes = null;
+    private Double durationMinutes = null;
 
     public String getImageBase64() { return imageBase64; }
     public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64; }
@@ -31,14 +31,14 @@ public class Product extends Item {
 
     public Product() {}
 
-    // --- GETTER / SETTER CHO HAI TRƯỜNG MỚI ---
-    public Integer getWaitingMinutes() { return waitingMinutes; }
-    public void setWaitingMinutes(Integer waitingMinutes) { this.waitingMinutes = waitingMinutes; }
+    // --- GETTER / SETTER KIỂU DOUBLE ---
+    public Double getWaitingMinutes() { return waitingMinutes; }
+    public void setWaitingMinutes(Double waitingMinutes) { this.waitingMinutes = waitingMinutes; }
 
-    public Integer getDurationMinutes() { return durationMinutes; }
-    public void setDurationMinutes(Integer durationMinutes) { this.durationMinutes = durationMinutes; }
+    public Double getDurationMinutes() { return durationMinutes; }
+    public void setDurationMinutes(Double durationMinutes) { this.durationMinutes = durationMinutes; }
 
-    // --- các getter/setter cũ giữ nguyên hoàn toàn ---
+    // --- các getter/setter còn lại giữ nguyên hoàn toàn ---
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 

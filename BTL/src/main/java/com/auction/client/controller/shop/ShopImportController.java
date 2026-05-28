@@ -121,33 +121,33 @@ public class ShopImportController {
             product.setStatus(AVAILABLE);
             product.setStepPrice(startPrice * 0.1);
 
-            // --- LOGIC XỬ LÝ AN TOÀN CHO DỮ LIỆU THỜI GIAN ---
+            // --- LOGIC XỬ LÝ AN TOÀN CHO DỮ LIỆU THỜI GIAN (ĐỒNG BỘ KIỂU DOUBLE) ---
             String waitText = wait.getText().trim();
             String durationText = duration.getText().trim();
 
-            Integer waitingMins = null;
-            Integer durationMins = null;
+            Double waitingMins = null;
+            Double durationMins = null;
 
             // Kiểm tra ô wait: nếu có nhập và khác số 0
             if (!waitText.isEmpty()) {
-                int w = Integer.parseInt(waitText);
-                if (w != 0) {
+                double w = Double.parseDouble(waitText);
+                if (w != 0.0) {
                     waitingMins = w;
                 }
             }
 
             // Kiểm tra ô duration: nếu có nhập và khác số 0
             if (!durationText.isEmpty()) {
-                int d = Integer.parseInt(durationText);
-                if (d != 0) {
+                double d = Double.parseDouble(durationText);
+                if (d != 0.0) {
                     durationMins = d;
                 }
             }
 
-            // Gán giá trị (Có thể là số cụ thể hoặc null) vào product
+            // Gán giá trị Double (Có thể là số cụ thể hoặc null) vào product
             product.setWaitingMinutes(waitingMins);
             product.setDurationMinutes(durationMins);
-            // -------------------------------------------------
+            // ----------------------------------------------------------------------
 
             // Gửi tin nhắn qua Network
             if (editingProductId == null) {
@@ -173,17 +173,27 @@ public class ShopImportController {
         moreInfo.setText(product.getDescription());
         categoryComboBox.setValue(product.getCategory());
 
-        // --- ĐỔ NGƯỢC DỮ LIỆU THỜI GIAN (Hiển thị trống nếu null hoặc bằng 0) ---
-        if (product.getWaitingMinutes() != null && product.getWaitingMinutes() != 0) {
-            wait.setText(String.valueOf(product.getWaitingMinutes()));
+        // --- ĐỔ NGƯỢC DỮ LIỆU THỜI GIAN KIỂU DOUBLE (Loại bỏ phần đuôi .0 nếu là số nguyên để UI đẹp hơn) ---
+        if (product.getWaitingMinutes() != null && product.getWaitingMinutes() != 0.0) {
+            double w = product.getWaitingMinutes();
+            if (w == (long) w) {
+                wait.setText(String.format("%d", (long) w));
+            } else {
+                wait.setText(String.valueOf(w));
+            }
         } else {
-            wait.clear(); // Để trống ô nhập nếu dữ liệu là null hoặc 0
+            wait.clear();
         }
 
-        if (product.getDurationMinutes() != null && product.getDurationMinutes() != 0) {
-            duration.setText(String.valueOf(product.getDurationMinutes()));
+        if (product.getDurationMinutes() != null && product.getDurationMinutes() != 0.0) {
+            double d = product.getDurationMinutes();
+            if (d == (long) d) {
+                duration.setText(String.format("%d", (long) d));
+            } else {
+                duration.setText(String.valueOf(d));
+            }
         } else {
-            duration.clear(); // Để trống ô nhập nếu dữ liệu là null hoặc 0
+            duration.clear();
         }
         // ----------------------------------------------------------------------
 

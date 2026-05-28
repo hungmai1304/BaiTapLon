@@ -5,6 +5,7 @@ import com.auction.protocol.MessageType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSerializer;
+import com.google.gson.JsonDeserializer;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -12,20 +13,30 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RequestSender {
+    // NÂNG CẤP GSON: Đăng ký cả bộ Serializer để gửi đi mượt mà không lỗi chuỗi định dạng
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
                     new com.google.gson.JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
+            .registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, typeOfT, context) ->
+                    LocalDateTime.parse(json.getAsString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME))
             .create();
 
     private RequestSender() {}
 
     public static void send(String type, Object data) {
-        Map<String, Object> requestMap = new HashMap<>();
-        requestMap.put("type", type);
-        requestMap.put("data", data);
-        String json = gson.toJson(requestMap);
-        NetworkClient.sendCommand(json);
-    }// dit me may sua tao cai ham send cai, cu loi json, gson la sao nhi
+        try {
+            Map<String, Object> requestMap = new HashMap<>();
+            requestMap.put("type", type);
+            requestMap.put("data", data);
+
+            String json = gson.toJson(requestMap);
+            System.out.println("[RequestSender] JSON Gửi đi: " + json); // Log ra để dễ debug theo dõi
+            NetworkClient.sendCommand(json);
+        } catch (Exception e) {
+            System.err.println("[RequestSender Error] Lỗi khi tạo JSON string: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
     public static void sendLoginRequest(String email, String password) {
         Map<String, String> data = new HashMap<>();
@@ -52,19 +63,18 @@ public class RequestSender {
         send(MessageType.EDIT_PRODUCT_REQUEST, product);
     }
 
-
-
     // --- ĐẤU GIÁ (AUCTIONS) ---
 
     public static void sendGetActiveAuctionsRequest() {
         send(MessageType.GET_ACTIVE_AUCTIONS_REQUEST, new HashMap<>());
     }
 
-    // ĐÃ SỬA: Quay về nhận productId kiểu String
-    public static void sendSellProductRequest(String productId) {
-        Map<String, String> data = new HashMap<>();
-        data.put("id", productId);
-        send(MessageType.SELL_PRODUCT_REQUEST, data);
+    /**
+     * SỬA LẠI CHUẨN: Hàm này nhận Map dữ liệu đầy đủ (bao gồm cả id, startPrice, thời gian)
+     * từ ShopSellController để đẩy thẳng lên Server SellProductHandler.
+     */
+    public static void sendSellProductRequest(Map<String, Object> sellData) {
+        send(MessageType.SELL_PRODUCT_REQUEST, sellData);
     }
 
     public static void sendPlaceBidRequest(String productId, double bidAmount, String userEmail) {
@@ -85,7 +95,7 @@ public class RequestSender {
     }
 
     // đừng có xóa của tao:
-    //RequestSender.send(MessageType.GET_SHOP_PRODUCTS_REQUEST, null);
+    // RequestSender.send(MessageType.GET_SHOP_PRODUCTS_REQUEST, null);
 
     public static void sendDeleteProductRequest(String productId) {
         Map<String, String> data = new HashMap<>();

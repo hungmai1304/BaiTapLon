@@ -56,10 +56,14 @@ public class ProductDao {
     /**
      * 2. LƯU SẢN PHẨM MỚI
      */
+    /**
+     * 2. LƯU SẢN PHẨM MỚI (ĐÃ CẬP NHẬT LƯU THỜI GIAN)
+     */
     public boolean saveProduct(Product product) {
         String sql = "INSERT INTO products (id, name, category, description, image_path, start_price, " +
-                "current_price, step_price, status, owner_id, time_created, start_time, end_time) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "current_price, step_price, status, owner_id, time_created, start_time, end_time, " +
+                "waiting_minutes, duration_minutes) " + // Thêm 2 cột vào SQL
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -77,6 +81,13 @@ public class ProductDao {
             pstmt.setTimestamp(11, (product.getTimeCreated() != null) ? Timestamp.valueOf(product.getTimeCreated()) : null);
             pstmt.setTimestamp(12, (product.getStartTime() != null) ? Timestamp.valueOf(product.getStartTime()) : null);
             pstmt.setTimestamp(13, (product.getEndTime() != null) ? Timestamp.valueOf(product.getEndTime()) : null);
+
+            // Nạp dữ liệu an toàn dạng Double (tránh lỗi null)
+            if (product.getWaitingMinutes() != null) pstmt.setDouble(14, product.getWaitingMinutes());
+            else pstmt.setNull(14, Types.DOUBLE);
+
+            if (product.getDurationMinutes() != null) pstmt.setDouble(15, product.getDurationMinutes());
+            else pstmt.setNull(15, Types.DOUBLE);
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {

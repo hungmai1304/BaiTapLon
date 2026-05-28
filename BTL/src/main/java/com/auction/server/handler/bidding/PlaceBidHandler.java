@@ -220,17 +220,13 @@ public class PlaceBidHandler implements IMessageHandler {
         }
 
         botExecutor.submit(() -> {
-            try {
-                Thread.sleep(15000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
             boolean keepFighting = true;
             int safetyCounter = 0;
 
             while (keepFighting && safetyCounter < 100) {
                 keepFighting = false;
                 safetyCounter++;
+                boolean botJustBidded = false;
 
                 synchronized (currentAuction) {
                     if (!"ACTIVE".equals(currentAuction.getStatus())) {
@@ -296,12 +292,13 @@ public class PlaceBidHandler implements IMessageHandler {
                             System.out.println("[BOT WAR] Bot " + bot.getEmail() + " đã kích giá lên: " + String.format("%,.0f", nextBotPrice));
 
                             keepFighting = true;
+                            botJustBidded = true;
                             break;
                         }
                     }
                 }
 
-                if (keepFighting) {
+                if (botJustBidded) {
                     try {
                         Thread.sleep(15000);
                     } catch (InterruptedException e) {
