@@ -28,9 +28,6 @@ public class SellProductHandler implements IMessageHandler {
 
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
-    private static final double DEFAULT_TIME_WAITING_TO_START_MINUTES = 1.0;
-    private static final double DEFAULT_TIME_AUCTION_DURATION_MINUTES = 2.0;
-
     private static final Gson safeGson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
                     new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
@@ -41,6 +38,9 @@ public class SellProductHandler implements IMessageHandler {
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
         try {
+            // LOG THẦN THÁNH: In ra toàn bộ những gì client thực sự gửi lên để debug
+            System.out.println("[SellProductHandler] RAW DATA từ Client gửi lên: " + data);
+
             String productId = (String) data.get("id");
 
             if (productId == null || productId.isEmpty()) {
@@ -69,23 +69,38 @@ public class SellProductHandler implements IMessageHandler {
                 return;
             }
 
-            // =========================================================================
-            // BẢN FIX BỌC THÉP: KIỂM TRA ĐA DẠNG KEY & CHẤP MỌI KIỂU DỮ LIỆU TỪ CLIENT
-            // =========================================================================
+            // Lấy Object từ client (Hỗ trợ cả CamelCase và Snake_case)
             Object waitingObj = data.get("waitingMinutes") != null ? data.get("waitingMinutes") : data.get("waiting_minutes");
             Object durationObj = data.get("durationMinutes") != null ? data.get("durationMinutes") : data.get("duration_minutes");
             Object startPriceObj = data.get("startPrice") != null ? data.get("startPrice") : data.get("start_price");
 
-            // Tiến hành parse an toàn bằng hàm tiện ích tự dựng phía dưới
-            double waitingMinutes = safeParseDouble(waitingObj, DEFAULT_TIME_WAITING_TO_START_MINUTES);
-            double durationMinutes = safeParseDouble(durationObj, DEFAULT_TIME_AUCTION_DURATION_MINUTES);
-            double liveStartPrice = safeParseDouble(startPriceObj, pCheck.getStartPrice());
+            // Tiến hành parse nghiêm ngặt (Nếu null sẽ trả về null chứ không lấy mặc định)
+            Double waitingMinutes = parseDoubleStrict(waitingObj);
+            Double durationMinutes = parseDoubleStrict(durationObj);
 
-            System.out.println("[SellProductHandler] Nhận từ client -> Chờ sàn: " + waitingMinutes + " phút | Chạy sàn: " + durationMinutes + " phút | Giá khởi điểm: " + liveStartPrice);
+            // Đối với giá, nếu không truyền thì mới lấy giá gốc của sản phẩm
+            Double liveStartPrice = parseDoubleStrict(startPriceObj);
+            if (liveStartPrice == null) {
+                liveStartPrice = pCheck.getStartPrice();
+            }
+
+            // =========================================================================
+            // CHẶN LỖI: BẮT BUỘC PHẢI CÓ THỜI GIAN TỪ CLIENT
+            // =========================================================================
+            if (waitingMinutes == null) {
+                sendError(conn, "Thất bại: Server không nhận được thời gian chờ hợp lệ từ Client (waitingMinutes)!");
+                return;
+            }
+            if (durationMinutes == null || durationMinutes <= 0) {
+                sendError(conn, "Thất bại: Server không nhận được thời gian chạy sàn hợp lệ từ Client (durationMinutes phải > 0)!");
+                return;
+            }
+
+            System.out.println("[SellProductHandler] CHẤP NHẬN THỜI GIAN CLIENT -> Chờ: " + waitingMinutes + " phút | Chạy: " + durationMinutes + " phút");
 
             LocalDateTime now = LocalDateTime.now();
 
-            // Tính toán thời gian dựa trên số giây quy đổi chính xác tuyệt đối
+            // Tính toán thời gian dựa trên số giây quy đổi từ Client gửi lên
             long waitingSeconds = Math.round(waitingMinutes * 60);
             long durationSeconds = Math.round(durationMinutes * 60);
 
@@ -134,7 +149,7 @@ public class SellProductHandler implements IMessageHandler {
                     }
                 }, delayToActiveSeconds, TimeUnit.SECONDS);
 
-                // HẸN GIỜ 2: ĐÓNG PHIÊN VÀ CHỐT ĐƠN (GỌI BỘ NÃO TRUNG TÂM)
+                // HẸN GIỜ 2: ĐÓNG PHIÊN VÀ CHỐT ĐƠN
                 scheduler.schedule(() -> {
                     try {
                         Auction auctionToEnd = context.getAuctionByProductId(productId);
@@ -148,7 +163,7 @@ public class SellProductHandler implements IMessageHandler {
                     }
                 }, delayToCompletedSeconds, TimeUnit.SECONDS);
 
-                // Phản hồi cho người bán gửi request thành công
+                // Phản hồi cho người bán
                 Response response = new Response(MessageType.SELL_PRODUCT_RESPONSE, "SUCCESS", "Đã đưa sản phẩm lên sàn đấu giá thành công!");
                 conn.send(safeGson.toJson(response));
 
@@ -166,10 +181,10 @@ public class SellProductHandler implements IMessageHandler {
     }
 
     /**
-     * HÀM TIỆN ÍCH: ÉP KIỂU AN TOÀN TUYỆT ĐỐI CHỐNG LỖI ĐỊNH DẠNG DỮ LIỆU TỪ CLIENT
+     * HÀM PARSE NGHIÊM NGẶT: Trả về null nếu dữ liệu không hợp lệ, ép buộc báo lỗi về client
      */
-    private double safeParseDouble(Object value, double defaultValue) {
-        if (value == null) return defaultValue;
+    private Double parseDoubleStrict(Object value) {
+        if (value == null) return null;
         try {
             if (value instanceof Number) {
                 return ((Number) value).doubleValue();
@@ -177,9 +192,9 @@ public class SellProductHandler implements IMessageHandler {
                 return Double.parseDouble(((String) value).trim());
             }
         } catch (Exception e) {
-            System.err.println("[Format Warn] Không thể ép kiểu giá trị '" + value + "' sang Double. Dùng mặc định: " + defaultValue);
+            System.err.println("[Format Error] Không thể parse giá trị: " + value);
         }
-        return defaultValue;
+        return null;
     }
 
     private void broadcastNewAuctionSession(ServerContext context) {
