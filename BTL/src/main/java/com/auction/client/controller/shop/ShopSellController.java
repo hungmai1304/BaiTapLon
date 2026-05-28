@@ -48,13 +48,13 @@ public class ShopSellController {
 
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
 
-        // Định dạng cột Giá tiền
+        // Định dạng cột Giá tiền sang kiểu tiền tệ dễ nhìn
         colPrice.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(Double item, boolean empty) {
                 super.updateItem(item, empty);
                 setAlignment(javafx.geometry.Pos.CENTER);
-                setText(empty || item == null ? null : String.format("%,.0f", item));
+                setText(empty || item == null ? null : String.format("%,.0fđ", item));
             }
         });
         colPrice.setCellValueFactory(new PropertyValueFactory<>("startPrice"));
@@ -69,10 +69,10 @@ public class ShopSellController {
                 setAlignment(javafx.geometry.Pos.CENTER);
                 if (empty || item == null) { setText(null); setStyle(""); return; }
                 switch (item) {
-                    case AVAILABLE     -> { setText("Trong kho");     setStyle("-fx-text-fill: #f0a500;"); }
-                    case ON_AUCTION    -> { setText("Đang treo bán"); setStyle("-fx-text-fill: #6c63ff;"); }
-                    case NOT_AVAILABLE -> { setText("Đã bị cấm");    setStyle("-fx-text-fill: #e63946;"); } // Đổi sang màu đỏ cảnh báo cho rõ ràng
-                    case SOLD          -> { setText("Đã bán");        setStyle("-fx-text-fill: #4caf50;"); }
+                    case AVAILABLE     -> { setText("Trong kho");     setStyle("-fx-text-fill: #f0a500; -fx-font-weight: bold;"); }
+                    case ON_AUCTION    -> { setText("Đang treo bán"); setStyle("-fx-text-fill: #6c63ff; -fx-font-weight: bold;"); }
+                    case NOT_AVAILABLE -> { setText("Đã bị cấm");    setStyle("-fx-text-fill: #e63946; -fx-font-weight: bold;"); }
+                    case SOLD          -> { setText("Đã bán");        setStyle("-fx-text-fill: #4caf50; -fx-font-weight: bold;"); }
                     default            -> { setText(item.toString()); setStyle(""); }
                 }
             }
@@ -86,8 +86,8 @@ public class ShopSellController {
             private final HBox box = new HBox(10, btnEdit, btnSell);
             {
                 box.setAlignment(javafx.geometry.Pos.CENTER);
-                btnEdit.setStyle("-fx-background-color: #f0a500; -fx-text-fill: white; -fx-cursor: hand;");
-                btnSell.setStyle("-fx-background-color: #6c63ff; -fx-text-fill: white; -fx-cursor: hand;");
+                btnEdit.setStyle("-fx-background-color: #f0a500; -fx-text-fill: white; -fx-cursor: hand; -fx-font-weight: bold;");
+                btnSell.setStyle("-fx-background-color: #6c63ff; -fx-text-fill: white; -fx-cursor: hand; -fx-font-weight: bold;");
 
                 btnEdit.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
                 btnSell.setOnAction(e -> handleSell(getTableView().getItems().get(getIndex())));
@@ -99,15 +99,17 @@ public class ShopSellController {
                 if (empty) {
                     setGraphic(null);
                 } else {
-                    // Lấy đối tượng Product tại dòng hiện tại
                     Product currentProduct = getTableView().getItems().get(getIndex());
 
-                    if (currentProduct != null && currentProduct.getStatus() == ProductStatus.NOT_AVAILABLE) {
-                        // Nếu sản phẩm BỊ CẤM (NOT_AVAILABLE) -> Loại bỏ hoàn toàn nút Sell khỏi layout HBox
-                        box.getChildren().setAll(btnEdit);
-                    } else {
-                        // Nếu sản phẩm ở trạng thái bình thường khác -> Hiện đầy đủ cả 2 nút
-                        box.getChildren().setAll(btnEdit, btnSell);
+                    if (currentProduct != null) {
+                        // Nếu sản phẩm đã BÁN hoặc đang ĐẤU GIÁ hoặc BỊ CẤM -> Vô hiệu hóa tính năng Sell công khai
+                        if (currentProduct.getStatus() == ProductStatus.NOT_AVAILABLE ||
+                                currentProduct.getStatus() == ProductStatus.ON_AUCTION ||
+                                currentProduct.getStatus() == ProductStatus.SOLD) {
+                            box.getChildren().setAll(btnEdit); // Chỉ cho phép xem/sửa thông tin
+                        } else {
+                            box.getChildren().setAll(btnEdit, btnSell);
+                        }
                     }
                     setGraphic(box);
                 }
@@ -115,20 +117,13 @@ public class ShopSellController {
         });
     }
 
-    /**
-     * Cập nhật lại Label tổng số lượng
-     */
     private void updateTotalLabel() {
         int count = ClientContext.getInstance().getShopProductCount();
         totalLabel.setText("Tổng cộng: " + count + " sản phẩm đang chờ");
     }
 
-    /**
-     * Hàm này được gọi từ Handler khi có dữ liệu mới cập nhật đồng bộ từ Server
-     */
     public void loadProducts(List<Product> products) {
         Platform.runLater(() -> {
-            // Vì Table đã được bind trực tiếp với ObservableList trong Context nên chỉ cần update Label và làm mới giao diện
             updateTotalLabel();
             productTable.refresh();
         });
@@ -154,12 +149,12 @@ public class ShopSellController {
 
         System.out.println("-> Đang đóng gói dữ liệu lên sàn cho SP: " + product.getName());
 
-        // Tạo Map gửi đi
+        // Tạo cấu trúc dữ liệu JSON gửi đi
         java.util.Map<String, Object> payload = new java.util.HashMap<>();
         payload.put("id", product.getId());
         payload.put("startPrice", product.getStartPrice());
 
-        // Nếu ở dưới Client bị null hoặc <= 0, tự động lấy 1.0 và 2.0 làm fallback truyền lên Server
+        // Bọc thép chống NullPointerException: Ép sang kiểu double thuần để nhận thời gian chính xác
         double waitMin = (product.getWaitingMinutes() != null && product.getWaitingMinutes() > 0)
                 ? product.getWaitingMinutes() : 1.0;
         double durationMin = (product.getDurationMinutes() != null && product.getDurationMinutes() > 0)
@@ -168,7 +163,7 @@ public class ShopSellController {
         payload.put("waitingMinutes", waitMin);
         payload.put("durationMinutes", durationMin);
 
-        // Bắn sang RequestSender
+        // Bắn gói tin Realtime sang tầng mạng Network qua WebSocket
         RequestSender.sendSellProductRequest(payload);
     }
 
