@@ -29,6 +29,13 @@ public class AuctionResultClientHandler implements IClientHandler {
         Platform.runLater(() -> {
             String rawMessage = response.getMessage();
             if (rawMessage == null) rawMessage = "";
+
+            // BẪY CHẶN TIN NHẮN MẬT CỦA SELLER ĐỂ BẢO VỆ POPUP CHÍNH
+            if (rawMessage.contains("của bạn đã bán thành công") || rawMessage.contains("của bạn đã kết thúc")) {
+                System.out.println(" [Mật thư Seller]: " + rawMessage);
+                // Bỏ qua, không bật Popup để nhường chỗ cho tin nhắn Public bật Popup chuẩn!
+                return;
+            }
             String winnerEmail = "Không có";
             String productName = "Sản phẩm";
             double finalPrice = 0.0;
