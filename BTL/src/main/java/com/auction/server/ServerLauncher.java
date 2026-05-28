@@ -3,45 +3,62 @@ package com.auction.server;
 import com.auction.common.model.auction.Auction;
 import com.auction.server.dao.ProductDao;
 import com.auction.server.model.ServerContext;
+import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
 
 public class ServerLauncher {
 
     public static void main(String[] args) {
-        // 1. Ép Server luôn chạy ở múi giờ Việt Nam (GMT+7) để tránh lệch giờ khi deploy lên Render/Cloud
+        // 1. �p Server lu�n ch?y ? m�i gi? Vi?t Nam (GMT+7)
         java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
 
         try {
-            // 2. Lấy PORT linh hoạt từ biến môi trường của Render, nếu không có mới dùng 10000
+            // 2. Ki?m tra m�i tr??ng (Render hay Local/Tailscale)
             String portStr = System.getenv("PORT");
             int port;
+            InetSocketAddress address;
+
             if (portStr != null && !portStr.isEmpty()) {
+                // N?U CH?Y TR�N RENDER: L?y port t? ??ng v� l?ng nghe m?i IP (0.0.0.0)
                 port = Integer.parseInt(portStr);
+                address = new InetSocketAddress("0.0.0.0", port);
+
+                System.out.println("=========================================");
+                System.out.println("? SERVER ??U GI� ?ANG CH?Y TR�N CLOUD (RENDER)");
+                System.out.println("PORT: " + port);
+                System.out.println("=========================================");
             } else {
+                // N?U CH?Y LOCAL: G�n c?ng IP Tailscale v� Port 10000
                 port = 10000;
+                String tailscaleIp = "100.89.94.42";
+                address = new InetSocketAddress(tailscaleIp, port);
+
+                System.out.println("=========================================");
+                System.out.println("? SERVER ??U GI� ?ANG KH?I ??NG (TAILSCALE LOCAL)");
+                System.out.println("IP TAILSCALE: " + tailscaleIp);
+                System.out.println("PORT: " + port);
+                System.out.println("=========================================");
             }
 
-            System.out.println("=========================================");
-            System.out.println("🚀 SERVER ĐẤU GIÁ ĐANG KHỞI ĐỘNG (RENDER)");
-            System.out.println("PORT: " + port);
-            System.out.println("TIMEZONE: " + java.util.TimeZone.getDefault().getID());
-            System.out.println("=========================================");
-
-            // 3. Khởi chạy WebSocket Server
-            AuctionWebSocketServer server = new AuctionWebSocketServer(port);
+            // 3. Kh?i ch?y WebSocket Server theo ??a ch? c?u h�nh ? tr�n
+            AuctionWebSocketServer server = new AuctionWebSocketServer(address);
             server.start();
 
-            System.out.println("✅ Server đã start thành công.");
-            System.out.println("📡 Đang chờ các Client kết nối... ");
+            if (portStr != null && !portStr.isEmpty()) {
+                System.out.println("? Server ?� start th�nh c�ng tr�n Render.");
+            } else {
+                System.out.println("? Server ?� start th�nh c�ng! Link k?t n?i c?a client:");
+                System.out.println("   ? ws://100.89.94.42:10000");
+            }
+            System.out.println("? ?ang ch? c�c Client k?t n?i... ");
 
             // =========================================================================
-            // CHỈ CHẠY ĐÚNG 1 LẦN DUY NHẤT KHI MỞ SERVER ĐỂ DỌN RÁC DỮ LIỆU CŨ
+            // CH? CH?Y ?�NG 1 L?N DUY NH?T KHI M? SERVER ?? D?N R�C D? LI?U C?
             // =========================================================================
             try {
-                System.out.println("🤖 [SystemCheck] Đang quét kiểm tra sản phẩm hết hạn lúc mở Server...");
+                System.out.println("? [SystemCheck] ?ang qu�t ki?m tra s?n ph?m h?t h?n l�c m? Server...");
                 ServerContext context = ServerContext.getInstance();
 
-                // 4. Quét sạch các phiên đấu giá lỗi thời trên RAM (ConcurrentModificationException-safe)
                 java.util.List<String> expiredProductIds = new java.util.ArrayList<>();
                 for (Auction a : context.getActiveAuctions()) {
                     if (a.getProduct() != null && a.getProduct().getEndTime() != null) {
@@ -54,16 +71,15 @@ public class ServerLauncher {
                     context.removeAuctionByProductId(id);
                 }
 
-                // 5. Cập nhật dứt điểm trạng thái dưới Database cho các sản phẩm đã hết giờ trong lúc Server tắt
                 int affectedRows = ProductDao.getInstance().autoExpireProducts();
-                System.out.println("🤖 [SystemCheck] Hoàn thành quét dọn! Đã hạ sàn " + affectedRows + " sản phẩm hết hạn dưới DB.");
+                System.out.println("? [SystemCheck] Ho�n th�nh qu�t d?n! ?� h? s�n " + affectedRows + " s?n ph?m h?t h?n d??i DB.");
 
             } catch (Exception e) {
-                System.err.println("❌ Lỗi khi quét dọn lúc mở Server: " + e.getMessage());
+                System.err.println("? L?i khi qu�t d?n l�c m? Server: " + e.getMessage());
             }
             // =========================================================================
 
-            // 6. GIỮ SERVER SỐNG TRÊN RENDER (Tránh Thread main kết thúc làm sập app)
+            // 6. GI? SERVER S?NG (Tr�nh Thread main k?t th�c l�m s?p app)
             Thread.currentThread().join();
 
         } catch (Exception e) {
