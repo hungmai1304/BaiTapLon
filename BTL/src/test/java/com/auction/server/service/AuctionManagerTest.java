@@ -79,12 +79,17 @@ class AuctionManagerTest {
         p1.setStartPrice(100);
         p1.setStatus(ProductStatus.ON_AUCTION);
         
+        com.auction.common.model.user.User bidder = new com.auction.common.model.user.User();
+        bidder.setEmail("winner@test.com");
+        bidder.setUsername("winner");
+
         Auction a1 = new Auction();
         a1.setId("1");
         a1.setProduct(p1);
         a1.setStartPrice(100);
         a1.setCurrentPrice(150); // Price increased
         a1.setStatus("ACTIVE");
+        a1.setHighestBidder(bidder);
 
         auctionManager.endAuction(a1);
 
@@ -107,11 +112,12 @@ class AuctionManagerTest {
         a1.setStartPrice(100);
         a1.setCurrentPrice(100); // No price increase
         a1.setStatus("ACTIVE");
+        // No highest bidder
 
         auctionManager.endAuction(a1);
 
         assertEquals("COMPLETED", a1.getStatus());
-        assertEquals(ProductStatus.CANCELLED, p1.getStatus());
+        assertEquals(ProductStatus.AVAILABLE, p1.getStatus());
         verify(mockServer, atLeastOnce()).getConnections();
     }
 }
