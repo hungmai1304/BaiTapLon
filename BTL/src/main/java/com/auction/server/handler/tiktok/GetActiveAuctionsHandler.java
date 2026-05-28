@@ -19,7 +19,7 @@ public class GetActiveAuctionsHandler implements IMessageHandler {
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
         try {
-            // Móc danh sách Phiên đấu giá từ RAM ra
+            // lấy từ servercontext danh sách đấu giá loại list
             List<Auction> activeAuctions = context.getActiveAuctions();
 
             // --- LOGIC LỌC DỮ LIỆU (Search Filtering) ---

@@ -33,22 +33,22 @@ public class ServerContext {
             Math.max(4, Runtime.getRuntime().availableProcessors())
     );
 
-    // 1. Quản lý User Online (Key: String đại diện email/id, Value: WebSocket)
+    // 1. bảng lưu email là key, để tìm conn
     private final Map<String, WebSocket> onlineUsers = new ConcurrentHashMap<>();
 
-    // KỸ THUẬT MỚI: Bản đồ ngược để biến hàm getUserByConn từ O(N) thành O(1) tuyệt đối
+    // 2. bảng lưu conn là key, để tìm email
     private final Map<WebSocket, String> connToUserKey = new ConcurrentHashMap<>();
 
-    // 2. Quản lý thông tin User kết hợp với kết nối WebSocket tương ứng (Dạng Object làm RAM CACHE)
+    // 3. bảng lưu conn là key, tìm user
     private final Map<WebSocket, User> onlineUserObjects = new ConcurrentHashMap<>();
 
-    // Danh sách phiên đấu giá đang diễn ra trên RAM (Chuyển sang Map để đạt O(1) khi update/remove)
+    // lưu danh sách auction online đang diễn ra
     private final Map<String, Auction> activeAuctionsMap = new ConcurrentHashMap<>();
 
-    // Danh sách những người đăng ký nhận tin TikTok (Listener)
+    // Danh sách những người đăng ký nhận tin TikTok
     private final Set<WebSocket> tiktokListeners = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-    // --- THIẾT KẾ SINGLETON (Cải tiến giữ nguyên tương thích ngược) ---
+    // constructor chỉ khởi tạo 1 lần cho servercontext
     private ServerContext() {}
 
     public static synchronized ServerContext getInstance() {
@@ -62,12 +62,12 @@ public class ServerContext {
         this.server = server;
     }
 
-    // --- Getter/Setter cơ bản ---
+    // getter instance
     public AuctionWebSocketServer getServer() {
         return server;
     }
 
-    // --- Quản lý Phiên Đấu giá ---
+    // danh sách lưu trữ các cuộc đấu giá online, dễ dàng gửi đi cho client
     public List<Auction> getActiveAuctions() {
         return new ArrayList<>(activeAuctionsMap.values());
     }
@@ -122,7 +122,7 @@ public class ServerContext {
     }
     // =========================================================================
 
-    // --- Quản lý TikTok Listeners ---
+    // thêm và xóa cho Listeners tik tok
     public void addTikTokListener(WebSocket conn) {
         if (conn != null) tiktokListeners.add(conn);
     }
@@ -164,7 +164,7 @@ public class ServerContext {
         });
     }
 
-    // --- Quản lý User Connection (Dạng chuỗi ID/Email) ---
+    // quản lí truyền vào user id, trả về conn
     public void addOnlineUser(String userId, WebSocket conn) {
         if (userId == null || conn == null) return;
         onlineUsers.put(userId, conn);
@@ -188,6 +188,7 @@ public class ServerContext {
     /**
      * ĐÃ TỐI ƯU: Tìm kiếm ID/Email từ kết nối mạng đạt tốc độ O(1) tuyệt đối
      */
+    // trả về email, lấy conn
     public String getUserByConn(WebSocket conn) {
         if (conn == null) return null;
         return connToUserKey.get(conn);
@@ -198,7 +199,7 @@ public class ServerContext {
     }
 
 
-    // --- BỔ SUNG & QUẢN LÝ DANH SÁCH USER DẠNG OBJECT (RAM CACHE) ---
+    // các hàm quản lí cho danh sách lưu conn/user
 
     /**
      * TỐI ƯU BỔ SUNG: Hàm lấy thông tin User Cache nhanh từ RAM thông qua Email (Tốc độ O(1))

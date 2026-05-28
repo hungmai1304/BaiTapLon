@@ -84,19 +84,14 @@ public class AdminCancelAuction implements IMessageHandler {
             // 3. CẬP NHẬT TRẠNG THÁI SẢN PHẨM TRONG DATABASE (PRODUCT DAO)
             // =========================================================================
             ProductDao productDao = ProductDao.getInstance();
-            // Xác định chính xác ID sản phẩm cần cập nhật trong DB
+
+            // 1. Xác định chính xác ID sản phẩm cần cập nhật trong DB
             String dbProductId = (targetAuction != null && targetAuction.getProduct() != null)
                     ? targetAuction.getProduct().getId()
                     : targetId;
 
-            Product product = productDao.getProductById(dbProductId);
-            boolean dbUpdated = false;
-
-            if (product != null) {
-                // Đổi trạng thái thành NOT_AVAILABLE theo yêu cầu bài toán
-                product.setStatus(ProductStatus.NOT_AVAILABLE);
-                dbUpdated = productDao.editProduct(product);
-            }
+            // 2. TỐI ƯU: Gọi thẳng hàm cập nhật trạng thái, không cần nạp Product lên nữa
+            boolean dbUpdated = productDao.updateProductStatus(dbProductId, ProductStatus.NOT_AVAILABLE);
 
             // =========================================================================
             // 4. TRẢ KẾT QUẢ VỀ CHO CLIENT ADMIN

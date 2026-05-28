@@ -138,7 +138,7 @@ public class ProductDao {
     }
 
     /**
-     * 5. LẤY DANH SÁCH THEO USER ID - Đã tối ưu JOIN
+     * 5. HÀM LẤY SẢN PHẨM CỦA SHOP DỰA TRÊN ID NGUWLWIF DÙNG: CHƯA DÙNG
      */
     public List<Product> getProductsByUserId(String userId) {
         List<Product> productList = new ArrayList<>();
@@ -180,14 +180,17 @@ public class ProductDao {
     }
 
     /**
-     * NGHIỆP VỤ BỔ SUNG: Cập nhật nhanh trạng thái sản phẩm (ví dụ: SOLD, COMPLETED, PENDING)
+     * NGHIỆP VỤ BỔ SUNG: Cập nhật nhanh trạng thái sản phẩm (ví dụ: SOLD, COMPLETED, PENDING) CHO ADMIN
      */
+    // Trong lớp ProductDao của bạn
     public boolean updateProductStatus(String productId, ProductStatus status) {
         String sql = "UPDATE products SET status = ? WHERE id = ?";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, status.toString());
+
+            pstmt.setString(1, status.name()); // Dùng .name() sẽ an toàn hơn .toString()
             pstmt.setString(2, productId);
+
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("[ProductDao] Lỗi updateProductStatus: " + e.getMessage());
@@ -233,7 +236,7 @@ public class ProductDao {
     }
 
     /**
-     * HÀM PHỤ TRỢ ĐÃ ĐƯỢC TỐI ƯU
+     * hàm map
      */
     private Product mapResultSetToProduct(ResultSet rs) throws SQLException {
         Product product = new Product();

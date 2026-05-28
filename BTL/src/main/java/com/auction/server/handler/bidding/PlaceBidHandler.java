@@ -109,6 +109,9 @@ public class PlaceBidHandler implements IMessageHandler {
 
             User previousLeader = null;
             double previousBid = 0;
+            String safeUserName = (currentUser.getUsername() != null && !currentUser.getUsername().trim().isEmpty())
+                    ? currentUser.getUsername()
+                    : userEmail;
 
             // ĐỒNG BỘ HÓA LUỒNG TRÊN RAM (NHANH CHÓNG): Chống Race Condition
             synchronized (currentAuction) {
@@ -141,11 +144,13 @@ public class PlaceBidHandler implements IMessageHandler {
                 // Tiến hành ghi nhận người dẫn đầu mới lên RAM
                 User newLeader = new User();
                 newLeader.setEmail(userEmail);
-                newLeader.setUsername(currentUser.getUsername());
+                newLeader.setUsername(safeUserName);
+
+                newLeader.setUsername(safeUserName);
 
                 currentAuction.setCurrentPrice(bidAmount);
                 currentAuction.setHighestBidder(newLeader);
-                currentAuction.setLeaderName(newLeader.getUsername());
+                currentAuction.setLeaderName(safeUserName);
 
                 // Ghi nhận lịch sử giao dịch
                 BidTransaction transaction = new BidTransaction();
@@ -177,7 +182,7 @@ public class PlaceBidHandler implements IMessageHandler {
             }
 
             // Phát loa Real-time cho toàn sàn nhận giá mới
-            broadcastNewBid(context, gson, productId, bidAmount, userEmail);
+            broadcastNewBid(context, gson, productId, bidAmount, safeUserName);
 
             // Kích hoạt cuộc chiến Bot
             triggerBotWar(context, gson, productId, currentAuction);
@@ -280,7 +285,7 @@ public class PlaceBidHandler implements IMessageHandler {
 
                             context.updateAuction(currentAuction);
 
-                            broadcastNewBid(context, gson, productId, nextBotPrice, bot.getEmail());
+                            broadcastNewBid(context, gson, productId, nextBotPrice, safeBotName);
                             updateClientBalance(context, gson, bot.getEmail());
 
                             System.out.println("[BOT WAR] Bot " + bot.getEmail() + " đã kích giá lên: " + String.format("%,.0f", nextBotPrice));
