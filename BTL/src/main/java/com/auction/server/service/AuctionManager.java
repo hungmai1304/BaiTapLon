@@ -120,56 +120,63 @@ public class AuctionManager {
      */
     // lỗi ở đây
     // ========== KẾT THÚC PHIÊN ĐẤU GIÁ ==========
-
+    //@SuppressWarnings("java:S2445") // tat canh bao
     public void endAuction(Auction auction) {
         if (auction == null) return;
-
         ServerContext context = ServerContext.getInstance();
-        auction.setStatus("COMPLETED");
 
-        Product product = auction.getProduct();
-        if (product != null) {
-            String winnerEmail = null;
-            String winnerName = "Không có"; // Khởi tạo mặc định tránh lỗi null
-            double finalPrice = auction.getCurrentPrice();
-            String thongBaoChung = "";
+        //  BỌC THÉP SYNCHRONIZED ĐỂ CHỐNG LỖI ĐA LUỒNG (QUAN TRỌNG NHẤT)
+        synchronized (auction) {
+            // Ngăn chặn việc kết thúc 2 lần
+            if ("COMPLETED".equals(auction.getStatus())) return;
+            auction.setStatus("COMPLETED");
 
-            if (auction.getHighestBidder() != null) {
-                // 1. TRƯỜNG HỢP CÓ NGƯỜI MUA (CHỐT ĐƠN)
+            Product product = auction.getProduct();
+            if (product != null) {
+                String winnerEmail = null;
+                String winnerName = "Không có";
+                double finalPrice = auction.getCurrentPrice();
+                String thongBaoChung = "";
 
-                winnerEmail = auction.getHighestBidder().getEmail();
-                // FIX LỖI TÊN "Không có": Lấy Username, nếu trống thì lấy Email
-                winnerName = auction.getHighestBidder().getUsername() != null ? auction.getHighestBidder().getUsername() : winnerEmail;
-                auction.setLeaderName(winnerName);
+                if (auction.getHighestBidder() != null) {
+                    // =========================================================
+                    // 1. TRƯỜNG HỢP CÓ NGƯỜI MUA (CHỐT ĐƠN)
+                    // =========================================================
+                    winnerEmail = auction.getHighestBidder().getEmail();
+                    winnerName = auction.getHighestBidder().getUsername() != null ? auction.getHighestBidder().getUsername() : winnerEmail;
+                    auction.setLeaderName(winnerName);
 
-                product.setStatus(ProductStatus.SOLD);
-                product.setCurrentPrice(finalPrice);
+                    product.setStatus(ProductStatus.SOLD);
+                    product.setCurrentPrice(finalPrice);
 
-                thongBaoChung = "Chúc mừng " + winnerName + " đã chốt đơn sản phẩm '" + product.getName() + "' với giá " + String.format("%,.0fđ", finalPrice) + "!";
-                System.out.println("[AuctionManager] Sản phẩm " + product.getName() + " ĐÃ BÁN cho " + winnerEmail);
+                    thongBaoChung = "Chúc mừng " + winnerName + " đã chốt đơn sản phẩm '" + product.getName() + "' với giá " + String.format("%,.0fđ", finalPrice) + "!";
+                    System.out.println("[AuctionManager] Sản phẩm " + product.getName() + " ĐÃ BÁN cho " + winnerEmail);
 
+                    // =========================================================
+                    //  2. TRẢ TIỀN CHO NGƯỜI BÁN (SELLER) - BẢN FIX TUYỆT ĐỐI
+                    // =========================================================
+                    String sellerEmail = null;
 
-                // =========================================================
-                // 🚀 XỬ LÝ RIÊNG TƯ CHO NGƯỜI BÁN (SELLER) - BẢN ĐÃ FIX LỖI EMAIL
-                // =========================================================
-                String sellerId = null;
-                if (product.getOwner() != null && product.getOwner().getId() != null) {
-                    sellerId = product.getOwner().getId();
-                }
+                    // Thử lấy thẳng Email từ Product Owner
+                    if (product.getOwner() != null) {
+                        if (product.getOwner().getEmail() != null && !product.getOwner().getEmail().trim().isEmpty()) {
+                            sellerEmail = product.getOwner().getEmail();
+                        } else if (product.getOwner().getId() != null) {
+                            // Nếu rỗng Email mà có ID, vào DB tìm lại cho chắc
+                            User sellerFromDB = com.auction.server.dao.UserDao.getInstance().findById(product.getOwner().getId());
+                            if (sellerFromDB != null) {
+                                sellerEmail = sellerFromDB.getEmail();
+                            }
+                        }
+                    }
 
-                if (sellerId != null) {
-
-                    User seller = com.auction.server.dao.UserDao.getInstance().findById(sellerId);
-
-                    if (seller != null && seller.getEmail() != null) {
-                        String sellerEmail = seller.getEmail();
-
+                    if (sellerEmail != null && !sellerEmail.trim().isEmpty()) {
                         // A. Cộng tiền vào Database cho Seller
-                        UserDao.getInstance().depositMoney(sellerEmail, finalPrice);
-                        System.out.println("💰 [Payout] Đã chuyển " + String.format("%,.0fđ", finalPrice) + " cho Seller: " + sellerEmail);
+                        com.auction.server.dao.UserDao.getInstance().depositMoney(sellerEmail, finalPrice);
+                        System.out.println(" [Payout] Đã chuyển " + String.format("%,.0fđ", finalPrice) + " cho Seller: " + sellerEmail);
 
                         // B. Nháy số dư trên màn hình Seller
-                        PlaceBidHandler.updateClientBalance(context, gson, sellerEmail);
+                        com.auction.server.handler.bidding.PlaceBidHandler.updateClientBalance(context, gson, sellerEmail);
 
                         // C. Đóng gói thông báo RIÊNG TƯ chỉ dành cho Seller
                         String thongBaoRieng = "Sản phẩm '" + product.getName() + "' của bạn đã bán thành công. Bạn nhận được: " + String.format("%,.0fđ", finalPrice);
@@ -184,66 +191,63 @@ public class AuctionManager {
                             }
                         }
                     } else {
-                        System.err.println("LỖI PAYOUT: Không tìm thấy Seller trong DB với ID: " + sellerId);
+                        System.err.println(" LỖI PAYOUT: Không tìm thấy thông tin Seller để cộng tiền!");
                     }
+
                 } else {
-                    System.err.println("LỖI PAYOUT: Sản phẩm Không có thông tin Owner ID!");
-                }
+                    // =========================================================
+                    // 3. TRƯỜNG HỢP Ế HÀNG
+                    // =========================================================
+                    product.setStatus(ProductStatus.AVAILABLE);
+                    finalPrice = product.getStartPrice();
 
-            } else {
-                // 2. TRƯỜNG HỢP Ế HÀNG
-                
-                product.setStatus(ProductStatus.AVAILABLE);
-                finalPrice = product.getStartPrice();
+                    thongBaoChung = "Rất tiếc, sản phẩm '" + product.getName() + "' đã hết giờ mà không có ai chốt đơn!";
+                    System.out.println("[AuctionManager] Sản phẩm " + product.getName() + " Ế HÀNG -> Hủy bỏ");
 
-                thongBaoChung = "Rất tiếc, sản phẩm '" + product.getName() + "' đã hết giờ mà không có ai chốt đơn!";
-                System.out.println("[AuctionManager] Sản phẩm " + product.getName() + " Ế HÀNG -> Hủy bỏ");
-
-                // (Tùy chọn) Gửi thông báo ế hàng riêng cho Seller
-                if (product.getOwner() != null) {
-                    String sellerEmail = product.getOwner().getEmail();
-                    String thongBaoRieng = "Sản phẩm '" + product.getName() + "' của bạn đã kết thúc mà không có ai đặt giá.";
-                    Response sellerRes = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBaoRieng);
-                    String sellerMsg = gson.toJson(sellerRes);
-                    for (WebSocket client : context.getServer().getConnections()) {
-                        if (sellerEmail.equals(context.getUserByConn(client))) {
-                            if (client.isOpen()) client.send(sellerMsg);
-                            break;
+                    // Báo tin ế hàng cho Seller
+                    if (product.getOwner() != null) {
+                        String sellerEmail = product.getOwner().getEmail();
+                        if (sellerEmail != null && !sellerEmail.trim().isEmpty()) {
+                            String thongBaoRieng = "Sản phẩm '" + product.getName() + "' của bạn đã kết thúc mà không có ai đặt giá.";
+                            Response sellerRes = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBaoRieng);
+                            String sellerMsg = gson.toJson(sellerRes);
+                            for (WebSocket client : context.getServer().getConnections()) {
+                                if (sellerEmail.equals(context.getUserByConn(client))) {
+                                    if (client.isOpen()) client.send(sellerMsg);
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
+
+                // =========================================================
+                // 4. LƯU DB & PHÁT LOA
+                // =========================================================
+                product.setStartTime(null);
+                product.setEndTime(null);
+                com.auction.server.dao.ProductDao.getInstance().editProduct(product);
+
+                com.auction.server.dao.AuctionDao.getInstance().saveCompletedAuction(
+                        String.valueOf(auction.getId()),
+                        product.getId(),
+                        winnerEmail,
+                        finalPrice
+                );
+
+                Response publicRes = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBaoChung);
+                publicRes.getData().put("auction", auction);
+                publicRes.getData().put("winnerName", winnerName);
+
+                String publicMsg = gson.toJson(publicRes);
+                for (WebSocket client : context.getServer().getConnections()) {
+                    if (client.isOpen()) client.send(publicMsg);
+                }
             }
+        } //  KẾT THÚC KHỐI BỌC THÉP SYNCHRONIZED
 
-            // 3. LƯU TRẠNG THÁI SẢN PHẨM XUỐNG DB
-            product.setStartTime(null);
-            product.setEndTime(null);
-            ProductDao.getInstance().editProduct(product);
-
-            // 4. LƯU VÀO SỔ CÁI ĐẤU GIÁ
-            AuctionDao.getInstance().saveCompletedAuction(
-                    String.valueOf(auction.getId()),
-                    product.getId(),
-                    winnerEmail,
-                    finalPrice
-            );
-
-
-            // 5. PHÁT LOA CHUNG CHO CẢ SÀN (Kèm theo tên người thắng)
-
-            Response publicRes = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBaoChung);
-            publicRes.getData().put("auction", auction);
-            publicRes.getData().put("winnerName", winnerName); // Đóng gói tên để Client đọc
-
-            String publicMsg = gson.toJson(publicRes);
-            for (WebSocket client : context.getServer().getConnections()) {
-                if (client.isOpen()) client.send(publicMsg);
-            }
-        }
-
-        // 6. DỌN DẸP RAM
+        // DỌN DẸP RAM & TIẾP TỤC
         context.removeAuction(auction.getId());
-
-        // Chọn phiên tiếp theo
         scheduleNextAuction();
     }
 

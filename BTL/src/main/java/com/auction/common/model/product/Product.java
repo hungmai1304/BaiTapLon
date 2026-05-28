@@ -1,7 +1,9 @@
 package com.auction.common.model.product;
+
 import com.auction.common.model.user.User;
 import java.time.LocalDateTime;
 import com.auction.common.model.product.ProductStatus;
+
 public class Product extends Item {
     private String category;
     private double startPrice;
@@ -15,6 +17,10 @@ public class Product extends Item {
     private String imagePath;
     private String imageBase64;
 
+    // --- HAI TRƯỜNG MỚI: Dùng Integer để có thể nhận giá trị null ---
+    private Integer waitingMinutes = null;
+    private Integer durationMinutes = null;
+
     public String getImageBase64() { return imageBase64; }
     public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64; }
 
@@ -22,19 +28,20 @@ public class Product extends Item {
     public void setImagePath(String imagePath) { this.imagePath = imagePath; }
 
     private ProductStatus status = ProductStatus.AVAILABLE;
-    // mặc định đầu tiên là chờ sản phẩm
-//    private String currentAuctionId = null; // khoi tao chua dau gia lan nao
 
     public Product() {}
 
-    // --- getter/setter
-    public String getDescription() {
-        return description;
-    }
+    // --- GETTER / SETTER CHO HAI TRƯỜNG MỚI ---
+    public Integer getWaitingMinutes() { return waitingMinutes; }
+    public void setWaitingMinutes(Integer waitingMinutes) { this.waitingMinutes = waitingMinutes; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public Integer getDurationMinutes() { return durationMinutes; }
+    public void setDurationMinutes(Integer durationMinutes) { this.durationMinutes = durationMinutes; }
+
+    // --- các getter/setter cũ giữ nguyên hoàn toàn ---
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
 
@@ -56,10 +63,6 @@ public class Product extends Item {
     public LocalDateTime getEndTime() { return endTime; }
     public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
 
-    // THÊM MỚI - getter/setter cho status và auctionId
     public ProductStatus getStatus() { return status; }
     public void setStatus(ProductStatus status) { this.status = status; }
-
-//    public String getCurrentAuctionId() { return currentAuctionId; }
-//    public void setCurrentAuctionId(String id) { this.currentAuctionId = id; }
 }

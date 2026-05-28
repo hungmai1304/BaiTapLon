@@ -76,22 +76,28 @@ public class SellProductHandler implements IMessageHandler {
             }
 
             // =========================================================================
-            // NGHIỆP VỤ ĐỘNG: Lấy thời gian cấu hình do Client/Seller tự chọn
+            // NGHIỆP VỤ ĐỘNG: Lấy thời gian cấu hình do Client/Seller tự chọn (ĐÃ SỬA LỖI ÉP KIỂU)
             // =========================================================================
             long waitingMinutes = DEFAULT_TIME_WAITING_TO_START_MINUTES;
             long durationMinutes = DEFAULT_TIME_AUCTION_DURATION_MINUTES;
 
-            if (data.containsKey("waitingMinutes")) {
-                waitingMinutes = ((Double) data.get("waitingMinutes")).longValue();
-            }
-            if (data.containsKey("durationMinutes")) {
-                durationMinutes = ((Double) data.get("durationMinutes")).longValue();
+            try {
+                if (data.containsKey("waitingMinutes") && data.get("waitingMinutes") != null) {
+                    waitingMinutes = ((Number) data.get("waitingMinutes")).longValue();
+                }
+                if (data.containsKey("durationMinutes") && data.get("durationMinutes") != null) {
+                    durationMinutes = ((Number) data.get("durationMinutes")).longValue();
+                }
+            } catch (Exception e) {
+                System.err.println("[SellProductHandler] Lỗi parse thời gian từ client, dùng mặc định: " + e.getMessage());
+                waitingMinutes = DEFAULT_TIME_WAITING_TO_START_MINUTES;
+                durationMinutes = DEFAULT_TIME_AUCTION_DURATION_MINUTES;
             }
 
             // Cho phép cập nhật lại giá khởi điểm lúc lên sàn nếu client yêu cầu thay đổi
             double liveStartPrice = pCheck.getStartPrice();
-            if (data.containsKey("startPrice")) {
-                liveStartPrice = ((Double) data.get("startPrice"));
+            if (data.containsKey("startPrice") && data.get("startPrice") != null) {
+                liveStartPrice = ((Number) data.get("startPrice")).doubleValue();
             }
 
             LocalDateTime now = LocalDateTime.now();

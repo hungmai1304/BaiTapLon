@@ -6,12 +6,12 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
-<?import javafx.scene.image.ImageView?>
 
 <VBox prefHeight="1080.0" prefWidth="1831.0" styleClass="main-root" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.shop.ShopImportController">
     <children>
@@ -36,11 +36,9 @@
                                 <VBox spacing="15.0">
                                     <children>
                                         <Label styleClass="label-title" text="Hình ảnh sản phẩm" />
-                                        <StackPane fx:id="imageUploadArea" prefHeight="350.0" prefWidth="350.0"
-                                                   styleClass="image-upload-area" onMouseClicked="#handleImageClicked">
+                                        <StackPane fx:id="imageUploadArea" onMouseClicked="#handleImageClicked" prefHeight="350.0" prefWidth="350.0" styleClass="image-upload-area">
                                             <children>
-                                                <ImageView fx:id="productImageView" fitHeight="350.0" fitWidth="350.0"
-                                                           preserveRatio="true" visible="false" managed="false" />
+                                                <ImageView fx:id="productImageView" fitHeight="350.0" fitWidth="350.0" managed="false" preserveRatio="true" visible="false" />
                                                 <Label fx:id="uploadLabel" styleClass="upload-text" text="Thêm ảnh +" />
                                             </children>
                                         </StackPane>
@@ -56,15 +54,27 @@
                                             </children>
                                         </VBox>
 
+                                        <VBox spacing="8.0">
+                                            <children>
+                                                <Label styleClass="label-title" text="Giá nhập (đ)" />
+                                                <TextField fx:id="price" promptText="0" styleClass="custom-text-field" />
+                                            </children>
+                                        </VBox>
+
                                         <HBox spacing="20.0">
                                             <children>
                                                 <VBox spacing="8.0" HBox.hgrow="ALWAYS">
                                                     <children>
-                                                        <Label styleClass="label-title" text="Giá nhập (đ)" />
-                                                        <TextField fx:id="price" promptText="0" styleClass="custom-text-field" />
+                                                        <Label styleClass="label-title" text="Waiting Minutes:" />
+                                                        <TextField fx:id="wait" promptText="0" styleClass="custom-text-field" />
                                                     </children>
                                                 </VBox>
-                                                <VBox spacing="8.0" HBox.hgrow="ALWAYS" />
+                                                <VBox spacing="8.0" HBox.hgrow="ALWAYS">
+                                                    <children>
+                                                        <Label styleClass="label-title" text="Duration Minutes:" />
+                                                        <TextField fx:id="duration" promptText="0" styleClass="custom-text-field" />
+                                                    </children>
+                                                </VBox>
                                             </children>
                                         </HBox>
 
@@ -88,9 +98,7 @@
 
                         <HBox alignment="CENTER_RIGHT" spacing="20.0">
                             <children>
-                                <Label fx:id="successLabel" text=""
-                                       style="-fx-text-fill: #4caf50; -fx-font-size: 14px;"
-                                       visible="false" managed="false" />
+                                <Label fx:id="successLabel" managed="false" style="-fx-text-fill: #4caf50; -fx-font-size: 14px;" text="" visible="false" />
                                 <Button onAction="#deleteAllClicked" styleClass="btn-cancel" text="Hủy bỏ">
                                     <font>
                                         <Font size="21.0" />

@@ -220,6 +220,11 @@ public class PlaceBidHandler implements IMessageHandler {
         }
 
         botExecutor.submit(() -> {
+            try {
+                Thread.sleep(15000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
             boolean keepFighting = true;
             int safetyCounter = 0;
 

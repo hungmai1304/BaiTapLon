@@ -14,13 +14,13 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<StackPane minHeight="720.0" minWidth="1280.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.mainHome.MainController">
+<StackPane minHeight="720.0" minWidth="1280.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.mainHome.MainController">
    <children>
       <GridPane fx:id="gidpane_main" styleClass="Scene-Black" stylesheets="@style.css">
          <columnConstraints>
-            <ColumnConstraints hgrow="SOMETIMES" percentWidth="33.34" />
-            <ColumnConstraints hgrow="SOMETIMES" percentWidth="33.33" />
-            <ColumnConstraints hgrow="SOMETIMES" percentWidth="33.33" />
+            <ColumnConstraints hgrow="SOMETIMES" percentWidth="50.0" />
+            <ColumnConstraints hgrow="SOMETIMES" percentWidth="50.0" />
+            <ColumnConstraints hgrow="SOMETIMES" percentWidth="0.0" />
          </columnConstraints>
          <rowConstraints>
             <RowConstraints percentHeight="20.0" vgrow="SOMETIMES" />
@@ -90,37 +90,6 @@
                <GridPane.margin><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></GridPane.margin>
             </AnchorPane>
 
-            <AnchorPane stylesheets="@style.css" GridPane.columnIndex="2" GridPane.rowIndex="1">
-               <children>
-                  <VBox alignment="CENTER" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                     <children>
-                        <Label styleClass="label-super-bold" text="Statistics" textFill="WHITE">
-                           <font><Font size="45.0" /></font>
-                        </Label>
-                        <HBox alignment="CENTER" spacing="30.0">
-                           <children>
-                              <ImageView fitHeight="130.0" fitWidth="130.0" pickOnBounds="true" preserveRatio="true">
-                                 <image><Image url="@pie-chart.png" /></image>
-                              </ImageView>
-                              <VBox alignment="CENTER_LEFT" spacing="10.0">
-                                 <children>
-                                    <Label styleClass="label-super-bold" text="0%" textFill="WHITE"><font><Font size="35.0" /></font></Label>
-                                    <Label styleClass="label-super-bold" text="0%" textFill="WHITE"><font><Font size="35.0" /></font></Label>
-                                 </children>
-                              </VBox>
-                           </children>
-                        </HBox>
-                     </children>
-                  </VBox>
-               </children>
-               <styleClass>
-                  <String fx:value="Scene-Back-1" />
-                  <String fx:value="bogoc" />
-                  <String fx:value="hover-mouse" />
-               </styleClass>
-               <GridPane.margin><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></GridPane.margin>
-            </AnchorPane>
-
             <AnchorPane fx:id="shopAnchorPane" onMouseClicked="#handleShopClicked" stylesheets="@style.css" GridPane.rowIndex="2">
                <children>
                   <VBox alignment="CENTER" spacing="15.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -168,15 +137,6 @@
                </children>
                <styleClass>
                   <String fx:value="Scene-back-2" />
-                  <String fx:value="bogoc" />
-                  <String fx:value="hover-mouse" />
-               </styleClass>
-               <GridPane.margin><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></GridPane.margin>
-            </AnchorPane>
-
-            <AnchorPane stylesheets="@style.css" GridPane.columnIndex="2" GridPane.rowIndex="2">
-               <styleClass>
-                  <String fx:value="Scene-Back-1" />
                   <String fx:value="bogoc" />
                   <String fx:value="hover-mouse" />
                </styleClass>
