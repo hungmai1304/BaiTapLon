@@ -23,6 +23,9 @@ public class AuctionWebSocketServer extends WebSocketServer {
     private final Gson gson;
     private final MessageDispatcher dispatcher;
     private Timer auctionTimer;
+    
+    // Giới hạn dung lượng tin nhắn tối đa (Ví dụ: 5MB) để chống tấn công DoS/OOM
+    private static final int MAX_MESSAGE_SIZE = 5 * 1024 * 1024;
 
     // =========================================================================
     // 1. THAY ĐỔI CHÍNH: Thêm constructor nhận vào InetSocketAddress để chạy Tailscale/Render linh hoạt
@@ -75,8 +78,16 @@ public class AuctionWebSocketServer extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
+        // Kiểm tra bảo mật: Chặn tin nhắn quá lớn gây tràn bộ nhớ (DoS/OOM)
+        if (message == null || message.length() > MAX_MESSAGE_SIZE) {
+            System.err.println("⚠️ [Security Warning] Chặn tin nhắn quá lớn từ: " + conn.getRemoteSocketAddress());
+            conn.send("{\"type\":\"ERROR\", \"message\":\"Payload too large!\"}");
+            conn.close();
+            return;
+        }
+
         // Debug thông minh: Không in cả cục Base64
-        if (message != null && message.length() > 200) {
+        if (message.length() > 200) {
             System.out.println("[Server Nhận] Gói tin lớn: " + message.substring(0, 150) + "... [Độ dài: " + message.length() + "]");
         } else {
             System.out.println("[Server Nhận]: " + message);
