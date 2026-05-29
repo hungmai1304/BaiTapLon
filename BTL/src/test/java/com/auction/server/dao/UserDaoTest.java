@@ -84,6 +84,19 @@ public class UserDaoTest {
     }
 
     @Test
+    void testGetUserByEmailDatabaseError() throws SQLException {
+        try (MockedStatic<Db> mockedDb = mockStatic(Db.class)) {
+            // Mock Db.getConnection() to return a mock connection that throws exception on prepareStatement
+            Connection mockConnErr = mock(Connection.class);
+            mockedDb.when(Db::getConnection).thenReturn(mockConnErr);
+            when(mockConnErr.prepareStatement(anyString())).thenThrow(new SQLException("Database error"));
+
+            User result = userDao.getUserByEmail("test@test.com");
+            assertNull(result);
+        }
+    }
+
+    @Test
     void testAuthenticateFailureWithWrongPassword() throws SQLException {
         try (MockedStatic<Db> mockedDb = mockStatic(Db.class)) {
             mockedDb.when(Db::getConnection).thenReturn(mockConnection);

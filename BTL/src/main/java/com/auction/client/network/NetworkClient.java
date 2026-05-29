@@ -12,7 +12,7 @@ public class NetworkClient {
 
     // Production
     private static final String SERVER_URL = "wss://baitaplon-qegw.onrender.com";
-    // private static final String SERVER_URL = "ws://localhost:10000";
+//    private static final String SERVER_URL = "ws://localhost:10000";
 
     private static WebSocketClient webSocketClient;
     private static MessageListener currentListener;

@@ -29,12 +29,12 @@ public class NewBidClientHandler implements IClientHandler {
                     TikTokAuctionController controller = (TikTokAuctionController) ControllerRegistry.get("TikTokAuctionController");
                     BiddingController biddingCtrl = (BiddingController) ControllerRegistry.get("BiddingController");
                     if (biddingCtrl != null) {
-                        biddingCtrl.updateRealtimeBid(productId, newPrice, leaderName, newEndTime);
+                        biddingCtrl.updateRealtimeBid(productId, newPrice, leaderName);
                     }
 
                     if (controller != null) {
                         // Truyền dữ liệu sang UI để nó tự nhảy số
-                        controller.updateRealtimeBid(productId, newPrice, leaderName, newEndTime);
+                        controller.updateRealtimeBid(productId, newPrice, leaderName);
                     } else {
                         System.out.println("[Client] Giao diện TikTok chưa mở, không cần nhảy số.");
                     }
