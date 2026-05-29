@@ -155,17 +155,30 @@ public class SellProductHandler implements IMessageHandler {
                 }, delayToActiveSeconds, TimeUnit.SECONDS);
 
                 // HẸN GIỜ 2: ĐÓNG PHIÊN ĐẤU GIÁ VÀ HẠ SẢN PHẨM CHỐT ĐƠN (ACTIVE -> COMPLETED)
-                scheduler.schedule(() -> {
-                    try {
-                        Auction auctionToEnd = context.getAuctionByProductId(productId);
-                        if (auctionToEnd != null) {
-                            AuctionManager.getInstance().endAuction(auctionToEnd);
-                            broadcastNewAuctionSession(context);
-                            broadcastToAdmins(context);
-                            System.out.println("[Timer] SP " + productId + " đã được xử lý chốt đơn bởi Timer.");
+                scheduler.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Auction auctionToEnd = context.getAuctionByProductId(productId);
+                            if (auctionToEnd != null && !"COMPLETED".equals(auctionToEnd.getStatus())) {
+                                LocalDateTime now = LocalDateTime.now();
+                                if (!now.isBefore(auctionToEnd.getEndTime())) {
+                                    // Đã thực sự hết giờ, kết thúc phiên
+                                    AuctionManager.getInstance().endAuction(auctionToEnd);
+                                    broadcastNewAuctionSession(context);
+                                    broadcastToAdmins(context);
+                                    System.out.println("[Timer] SP " + productId + " đã được xử lý chốt đơn bởi Timer.");
+                                } else {
+                                    // Phiên bị gia hạn (Anti-sniping), lên lịch lại chạy theo thời gian còn lại
+                                    long extraSeconds = java.time.Duration.between(now, auctionToEnd.getEndTime()).getSeconds();
+                                    // Chạy lại chính mình sau extraSeconds (tối thiểu 1s để tránh loop vô tận nếu seconds xấp xỉ 0)
+                                    scheduler.schedule(this, extraSeconds > 0 ? extraSeconds : 1, TimeUnit.SECONDS);
+                                    System.out.println("[Timer Reschedule] SP " + productId + " bị gia hạn Anti-sniping, dời lịch đóng phiên sau " + extraSeconds + "s.");
+                                }
+                            }
+                        } catch (Exception e) {
+                            System.err.println("[Timer Error] Lỗi khi kết thúc phiên hẹn giờ: " + e.getMessage());
                         }
-                    } catch (Exception e) {
-                        System.err.println("[Timer Error] Lỗi khi kết thúc phiên hẹn giờ: " + e.getMessage());
                     }
                 }, delayToCompletedSeconds, TimeUnit.SECONDS);
 

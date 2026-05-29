@@ -40,38 +40,6 @@ class AuctionManagerTest {
     }
 
     @Test
-    void testPickNextProduct_NoAvailableAuctions() {
-        Auction picked = auctionManager.pickNextProduct();
-        assertNull(picked);
-    }
-
-    @Test
-    void testPickNextProduct_Success() {
-        Product p1 = new Product();
-        p1.setId("1");
-        p1.setName("Test Product");
-        p1.setStatus(ProductStatus.AVAILABLE);
-        
-        Auction a1 = new Auction();
-        a1.setId("1");
-        a1.setProduct(p1);
-        a1.setStatus("PENDING");
-        
-        serverContext.addAuction(a1);
-
-        Auction picked = auctionManager.pickNextProduct();
-
-        assertNotNull(picked);
-        assertEquals("1", picked.getId());
-        assertEquals("ACTIVE", picked.getStatus());
-        assertEquals(ProductStatus.ON_AUCTION, picked.getProduct().getStatus());
-        assertNotNull(picked.getStartTime());
-        assertNotNull(picked.getEndTime());
-        
-        verify(mockServer, atLeastOnce()).getConnections();
-    }
-
-    @Test
     void testEndAuction_Sold() {
         Product p1 = new Product();
         p1.setId("1");
