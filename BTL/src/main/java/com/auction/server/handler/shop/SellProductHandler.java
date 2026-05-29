@@ -26,8 +26,10 @@ import java.util.concurrent.TimeUnit;
 @CommandMap(value = MessageType.SELL_PRODUCT_REQUEST)
 public class SellProductHandler implements IMessageHandler {
 
+    // Bộ đếm giờ độc lập quản lý kích hoạt và đóng phiên
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
+    // Bộ SafeGson chuẩn hóa cấu trúc xử lý dữ liệu thời gian LocalDateTime theo ISO chuẩn của File 2
     private static final Gson safeGson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
                     new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
@@ -38,7 +40,7 @@ public class SellProductHandler implements IMessageHandler {
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
         try {
-            // LOG THẦN THÁNH: In ra toàn bộ những gì client thực sự gửi lên để debug
+            // LOG DEBUG: Theo dõi dữ liệu đầu vào thực tế gửi lên từ Client
             System.out.println("[SellProductHandler] RAW DATA từ Client gửi lên: " + data);
 
             String productId = (String) data.get("id");
@@ -48,6 +50,7 @@ public class SellProductHandler implements IMessageHandler {
                 return;
             }
 
+            // KIỂM TRA TRẠNG THÁI SẢN PHẨM TRƯỚC KHI LÊN SÀN (Tiêu chuẩn nghiêm ngặt File 2)
             Product pCheck = ProductDao.getInstance().getProductById(productId);
             if (pCheck == null) {
                 sendError(conn, "Sản phẩm không tồn tại trong hệ thống!");
@@ -69,24 +72,22 @@ public class SellProductHandler implements IMessageHandler {
                 return;
             }
 
-            // Lấy Object từ client (Hỗ trợ cả CamelCase và Snake_case)
+            // Đọc cấu hình thời gian và giá tùy biến (Hỗ trợ đa dạng cả CamelCase và Snake_case của File 2)
             Object waitingObj = data.get("waitingMinutes") != null ? data.get("waitingMinutes") : data.get("waiting_minutes");
             Object durationObj = data.get("durationMinutes") != null ? data.get("durationMinutes") : data.get("duration_minutes");
             Object startPriceObj = data.get("startPrice") != null ? data.get("startPrice") : data.get("start_price");
 
-            // Tiến hành parse nghiêm ngặt (Nếu null sẽ trả về null chứ không lấy mặc định)
+            // Ép kiểu dữ liệu nghiêm ngặt qua hàm bổ trợ
             Double waitingMinutes = parseDoubleStrict(waitingObj);
             Double durationMinutes = parseDoubleStrict(durationObj);
-
-            // Đối với giá, nếu không truyền thì mới lấy giá gốc của sản phẩm
             Double liveStartPrice = parseDoubleStrict(startPriceObj);
+
+            // Phòng hờ nếu người bán không đặt giá khởi điểm riêng biệt, lấy mặc định của sản phẩm
             if (liveStartPrice == null) {
                 liveStartPrice = pCheck.getStartPrice();
             }
 
-            // =========================================================================
-            // CHẶN LỖI: BẮT BUỘC PHẢI CÓ THỜI GIAN TỪ CLIENT
-            // =========================================================================
+            // KIỂM TRA LUẬT THỜI GIAN BẮT BUỘC ĐẦU VÀO
             if (waitingMinutes == null) {
                 sendError(conn, "Thất bại: Server không nhận được thời gian chờ hợp lệ từ Client (waitingMinutes)!");
                 return;
@@ -100,24 +101,28 @@ public class SellProductHandler implements IMessageHandler {
 
             LocalDateTime now = LocalDateTime.now();
 
-            // Tính toán thời gian dựa trên số giây quy đổi từ Client gửi lên
+            // Tính toán thời gian thực tế dựa trên số giây quy đổi từ Client gửi lên
             long waitingSeconds = Math.round(waitingMinutes * 60);
             long durationSeconds = Math.round(durationMinutes * 60);
 
             LocalDateTime startTime = now.plusSeconds(waitingSeconds);
             LocalDateTime endTime = startTime.plusSeconds(durationSeconds);
 
+            // Cập nhật Database đồng bộ hóa thông tin sản phẩm và khoảng thời gian chạy phiên
             boolean isUpdated = ProductDao.getInstance().sellProduct(productId, liveStartPrice, startTime, endTime);
 
             if (isUpdated) {
+                // Thay đổi trạng thái thực thể sản phẩm trên RAM
                 pCheck.setStatus(ProductStatus.ON_AUCTION);
                 pCheck.setStartPrice(liveStartPrice);
                 pCheck.setCurrentPrice(liveStartPrice);
                 pCheck.setStartTime(startTime);
                 pCheck.setEndTime(endTime);
 
+                // Khởi tạo UUID định danh duy nhất cho phiên đấu giá (File 2)
                 String auctionId = UUID.randomUUID().toString();
 
+                // Đóng gói cấu trúc Phiên Đấu Giá mới vào Context
                 Auction newAuction = new Auction(
                         pCheck,
                         pCheck.getStartPrice(),
@@ -134,7 +139,7 @@ public class SellProductHandler implements IMessageHandler {
                 long delayToActiveSeconds = waitingSeconds;
                 long delayToCompletedSeconds = waitingSeconds + durationSeconds;
 
-                // HẸN GIỜ 1: KÍCH HOẠT PHIÊN (PENDING -> ACTIVE)
+                // HẸN GIỜ 1: KÍCH HOẠT PHIÊN ĐẤU GIÁ (PENDING -> ACTIVE)
                 scheduler.schedule(() -> {
                     try {
                         Auction auctionToStart = context.getAuctionByProductId(productId);
@@ -149,7 +154,7 @@ public class SellProductHandler implements IMessageHandler {
                     }
                 }, delayToActiveSeconds, TimeUnit.SECONDS);
 
-                // HẸN GIỜ 2: ĐÓNG PHIÊN VÀ CHỐT ĐƠN
+                // HẸN GIỜ 2: ĐÓNG PHIÊN ĐẤU GIÁ VÀ HẠ SẢN PHẨM CHỐT ĐƠN (ACTIVE -> COMPLETED)
                 scheduler.schedule(() -> {
                     try {
                         Auction auctionToEnd = context.getAuctionByProductId(productId);
@@ -157,19 +162,22 @@ public class SellProductHandler implements IMessageHandler {
                             AuctionManager.getInstance().endAuction(auctionToEnd);
                             broadcastNewAuctionSession(context);
                             broadcastToAdmins(context);
+                            System.out.println("[Timer] SP " + productId + " đã được xử lý chốt đơn bởi Timer.");
                         }
                     } catch (Exception e) {
                         System.err.println("[Timer Error] Lỗi khi kết thúc phiên hẹn giờ: " + e.getMessage());
                     }
                 }, delayToCompletedSeconds, TimeUnit.SECONDS);
 
-                // Phản hồi cho người bán
+                // Phản hồi gói tin thành công cho Client gửi yêu cầu bán sản phẩm
                 Response response = new Response(MessageType.SELL_PRODUCT_RESPONSE, "SUCCESS", "Đã đưa sản phẩm lên sàn đấu giá thành công!");
                 conn.send(safeGson.toJson(response));
 
+                // Đồng bộ dữ liệu real-time toàn server ngay lập tức
                 broadcastNewAuctionSession(context);
                 broadcastToAdmins(context);
 
+                System.out.println("-> [SellProduct] Thành công tạo phiên đấu giá cho sản phẩm ID: " + productId);
             } else {
                 sendError(conn, "Lỗi khi cập nhật trạng thái lên Database!");
             }
@@ -181,7 +189,7 @@ public class SellProductHandler implements IMessageHandler {
     }
 
     /**
-     * HÀM PARSE NGHIÊM NGẶT: Trả về null nếu dữ liệu không hợp lệ, ép buộc báo lỗi về client
+     * HÀM PARSE DỮ LIỆU NGHIÊM NGẶT (Tiêu chuẩn gốc File 2)
      */
     private Double parseDoubleStrict(Object value) {
         if (value == null) return null;
@@ -197,6 +205,9 @@ public class SellProductHandler implements IMessageHandler {
         return null;
     }
 
+    /**
+     * PHÁT LOA DANH SÁCH AUCTION MỚI NHẤT CHO TOÀN BỘ USER ONLINE
+     */
     private void broadcastNewAuctionSession(ServerContext context) {
         List<Auction> activeAuctions = context.getActiveAuctions();
 
@@ -211,6 +222,9 @@ public class SellProductHandler implements IMessageHandler {
         }
     }
 
+    /**
+     * PHÁT LOA ĐỒNG BỘ LUỒNG QUẢN LÝ DÀNH CHO ADMIN
+     */
     private void broadcastToAdmins(ServerContext context) {
         try {
             Map<String, Object> responseMap = new HashMap<>();
@@ -226,6 +240,19 @@ public class SellProductHandler implements IMessageHandler {
             }
         } catch (Exception e) {
             System.err.println("[Broadcast Admin Error] Lỗi phát tin admin: " + e.getMessage());
+        }
+    }
+
+    /**
+     * TÍNH NĂNG BỔ TRỢ TỪ FILE 1: Phát thông báo thông tin chốt đơn/kết quả phiên
+     */
+    private void broadcastAuctionResult(ServerContext context, Gson gson, String thongBao) {
+        Response res = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBao);
+        String msg = gson.toJson(res);
+        for (WebSocket client : context.getConnectedClients()) {
+            if (client.isOpen()) {
+                client.send(msg);
+            }
         }
     }
 

@@ -7,25 +7,28 @@ import com.auction.client.utils.NavigationService;
 import com.auction.client.controller.general.SomeGlobal;
 import com.auction.common.model.product.Product;
 import com.auction.common.model.auction.Auction;
-import com.auction.common.model.user.User; // Import thêm model User để kiểm tra quyền sở hữu
+import com.auction.common.model.user.User;
+import com.auction.common.model.auction.BidTransaction;
+
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Button;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
-import com.auction.common.model.auction.BidTransaction;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.ZoneId;
-
-
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.scene.control.Button;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
+/**
+ * Controller quản lý màn hình đấu giá chi tiết.
+ * Đã gộp logic kiểm tra chủ sản phẩm (File 2) và tính năng tự động gia hạn Anti-Sniping (File 1).
+ */
 public class BiddingController {
 
     @FXML private Label lblProductName;
@@ -69,9 +72,7 @@ public class BiddingController {
 
             updateLeaderUI(currentAuctionData.getLeaderName(), currentAuctionData.getCurrentPrice());
 
-
-            // NGHIỆP VỤ MỚI: Khóa toàn bộ tính năng ra giá nếu người dùng là chủ sản phẩm
-
+            // --- NGHIỆP VỤ FILE 2: Khóa toàn bộ tính năng ra giá nếu người dùng là chủ sản phẩm ---
             User currentUser = SomeGlobal.getCurrentUser();
             if (currentUser != null && p.getOwner() != null) {
                 if (currentUser.getEmail().equalsIgnoreCase(p.getOwner().getEmail())) {
@@ -81,14 +82,12 @@ public class BiddingController {
                     lblNotification.setText("Bạn là người bán sản phẩm này, không có quyền tham gia đấu giá!");
                 }
             }
-            // =========================================================================
-
         } else {
             lblNotification.setStyle("-fx-text-fill: #e74c3c;");
             lblNotification.setText("Lỗi: Không tìm thấy thông tin phiên đấu giá!");
         }
 
-        //  KHÔI PHỤC LỊCH SỬ BIỂU ĐỒ BÊN ĐẤU GIÁ THƯỜNG KHI QUAY LẠI MÀN HÌNH
+        // --- KHÔI PHỤC LỊCH SỬ BIỂU ĐỒ BÊN ĐẤU GIÁ THƯỜNG ---
         if (priceSeries.getName() == null) {
             priceSeries.setName("Giá đấu");
 
@@ -107,7 +106,6 @@ public class BiddingController {
                     }
                 }
             }
-
             priceChart.getData().add(priceSeries);
         }
         startAuctionCountdown();
@@ -118,9 +116,7 @@ public class BiddingController {
         if (currentAuctionData != null && currentAuctionData.getProduct() != null) {
             Product p = (Product) currentAuctionData.getProduct();
 
-            // -------------------------------------------------------------------------
-            // KIỂM TRA BẢO MẬT: Double check từ chối gửi request mạng nếu cố tình bấm nút
-            // -------------------------------------------------------------------------
+            // KIỂM TRA BẢO MẬT: Từ chối gửi request mạng nếu cố tình bấm nút
             User currentUser = SomeGlobal.getCurrentUser();
             if (currentUser != null && p.getOwner() != null) {
                 if (currentUser.getEmail().equalsIgnoreCase(p.getOwner().getEmail())) {
@@ -129,7 +125,6 @@ public class BiddingController {
                     return;
                 }
             }
-            // -------------------------------------------------------------------------
 
             long nowMillis = System.currentTimeMillis();
             long startMillis = p.getStartTime() != null ? p.getStartTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() : 0;
@@ -239,7 +234,6 @@ public class BiddingController {
 
     @FXML
     public void handleClear(ActionEvent event) {
-        // Nếu là chủ sở hữu, chặn không cho clear để tránh việc mở lại giao diện nhập liệu
         if (currentAuctionData != null && currentAuctionData.getProduct() != null) {
             Product p = (Product) currentAuctionData.getProduct();
             User currentUser = SomeGlobal.getCurrentUser();
@@ -261,15 +255,34 @@ public class BiddingController {
         NavigationService.setCenterView("/com/auction/client/view/tiktokAuction.fxml");
     }
 
-    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
+    // --- ĐÃ TÍCH HỢP: Hàm cập nhật Realtime + Gia hạn Anti-Sniping (File 1) ---
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName, String newEndTime) {
         Platform.runLater(() -> {
             if (this.currentAuctionData != null && this.currentAuctionData.getProduct().getId().equals(productId)) {
+
+                // 1. Cập nhật giao diện text giá
                 lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0fđ", newPrice));
                 updateLeaderUI(leaderName, newPrice);
 
+                // 2. Lưu thông tin mới vào RAM để duy trì trạng thái
                 this.currentAuctionData.setCurrentPrice(newPrice);
                 this.currentAuctionData.setLeaderName(leaderName);
 
+                // 3. XỬ LÝ ANTI-SNIPING: Cập nhật và gia hạn thời gian kết thúc phiên nếu có từ Server
+                if (newEndTime != null && !newEndTime.isEmpty()) {
+                    try {
+                        LocalDateTime extendedTime = LocalDateTime.parse(newEndTime);
+                        this.currentAuctionData.setEndTime(extendedTime);
+                        if (this.currentAuctionData.getProduct() != null) {
+                            ((Product) this.currentAuctionData.getProduct()).setEndTime(extendedTime);
+                        }
+                        System.out.println("[Bidding UI] Đã áp dụng Anti-Sniping. Gia hạn kết thúc: " + extendedTime);
+                    } catch (Exception e) {
+                        System.err.println("[Bidding UI] Lỗi ép kiểu thời gian gia hạn Anti-Sniping: " + e.getMessage());
+                    }
+                }
+
+                // 4. Nhảy số và vẽ tiếp đồ thị realtime
                 bidCount++;
                 priceSeries.getData().add(new XYChart.Data<>(String.valueOf(bidCount), newPrice));
 
@@ -296,7 +309,6 @@ public class BiddingController {
                 return;
             }
 
-            // Chỉ thay đổi trạng thái Disable của nút bấm nếu người dùng HIỆN TẠI KHÔNG PHẢI người bán
             User currentUser = SomeGlobal.getCurrentUser();
             boolean isSeller = (currentUser != null && p.getOwner() != null && currentUser.getEmail().equalsIgnoreCase(p.getOwner().getEmail()));
 
@@ -315,7 +327,6 @@ public class BiddingController {
                 }
 
             } else if (nowMillis >= startMillis && nowMillis < endMillis) {
-                // Nếu là Seller thì giữ nguyên disable, ngược lại mới cho kích hoạt nút
                 if (btnPlaceBid != null) btnPlaceBid.setDisable(isSeller);
 
                 long diffSeconds = (endMillis - nowMillis) / 1000;

@@ -14,11 +14,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.XYChart;
-import com.auction.common.model.auction.BidTransaction;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -33,16 +28,13 @@ public class BotBiddingController {
     @FXML private Label lblCurrentPrice;
     @FXML private Label lblBotNotification;
 
-    // Đã thêm ánh xạ UI cho tính năng Đồng hồ và Khóa nút
     @FXML private Label lblCountdown;
     @FXML private Button btnRegisterBot;
 
     @FXML private TextField txtMaxBidPrice;
     @FXML private TextField txtBotPriceStep;
-    @FXML private LineChart<String, Number> priceChart;
 
     private Auction currentAuction;
-    private XYChart.Series<String, Number> priceSeries = new XYChart.Series<>();
     private static Timeline countdownTimeline;
 
     @FXML
@@ -59,7 +51,6 @@ public class BotBiddingController {
             lblPriceStep.setText("Bước giá hệ thống: " + String.format("%,.0f VNĐ", product.getStepPrice()));
             lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0f VNĐ", currentAuction.getCurrentPrice()));
 
-            // NGHIỆP VỤ: Đóng băng ô nhập liệu nếu User hiện tại (từ SomeGlobal) chính là Seller
             User currentUser = SomeGlobal.getCurrentUser();
             if (currentUser != null && product.getOwner() != null) {
                 if (currentUser.getEmail().equalsIgnoreCase(product.getOwner().getEmail())) {
@@ -72,29 +63,6 @@ public class BotBiddingController {
             }
         }
 
-        priceSeries.setName("Lịch sử giá");
-        if (currentAuction != null && currentAuction.getProduct() != null) {
-            Product p = (Product) currentAuction.getProduct();
-            // Mốc xuất phát
-            priceSeries.getData().add(new XYChart.Data<>("Mở sàn", p.getStartPrice()));
-
-            // Quét lịch sử cũ
-            if (currentAuction.getBiddingHistory() != null && !currentAuction.getBiddingHistory().isEmpty()) {
-                for (BidTransaction tx : currentAuction.getBiddingHistory()) {
-                    String timeStr = tx.getTimeCreated() != null
-                            ? tx.getTimeCreated().atZone(ZoneId.systemDefault()).toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-                            : LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-                    priceSeries.getData().add(new XYChart.Data<>(timeStr, tx.getBidAmount()));
-                }
-            } else {
-                // Nếu chưa ai đặt giá
-                String timeNowInit = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-                priceSeries.getData().add(new XYChart.Data<>(timeNowInit, currentAuction.getCurrentPrice()));
-            }
-        }
-        priceChart.getData().add(priceSeries);
-
-        // Khởi động cỗ máy đếm ngược thời gian giống hệt màn hình Bidding
         startAuctionCountdown();
     }
 
@@ -103,20 +71,8 @@ public class BotBiddingController {
             if (currentAuction != null && currentAuction.getProduct() != null
                     && currentAuction.getProduct().getId().equals(productId)) {
 
-                // 1. Cập nhật chữ trên giao diện
                 lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0f VNĐ", newPrice));
-
-                // 2. Cập nhật RAM
                 currentAuction.setCurrentPrice(newPrice);
-
-                // 3. Vẽ thêm điểm mới vào đồ thị
-                String timeNow = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-                priceSeries.getData().add(new XYChart.Data<>(timeNow, newPrice));
-
-                // Dọn bớt biểu đồ nếu dài quá (tùy chọn)
-                if (priceSeries.getData().size() > 20) {
-                    priceSeries.getData().remove(0);
-                }
             }
         });
     }
@@ -124,7 +80,6 @@ public class BotBiddingController {
     @FXML
     public void handleRegisterBot(ActionEvent event) {
         try {
-            // Chặn click gửi gói tin cố ý từ Client
             if (currentAuction != null && currentAuction.getProduct() instanceof Product) {
                 Product product = (Product) currentAuction.getProduct();
                 User currentUser = SomeGlobal.getCurrentUser();
@@ -194,7 +149,6 @@ public class BotBiddingController {
 
     @FXML
     public void handleBackToTikTok(ActionEvent event) {
-
         if (countdownTimeline != null) {
             countdownTimeline.stop();
         }
@@ -220,23 +174,20 @@ public class BotBiddingController {
                 return;
             }
 
-            // Chỉ thay đổi trạng thái Disable của nút nếu user khong phải người bán
             User currentUser = SomeGlobal.getCurrentUser();
             boolean isSeller = (currentUser != null && p.getOwner() != null && currentUser.getEmail().equalsIgnoreCase(p.getOwner().getEmail()));
 
             if (nowMillis < startMillis) {
-                // Trong thời gian quảng cáo sẽ khóa nút đăng ký Bot
                 if (btnRegisterBot != null) btnRegisterBot.setDisable(true);
                 long diffSeconds = (startMillis - nowMillis) / 1000;
                 if (diffSeconds < 0) diffSeconds = 0;
 
                 if (lblCountdown != null) {
                     lblCountdown.setText(String.format("Đợi quảng cáo: %02d:%02d", diffSeconds / 60, diffSeconds % 60));
-                    lblCountdown.setStyle("-fx-text-fill: #f39c12;"); // Màu vàng cam
+                    lblCountdown.setStyle("-fx-text-fill: #f39c12;");
                 }
 
             } else if (nowMillis >= startMillis && nowMillis < endMillis) {
-                // Đang trong phiên đấu giá mở khóa nút đăng ký Bot
                 if (btnRegisterBot != null) btnRegisterBot.setDisable(isSeller);
 
                 long diffSeconds = (endMillis - nowMillis) / 1000;
@@ -244,15 +195,14 @@ public class BotBiddingController {
 
                 if (lblCountdown != null) {
                     lblCountdown.setText(String.format("Thời gian còn lại: %02d:%02d", diffSeconds / 60, diffSeconds % 60));
-                    lblCountdown.setStyle("-fx-text-fill: #2ecc71;"); // Màu xanh lá
+                    lblCountdown.setStyle("-fx-text-fill: #2ecc71;");
                 }
 
             } else {
-                // Phiên đấu giá kết thúc khóa vĩnh viễn nút đăng ký Bot
                 if (btnRegisterBot != null) btnRegisterBot.setDisable(true);
                 if (lblCountdown != null) {
                     lblCountdown.setText("Phiên đấu giá ĐÃ KẾT THÚC!");
-                    lblCountdown.setStyle("-fx-text-fill: #e74c3c;"); // Màu đỏ
+                    lblCountdown.setStyle("-fx-text-fill: #e74c3c;");
                 }
                 countdownTimeline.stop();
             }
