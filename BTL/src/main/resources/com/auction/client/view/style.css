@@ -1,47 +1,51 @@
 .root {
-    /* Định nghĩa các biến màu từ ảnh */
-    -color-sapphire: #3C507D;
-    -color-royal-blue: #112250;
-    -color-quicksand: #E0C58F;
-    -color-swan-wing: #F5F0E9;
-    -color-shellstone: #D9CBC2;
+    /* BẢNG MÀU FOREST CYBERPUNK (XANH LÁ + XANH BIỂN - KHÔNG DÙNG TRẮNG) */
+    -color-blush-rose: #10B981;       /* Đổi sang Xanh lá Emerald rực rỡ (Làm nút bấm, điểm nhấn) */
+    -color-tomato-jam: #2DD4BF;       /* Đổi sang Xanh ngọc Mint sáng (Dùng cho chữ quan trọng, tiêu đề để cực kỳ nổi bật) */
+    -color-vanilla-custard: #0B132B;  /* Đổi sang Xanh biển đêm siêu đậm (Làm nền tối chủ đạo thay cho trắng/vàng) */
+    -color-princeton-orange: #3B82F6; /* Đổi sang Xanh đại dương rực rỡ (Dùng cho Focus, trạng thái đặc biệt) */
+    -color-olive: #00FF99;            /* Xanh lá Neon dạ quang - Hoàn hảo cho trạng thái Connected */
 
-    /* Màu chữ mặc định để dễ đọc trên nền tối/sáng */
-    -text-on-dark: #F5F0E9;
-    -text-on-light: #112250;
+    /* Định nghĩa lại các biến màu cũ đồng bộ sang hệ tối */
+    -color-sapphire: #0B132B;     /* Nền tối sâu thẳm */
+    -color-royal-blue: #042F2E;   /* Xanh lục bảo sẫm (Dùng cho thanh Header) */
+    -color-quicksand: #1C2541;    /* Xanh súng (Gunmetal blue) - Sáng hơn nền một chút để làm các khối phụ */
+    -color-swan-wing: #1E293B;    /* Đổi màu trắng cũ sang màu Xanh xám Slate đậm */
+    -color-shellstone: #0F172A;   /* Nền phụ tối */
+
+    /* Màu chữ hệ thống (Tuyệt đối không dùng trắng tinh) */
+    -text-on-dark: #CCFBF1;       /* Chữ xanh Mint cực nhạt, dịu mắt và đọc siêu rõ trên nền tối */
+    -text-on-light: #0B132B;      /* Chữ xanh đen khi cần tương phản trên nền sáng */
 }
 
 /* Trạng thái bình thường */
 #vbox_login {
-    -fx-background-color: -color-sapphire;
-    -fx-background-radius: 15; /* Thêm bo góc cho đẹp */
-    -fx-translate-y: 0;        /* Vị trí gốc */
+    -fx-background-color: -color-quicksand; /* Đổi sang nền xanh súng sẫm */
+    -fx-background-radius: 15;
+    -fx-translate-y: 0;
 }
 
 /* CHỈ SỬA PHẦN HOVER Ở ĐÂY */
 #vbox_login:hover {
-    /* 1. Đổi màu nền sáng hơn một chút so với Sapphire gốc */
-    -fx-background-color: #4a639a;
+    /* 1. Đổi màu nền sáng lên một chút thành tone xanh biển Cyber */
+    -fx-background-color: #222F56;
 
-    /* 2. Hiệu ứng bay lên: nhích nhẹ lên trên 4px */
+    /* 2. Hiệu ứng bay lên */
     -fx-translate-y: -4;
 
-    /* 3. Đổ bóng rộng và sâu hơn tạo cảm giác khối 3D đang nổi lên */
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 20, 0, 0, 8);
+    /* 3. Đổ bóng ma mị, phát sáng nhẹ dạng Neon Cyan */
+    -fx-effect: dropshadow(three-pass-box, rgba(45, 212, 191, 0.25), 20, 0, 0, 8);
 
-
+    -fx-border-color: -color-tomato-jam;
     -fx-border-width: 0.8;
     -fx-border-radius: 15;
-
-
 }
 
 .Scene1 {
-    -fx-background-color: -color-royal-blue;
+    -fx-background-color: -color-royal-blue; /* Header tối màu lục bảo */
 }
 .Scene2{
     -fx-background-color: -color-sapphire;
-
     -fx-border-radius: 15;
 }
 .Scene3{
@@ -49,28 +53,24 @@
     -fx-background-radius: 15;
 }
 .btn1{
-    -fx-background-color: -color-swan-wing;
-    -fx-text-fill: -color-royal-blue;
+    -fx-background-color: -color-blush-rose; /* Nút màu Xanh lá rực rỡ */
+    -fx-text-fill: -color-sapphire;         /* Chữ xanh đen sẫm tương phản cực cao */
     -fx-background-radius: 5;
     -fx-cursor: hand;
-
 }
-/* 2. Khi di chuột qua (Hover) - Làm màu đậm hơn một chút */
+/* 2. Khi di chuột qua (Hover) */
 .btn1:hover {
-    /* Bạn có thể dùng mã màu cố định hoặc chỉnh độ sáng */
-    -fx-background-color: #ffffff;
+    -fx-background-color: #34D399; /* Xanh lá sáng hơn */
 }
 
-/* 3. Khi nhấn giữ chuột (Pressed/Armed) - Làm màu đậm nhất */
+/* 3. Khi nhấn giữ chuột (Pressed/Armed) */
 .btn1:armed {
-    -fx-background-color: #ffa1b1;
+    -fx-background-color: #059669; /* Xanh lá sẫm lại */
 }
-
-
 
 .btn2 {
-    -fx-background-color: #e6f2ff;   /* xanh rất nhạt */
-    -fx-text-fill: #1e3a8a;          /* xanh đậm */
+    -fx-background-color: -color-swan-wing;  /* Nền xanh xám Slate */
+    -fx-text-fill: -color-tomato-jam;        /* Chữ màu Xanh Mint sáng */
 
     -fx-background-radius: 10;
     -fx-border-radius: 10;
@@ -86,40 +86,37 @@
 
 /* hover */
 .btn2:hover {
-    -fx-background-color: #cfe8ff;
-    -fx-text-fill: #1d4ed8;
+    -fx-background-color: -color-quicksand;
+    -fx-text-fill: -color-olive; /* Chuyển sang xanh Neon khi hover */
 
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 8, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 255, 153, 0.2), 8, 0, 0, 2);
 }
 
 /* khi nhấn */
 .btn2:pressed {
-    -fx-background-color: #93c5fd;
-    -fx-translate-y: 1; /* hiệu ứng nhấn xuống */
+    -fx-background-color: #111827;
+    -fx-translate-y: 1;
 }
-
-
 
 .btn3 {
     -fx-background-color: transparent;
-    -fx-border-color: -color-swan-wing;
+    -fx-border-color: -color-tomato-jam;
     -fx-border-width: 1.5;
     -fx-border-radius: 8;
-    -fx-text-fill: -color-swan-wing;
+    -fx-text-fill: -color-tomato-jam;
     -fx-cursor: hand;
 }
 
 .btn3:hover {
-    /* Khi hover thì lấp đầy màu trắng đục nhẹ */
-    -fx-background-color: rgba(245, 240, 233, 0.1);
-    -fx-border-color: #ffffff;
-    -fx-text-fill: #ffffff;
+    /* Khi hover lấp đầy màu xanh ngọc đục nhẹ */
+    -fx-background-color: rgba(45, 212, 191, 0.15);
+    -fx-border-color: #5EEAD4;
+    -fx-text-fill: #5EEAD4;
 }
 
 .btn3:armed {
-    -fx-background-color: rgba(245, 240, 233, 0.3);
+    -fx-background-color: rgba(45, 212, 191, 0.3);
 }
-
 
 .h3{
     -fx-font-size: 16;
@@ -128,14 +125,13 @@
     -fx-font-size: 30;
 }
 
-
 .small_window{
     -fx-background-size: 100% 100%;
 }
 
 .choice-box {
-    -fx-background-color: white;
-    -fx-border-color: #ccc;
+    -fx-background-color: -color-shellstone; /* Tuyệt đối không dùng white, đổi sang xanh tối */
+    -fx-border-color: -color-quicksand;
     -fx-border-radius: 8;
     -fx-background-radius: 8;
     -fx-padding: 5 10 5 10;
@@ -143,61 +139,60 @@
 
 /* text */
 .choice-box .label {
-    -fx-text-fill: #333;
+    -fx-text-fill: -color-tomato-jam;
     -fx-font-size: 14px;
 }
 
 /* nút mũi tên */
 .choice-box .arrow {
-    -fx-background-color: #666;
+    -fx-background-color: -color-blush-rose;
 }
 
 /* vùng dropdown */
 .choice-box .context-menu {
-    -fx-background-color: white;
-    -fx-border-color: #ccc;
+    -fx-background-color: -color-sapphire;
+    -fx-border-color: -color-blush-rose;
 }
 
 /* item trong dropdown */
 .choice-box .menu-item {
-    -fx-background-color: black;
+    -fx-background-color: -color-sapphire;
 }
 
 /* hover item */
 .choice-box .menu-item:hover {
-    -fx-background-color: #f0f0f0;
+    -fx-background-color: -color-quicksand;
 }
 .choice-box {
-    -fx-background-color: white;
-    -fx-border-color: #ddd;
+    -fx-background-color: -color-shellstone;
+    -fx-border-color: -color-quicksand;
     -fx-border-radius: 10;
     -fx-background-radius: 10;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 2);
 }
 
-
 .text-field {
-    -fx-background-color: white;
-    -fx-border-color: #e0e0e0;
+    -fx-background-color: #050B14; /* Xanh đen cực sẫm */
+    -fx-border-color: -color-quicksand;
     -fx-border-radius: 10;
     -fx-background-radius: 10;
 
     -fx-padding: 10 14;
     -fx-font-size: 14px;
+    -fx-text-fill: -text-on-dark; /* Chữ màu ngọc nhạt */
 }
 
 .text-field:focused {
-    -fx-border-color: #6C63FF; /* tím nhẹ */
-    -fx-effect: dropshadow(gaussian, rgba(108,99,255,0.2), 8, 0, 0, 2);
+    -fx-border-color: -color-princeton-orange; /* Viền xanh dương đại dương phát sáng */
+    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.4), 8, 0, 0, 2);
 }
-
 
 .title {
     -fx-font-size: 26px;
     -fx-font-weight: bold;
-    -fx-text-fill: #ffffff;
+    -fx-text-fill: -color-tomato-jam; /* Xanh ngọc nổi bần bật */
 
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 3, 0, 0, 1);
+    -fx-effect: dropshadow(gaussian, rgba(45, 212, 191, 0.2), 3, 0, 0, 1);
 }
 
 .bogoc{
@@ -207,7 +202,7 @@
 
 .btn-back {
     -fx-background-color: transparent;
-    -fx-text-fill: #555;
+    -fx-text-fill: #64748B; /* Màu xám xanh dịu */
 
     -fx-font-size: 14px;
     -fx-font-weight: bold;
@@ -216,105 +211,70 @@
 }
 
 .btn-back:hover {
-    -fx-text-fill: #000;
+    -fx-text-fill: -color-tomato-jam;
 }
-
 
 .Scene-Black{
-    -fx-background-color: black;
+    -fx-background-color: -color-sapphire;
 }
 .Scene-Back-1{
-    -fx-background-color: #383838;
+    -fx-background-color: -color-royal-blue;
 }
 .Scene-back-2{
-    -fx-background-color: #6e6d6d;
+    -fx-background-color: -color-quicksand;
 }
 .Scene-black-3{
-    -fx-background-color: #b5b5b5;
+    -fx-background-color: -color-swan-wing;
 }
 .Scene-black-4{
-    -fx-background-color: #fcfcfc;
+    -fx-background-color: #050B14;
 }
-
 
 .transparent{
     -fx-background-color: transparent;
 }
 
-
-
-
 /* Khi di chuột qua (Hover) */
 .toggle-button:hover {
-    -fx-background-color: #e0e0e0;
+    -fx-background-color: -color-quicksand;
 }
 
-/* Khi ĐANG ĐƯỢC CHỌN (Tối màu lại) */
+/* Khi ĐANG ĐƯỢC CHỌN */
 .toggle-button:selected {
-    -fx-background-color: #a0a0a0; /* Màu tối để báo hiệu đang chọn tool này */
+    -fx-background-color: -color-swan-wing;
 }
-
 
 .btn-transparent {
-    -fx-background-color: transparent; /* Làm nền trong suốt */
-    -fx-background-radius: 0;          /* Khử bo góc mặc định */
-    -fx-border-color: transparent;     /* Khử viền */
-    -fx-cursor: hand;                  /* Đổi con trỏ chuột thành hình bàn tay */
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
 }
 
-
 .label-super-bold {
-    /* 1. Chọn font có độ dày 'Black' hoặc 'Extra Bold' */
     -fx-font-family: "Archivo Black";
-
-
-
-    /* 3. Độ đậm tối đa */
     -fx-font-weight: 900;
-
-
-
-    /* 5. Ép khoảng cách dòng (để các chữ trông vuông và sát nhau hơn) */
     -fx-line-spacing: -10;
 }
 
-
-
 /* Khi di chuột qua (Hover) */
 .hover-mouse:hover {
-
-    /* 2. Hiệu ứng bay lên: nhích nhẹ lên trên 4px */
     -fx-translate-y: -4;
-
-
 }
 
-
 .text-field {
-    /* 1. Màu nền xám tối đặc trưng của Discord */
-    -fx-background-color: #1e1f22;
-
-    /* 2. Màu chữ trắng xám nhẹ */
-    -fx-text-fill: #dbdee1;
-
-    /* 3. Bo góc (Discord dùng bo góc nhỏ, rất hiện đại) */
+    -fx-background-color: #050B14;
+    -fx-text-fill: -text-on-dark;
     -fx-background-radius: 3;
-
-    /* 4. Padding để chữ không dính sát viền */
     -fx-padding: 10;
-
-    /* 5. Font chữ (nên dùng Inter hoặc Whitney nếu có) */
     -fx-font-family: "Segoe UI", Helvetica, Arial, sans-serif;
     -fx-font-size: 14px;
 }
 
 /* HIỆU ỨNG KHI CLICK CHUỘT VÀO (FOCUS) */
 .text-field:focused {
-    /* Giữ màu nền cũ */
-    -fx-background-color: #1e1f22;
-
-    /* Tạo viền màu xanh Discord nổi bật khi focus */
-    -fx-border-color: #00a8fc;
+    -fx-background-color: #050B14;
+    -fx-border-color: -color-princeton-orange;
     -fx-border-width: 1;
     -fx-border-radius: 3;
 }
@@ -325,36 +285,35 @@
 }
 
 .hero-section {
-    -fx-background-color: linear-gradient(to right, #00c4cc, #7d2ae8);
+    -fx-background-color: linear-gradient(to right, -color-sapphire, -color-quicksand);
 }
 
 /* Nav Bar scale up */
 .logo-text2 {
     -fx-font-size: 32px;
     -fx-font-weight: bold;
-    -fx-text-fill: #007acc; /* Màu xanh VS Code mặc định */
-    -fx-cursor: hand;       /* Hiện bàn tay khi rà vào */
+    -fx-text-fill: -color-blush-rose;
+    -fx-cursor: hand;
 }
 
 .logo-text2:hover {
-    -fx-text-fill: #005a9e; /* Màu xanh đậm hơn khi hover */
-    /* Hoặc thêm hiệu ứng phát sáng nhẹ (Glow) */
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 122, 204, 0.5), 10, 0, 0, 0);
+    -fx-text-fill: -color-tomato-jam;
+    -fx-effect: dropshadow(three-pass-box, rgba(45, 212, 191, 0.5), 10, 0, 0, 0);
 }
 
 .sub-logo {
-    -fx-text-fill: white;
+    -fx-text-fill: -color-tomato-jam;
     -fx-font-size: 22px;
 }
 
 .nav-link {
-    -fx-text-fill: white;
+    -fx-text-fill: -color-tomato-jam;
     -fx-font-size: 18px;
 }
 
 .btn-create {
-    -fx-background-color: #5d34a4;
-    -fx-text-fill: white;
+    -fx-background-color: -color-blush-rose;
+    -fx-text-fill: -color-sapphire;
     -fx-font-size: 18px;
     -fx-background-radius: 8;
     -fx-padding: 12 25;
@@ -362,116 +321,120 @@
 
 /* Search Area scale up */
 .main-title {
-    -fx-text-fill: white;
-    -fx-font-size: 56px; /* Chữ to hơn cho màn hình rộng */
+    -fx-text-fill: -text-on-dark;
+    -fx-font-size: 56px;
     -fx-font-weight: 300;
 }
 
 .search-container {
-    -fx-background-color: white;
+    -fx-background-color: -color-shellstone;
     -fx-background-radius: 8;
     -fx-padding: 8;
+    -fx-border-color: -color-quicksand;
+    -fx-border-radius: 8;
 }
 
 .search-field {
     -fx-background-color: transparent;
     -fx-font-size: 20px;
     -fx-padding: 15;
+    -fx-text-fill: -text-on-dark;
 }
 
 /* Trạng thái bình thường bạn đã gửi */
 .btn-search {
-    -fx-background-color: #6cb221;
-    -fx-text-fill: white;
+    -fx-background-color: -color-blush-rose;
+    -fx-text-fill: -color-sapphire;
     -fx-font-size: 20px;
     -fx-font-weight: bold;
     -fx-padding: 15 45;
     -fx-background-radius: 6;
-    -fx-cursor: hand; /* Thêm bàn tay khi rà vào cho đúng điệu button */
+    -fx-cursor: hand;
 }
 
-/* KHI DI CHUỘT VÀO (HOVER): Màu xanh sẽ đậm hơn */
+/* KHI DI CHUỘT VÀO (HOVER) */
 .btn-search:hover {
-    -fx-background-color: #5a961b; /* Màu xanh lá đậm hơn một tông */
-    /* Thêm một chút bóng đổ nhẹ cho nút nổi bật hẳn lên */
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 0);
+    -fx-background-color: -color-tomato-jam;
+    -fx-effect: dropshadow(three-pass-box, rgba(45, 212, 191, 0.4), 10, 0, 0, 0);
 }
 
-/* KHI ẤN GIỮ CHUỘT (PRESSED): Màu cực đậm để tạo cảm giác nút bị lún xuống */
+/* KHI ẤN GIỮ CHUỘT (PRESSED) */
 .btn-search:pressed {
-    -fx-background-color: #4a7c16;
-    -fx-scale-x: 0.98; /* Co nhẹ nút lại một chút tạo hiệu ứng vật lý */
+    -fx-background-color: #0D9488;
+    -fx-scale-x: 0.98;
     -fx-scale-y: 0.98;
 }
 
 /* Cards Section scale up */
 .cards-section {
-    -fx-background-color: #f4f7f8;
+    -fx-background-color: -color-sapphire;
 }
 
 .info-card {
-    -fx-background-color: white;
-    -fx-padding: 60; /* Tăng padding trong card */
+    -fx-background-color: -color-shellstone;
+    -fx-padding: 60;
     -fx-background-radius: 12;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 20, 0, 0, 5);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 20, 0, 0, 5);
     -fx-spacing: 25;
-    -fx-min-width: 400; /* Đảm bảo card đủ to */
+    -fx-min-width: 400;
 }
 
 .card-title {
     -fx-font-size: 28px;
     -fx-font-weight: bold;
-    -fx-text-fill: #333;
+    -fx-text-fill: -color-tomato-jam;
 }
 
 .card-desc {
-    -fx-fill: #666;
+    -fx-fill: -text-on-dark;
     -fx-font-size: 18px;
 }
 
-
-/* Tổng thể nền tối */
+/* Tổng thể nền tối màu lục bảo / dương */
 .main-container {
-    -fx-background-color: #121212;
+    -fx-background-color: -color-sapphire;
     -fx-font-family: "Segoe UI", system-ui;
 }
 
 .header {
-    -fx-background-color: #1E1E1E;
+    -fx-background-color: -color-royal-blue;
+    -fx-border-color: -color-blush-rose;
+    -fx-border-width: 0 0 2 0;
 }
 
 .header-title {
-    -fx-text-fill: #A7D3A6; /* Xanh Pastel */
+    -fx-text-fill: -text-on-dark;
     -fx-font-size: 32px;
     -fx-font-weight: bold;
 }
 
 /* Card nội dung */
 .content-card {
-    -fx-background-color: #1E1E1E;
+    -fx-background-color: -color-shellstone;
     -fx-background-radius: 20;
-    -fx-border-color: rgba(167, 211, 166, 0.2); /* Viền xanh pastel nhạt */
+    -fx-border-color: rgba(16, 185, 129, 0.2);
     -fx-border-radius: 20;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 15, 0, 0, 5);
 }
 
 /* Khung ảnh */
 .image-container {
-    -fx-background-color: #2A2A2A;
+    -fx-background-color: -color-quicksand;
     -fx-background-radius: 15;
-    -fx-border-color: #A7D3A6;
+    -fx-border-color: -color-blush-rose;
     -fx-border-width: 1;
     -fx-border-radius: 15;
 }
 
 .image-placeholder {
-    -fx-text-fill: #B0B0B0;
+    -fx-text-fill: -text-on-dark;
     -fx-font-size: 24px;
 }
 
 /* Nút điều hướng ảnh */
 .nav-button {
-    -fx-background-color: #A7D3A6;
-    -fx-text-fill: #121212;
+    -fx-background-color: -color-blush-rose;
+    -fx-text-fill: -color-sapphire;
     -fx-font-size: 24px;
     -fx-background-radius: 50;
     -fx-cursor: hand;
@@ -479,56 +442,56 @@
 
 /* Text thông tin */
 .label-title {
-    -fx-text-fill: white;
+    -fx-text-fill: -color-tomato-jam;
     -fx-font-size: 22px;
 }
 
 .label-value {
-
     -fx-font-size: 22px;
+    -fx-text-fill: -text-on-dark;
 }
 
 .label-value-highlight {
-    -fx-text-fill: #A7D3A6;
+    -fx-text-fill: -color-princeton-orange;
     -fx-font-size: 24px;
     -fx-font-weight: bold;
 }
 
 .section-title {
-    -fx-text-fill: white;
+    -fx-text-fill: -color-tomato-jam;
     -fx-font-size: 24px;
     -fx-font-weight: bold;
 }
 
 /* Box người dẫn đầu */
 .leader-box {
-    -fx-background-color: #2A2A2A;
+    -fx-background-color: -color-quicksand;
     -fx-padding: 20;
     -fx-background-radius: 10;
-    -fx-border-color: #A7D3A6;
-    -fx-border-width: 0 0 0 5; /* Border trái làm điểm nhấn */
+    -fx-border-color: -color-blush-rose;
+    -fx-border-width: 0 0 0 5;
 }
 
 .leader-name {
-    -fx-text-fill: #A7D3A6;
+    -fx-text-fill: -color-blush-rose;
     -fx-font-size: 22px;
     -fx-font-weight: bold;
 }
 
 /* Khung Chat */
 .chat-area {
-    -fx-control-inner-background: #2A2A2A;
-    -fx-text-fill: white;
+    -fx-control-inner-background: -color-shellstone;
+    -fx-text-fill: -text-on-dark;
     -fx-font-size: 18px;
     -fx-background-color: transparent;
-    -fx-border-color: #333333;
+    -fx-border-color: -color-quicksand;
     -fx-border-radius: 10;
 }
 
 /* Nút bấm Đấu giá & Bot */
 .btn-bid {
-    -fx-background-color: #A7D3A6;
-    -fx-text-fill: #121212;
+    -fx-background-color: -color-blush-rose;
+    -fx-text-fill: -color-sapphire;
     -fx-font-size: 24px;
     -fx-font-weight: bold;
     -fx-padding: 15 40;
@@ -537,13 +500,13 @@
 }
 
 .btn-bid:hover {
-    -fx-background-color: #8fb88e;
+    -fx-background-color: -color-tomato-jam;
 }
 
 .btn-bot {
     -fx-background-color: transparent;
-    -fx-text-fill: #A7D3A6;
-    -fx-border-color: #A7D3A6;
+    -fx-text-fill: -color-blush-rose;
+    -fx-border-color: -color-blush-rose;
     -fx-border-width: 2;
     -fx-font-size: 24px;
     -fx-font-weight: bold;
@@ -553,63 +516,58 @@
 }
 
 .btn-bot:hover {
-    -fx-background-color: rgba(167, 211, 166, 0.1);
+    -fx-background-color: rgba(16, 185, 129, 0.1);
 }
-/* BẢNG MÀU:
-   - Đen chủ đạo: #121212
-   - Vàng cacton (Kraft): #D4A373
-   - Đen xám (Card): #1E1E1E
-*/
 
 .main-root {
-    -fx-background-color: #121212;
+    -fx-background-color: -color-sapphire;
     -fx-font-family: "Segoe UI", system-ui;
 }
 
 /* Header */
 .header {
-    -fx-background-color: #000000;
-    -fx-border-color: #D4A373;
-    -fx-border-width: 0 0 2 0; /* Gạch chân màu vàng cacton */
+    -fx-background-color: -color-royal-blue;
+    -fx-border-color: -color-princeton-orange;
+    -fx-border-width: 0 0 2 0;
 }
 
 .logo-text {
-    -fx-text-fill: #D4A373;
+    -fx-text-fill: -text-on-dark;
     -fx-font-size: 36px;
     -fx-font-weight: 900;
 }
 
 .search-box {
-    -fx-background-color: #1E1E1E;
+    -fx-background-color: -color-shellstone;
     -fx-background-radius: 5;
-    -fx-border-color: #333;
+    -fx-border-color: -color-quicksand;
     -fx-border-radius: 5;
 }
 
 .search-input {
     -fx-background-color: transparent;
-    -fx-text-fill: white;
+    -fx-text-fill: -text-on-dark;
     -fx-font-size: 16px;
     -fx-padding: 10;
 }
 
 .btn-search2 {
-    -fx-background-color: #D4A373;
-    -fx-text-fill: black;
+    -fx-background-color: -color-blush-rose;
+    -fx-text-fill: -color-sapphire;
     -fx-cursor: hand;
     -fx-padding: 10 20;
 }
 
 .nav-item {
-    -fx-text-fill: #B0B0B0;
+    -fx-text-fill: #94A3B8; /* Màu xám xanh nhã nhặn */
     -fx-font-size: 16px;
     -fx-cursor: hand;
 }
 
 .btn-cart {
     -fx-background-color: transparent;
-    -fx-border-color: #D4A373;
-    -fx-text-fill: #D4A373;
+    -fx-border-color: -text-on-dark;
+    -fx-text-fill: -text-on-dark;
     -fx-padding: 10 25;
     -fx-background-radius: 20;
     -fx-border-radius: 20;
@@ -618,11 +576,13 @@
 
 /* Sidebar */
 .sidebar {
-    -fx-background-color: #0A0A0A;
+    -fx-background-color: -color-shellstone;
+    -fx-border-color: -color-quicksand;
+    -fx-border-width: 0 1 0 0;
 }
 
 .sidebar-title {
-    -fx-text-fill: #D4A373;
+    -fx-text-fill: -color-tomato-jam;
     -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-letter-spacing: 2px;
@@ -630,7 +590,7 @@
 
 .sidebar-link, .sidebar-link-active {
     -fx-background-color: transparent;
-    -fx-text-fill: #B0B0B0;
+    -fx-text-fill: -text-on-dark;
     -fx-font-size: 17px;
     -fx-alignment: center-left;
     -fx-padding: 12 15;
@@ -638,13 +598,14 @@
 }
 
 .sidebar-link-active {
-    -fx-text-fill: black;
-    -fx-background-color: #D4A373;
+    -fx-text-fill: -color-sapphire;
+    -fx-background-color: -color-blush-rose;
     -fx-background-radius: 5;
 }
 
 .sidebar-link:hover {
-    -fx-text-fill: #D4A373;
+    -fx-text-fill: -color-sapphire;
+    -fx-background-color: -color-tomato-jam;
 }
 
 /* Main Content & Banner */
@@ -654,26 +615,26 @@
 }
 
 .hero-banner {
-    -fx-background-color: linear-gradient(to right, #D4A373, #121212);
+    -fx-background-color: linear-gradient(to right, -color-royal-blue, -color-quicksand);
     -fx-background-radius: 15;
 }
 
 .hero-tag {
-    -fx-text-fill: black;
+    -fx-text-fill: -text-on-dark;
     -fx-font-weight: bold;
-    -fx-background-color: white;
+    -fx-background-color: -color-princeton-orange;
     -fx-padding: 5 15;
 }
 
 .hero-title {
-    -fx-text-fill: white;
+    -fx-text-fill: -color-tomato-jam;
     -fx-font-size: 48px;
     -fx-font-weight: 900;
 }
 
 .btn-hero {
-    -fx-background-color: black;
-    -fx-text-fill: white;
+    -fx-background-color: -color-tomato-jam;
+    -fx-text-fill: -color-sapphire;
     -fx-font-size: 18px;
     -fx-padding: 15 40;
     -fx-background-radius: 5;
@@ -681,115 +642,123 @@
 }
 
 .section-title {
-    -fx-text-fill: white;
+    -fx-text-fill: -color-tomato-jam;
     -fx-font-size: 28px;
     -fx-font-weight: bold;
 }
 
 /* Product Card */
 .product-card {
-    -fx-background-color: #1E1E1E;
+    -fx-background-color: -color-shellstone;
     -fx-background-radius: 10;
-    -fx-border-color: #333;
+    -fx-border-color: -color-quicksand;
     -fx-border-radius: 10;
     -fx-overflow: hidden;
 }
 
 .product-card:hover {
-    -fx-border-color: #D4A373;
-    -fx-effect: dropshadow(three-pass-box, rgba(212, 163, 115, 0.2), 15, 0, 0, 0);
+    -fx-border-color: -color-blush-rose;
+    -fx-effect: dropshadow(three-pass-box, rgba(16, 185, 129, 0.2), 15, 0, 0, 0);
 }
 
 .product-name {
-    -fx-text-fill: white;
+    -fx-text-fill: -text-on-dark;
     -fx-font-size: 18px;
     -fx-font-weight: bold;
 }
 
+/* Đổi chấm kết nối mạng "Connected" sang màu xanh Olive dạ quang rực rỡ */
+.status-connected, .connected-dot {
+    -fx-background-color: -color-olive;
+    -fx-background-radius: 50;
+    -fx-effect: dropshadow(gaussian, -color-olive, 8, 0, 0, 0);
+}
+
 .product-price {
-    -fx-text-fill: #D4A373;
+    -fx-text-fill: -color-princeton-orange;
     -fx-font-size: 20px;
     -fx-font-weight: bold;
 }
 
 .btn-add-cart {
-    -fx-background-color: #333;
-    -fx-text-fill: white;
+    -fx-background-color: -color-quicksand;
+    -fx-text-fill: -color-tomato-jam;
     -fx-padding: 10;
     -fx-cursor: hand;
     -fx-background-radius: 5;
 }
 
 .btn-add-cart:hover {
-    -fx-background-color: #D4A373;
-    -fx-text-fill: black;
+    -fx-background-color: -color-blush-rose;
+    -fx-text-fill: -color-sapphire;
 }
-/* Màu bổ sung cho phong cách Kraft */
+
+/* Màu bổ sung cho phong cách mới */
 .header-sub-title {
-    -fx-text-fill: #B0B0B0;
+    -fx-text-fill: -text-on-dark;
     -fx-font-size: 24px;
 }
 
 .content-card {
-    -fx-background-color: #1E1E1E;
+    -fx-background-color: -color-shellstone;
     -fx-background-radius: 15;
-    -fx-border-color: #333;
+    -fx-border-color: -color-quicksand;
     -fx-border-radius: 15;
 }
 
-/* Các Input field màu tối */
+/* Các Input field màu tối huyền bí */
 .custom-text-field, .custom-text-area, .custom-combo-box {
-    -fx-background-color: #2A2A2A;
-    -fx-text-fill: white;
-    -fx-border-color: #444;
+    -fx-background-color: #050B14;
+    -fx-text-fill: -text-on-dark;
+    -fx-border-color: -color-quicksand;
     -fx-border-radius: 5;
     -fx-padding: 12;
     -fx-font-size: 16px;
 }
 
 .custom-text-field:focused {
-    -fx-border-color: #D4A373; /* Vàng carton khi chọn */
+    -fx-border-color: -color-princeton-orange;
 }
 
 /* Khu vực upload ảnh */
 .image-upload-area {
-    -fx-background-color: #2A2A2A;
-    -fx-border-color: #D4A373;
+    -fx-background-color: -color-quicksand;
+    -fx-border-color: -color-blush-rose;
     -fx-border-style: dashed;
     -fx-border-radius: 10;
     -fx-cursor: hand;
 }
 
 .upload-text {
-    -fx-text-fill: #D4A373;
+    -fx-text-fill: -color-blush-rose;
     -fx-font-size: 18px;
 }
 
-/* Table View phong cách đen vàng */
+/* Table View phong cách Cyber */
 .custom-table {
     -fx-background-color: transparent;
-    -fx-border-color: #333;
+    -fx-border-color: -color-quicksand;
 }
 
 .custom-table .column-header {
-    -fx-background-color: #D4A373;
+    -fx-background-color: -color-royal-blue;
 }
 
 .custom-table .column-header .label {
-    -fx-text-fill: black;
+    -fx-text-fill: -color-tomato-jam;
     -fx-font-weight: bold;
 }
 
 .custom-table .cell {
-    -fx-background-color: #1E1E1E;
-    -fx-text-fill: white;
-    -fx-border-color: #2A2A2A;
+    -fx-background-color: -color-shellstone;
+    -fx-text-fill: -text-on-dark;
+    -fx-border-color: -color-quicksand;
 }
 
 /* Button */
 .btn-submit {
-    -fx-background-color: #D4A373;
-    -fx-text-fill: black;
+    -fx-background-color: -color-blush-rose;
+    -fx-text-fill: -color-sapphire;
     -fx-font-weight: bold;
     -fx-padding: 15 40;
     -fx-font-size: 18px;
@@ -797,40 +766,40 @@
 }
 
 .btn-cancel {
-    -fx-background-color: #333;
-    -fx-text-fill: white;
+    -fx-background-color: -color-swan-wing;
+    -fx-text-fill: -text-on-dark;
     -fx-padding: 15 40;
 }
 
-/* Nền tối toàn màn hình */
+/* Nền sẫm toàn màn hình */
 .main-container {
-    -fx-background-color: #0f0f0f;
+    -fx-background-color: -color-sapphire;
 }
 
 /* Khung Setting Card */
 .setting-card {
-    -fx-background-color: #1e1e1e;
+    -fx-background-color: -color-shellstone;
     -fx-background-radius: 8;
-    -fx-border-color: #333333;
+    -fx-border-color: -color-quicksand;
     -fx-border-width: 1;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 20, 0, 0, 10);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 20, 0, 0, 10);
 }
 
 /* Tiêu đề chính */
 .header-title {
-    -fx-text-fill: #ffffff;
+    -fx-text-fill: -text-on-dark;
     -fx-font-size: 24px;
     -fx-font-weight: bold;
 }
 
 .header-subtitle {
-    -fx-text-fill: #858585;
+    -fx-text-fill: #64748B;
     -fx-font-size: 13px;
 }
 
 /* Tiêu đề từng mục */
 .section-header {
-    -fx-text-fill: #007acc; /* Màu xanh đặc trưng VS Code */
+    -fx-text-fill: -color-tomato-jam;
     -fx-font-weight: bold;
     -fx-font-size: 12px;
     -fx-padding: 10 0 0 0;
@@ -838,8 +807,8 @@
 
 /* Nút chức năng chung */
 .action-button {
-    -fx-background-color: #252526;
-    -fx-text-fill: #cccccc;
+    -fx-background-color: -color-quicksand;
+    -fx-text-fill: -text-on-dark;
     -fx-background-radius: 4;
     -fx-padding: 12 15;
     -fx-cursor: hand;
@@ -847,21 +816,21 @@
 }
 
 .action-button:hover {
-    -fx-background-color: #2d2d2d;
-    -fx-text-fill: #ffffff;
-    -fx-border-color: #007acc;
+    -fx-background-color: -color-swan-wing;
+    -fx-text-fill: -color-tomato-jam;
+    -fx-border-color: -color-blush-rose;
     -fx-border-radius: 4;
 }
 
 /* Thông tin phiên bản & trạng thái */
 .version-label {
-    -fx-text-fill: #4ec9b0; /* Màu xanh lá đặc trưng mã code */
+    -fx-text-fill: -color-tomato-jam;
     -fx-font-family: "Consolas", monospace;
 }
 
 .status-tag {
-    -fx-background-color: #0e639c;
-    -fx-text-fill: white;
+    -fx-background-color: -color-blush-rose;
+    -fx-text-fill: -color-sapphire;
     -fx-font-size: 10px;
     -fx-padding: 2 5;
     -fx-background-radius: 3;
@@ -869,185 +838,186 @@
 
 /* Nút Đăng xuất */
 .logout-button {
-    -fx-background-color: #3e3e3e;
-    -fx-text-fill: white;
+    -fx-background-color: -color-quicksand;
+    -fx-text-fill: -color-tomato-jam;
     -fx-padding: 12;
     -fx-cursor: hand;
     -fx-font-weight: bold;
 }
 
 .logout-button:hover {
-    -fx-background-color: #4e4e4e;
+    -fx-background-color: -color-swan-wing;
 }
 
-/* Nút Xóa tài khoản (Màu đỏ cảnh báo) */
+/* Nút Xóa tài khoản */
 .delete-account-button {
     -fx-background-color: transparent;
-    -fx-border-color: #f44747;
+    -fx-border-color: #EF4444; /* Màu đỏ cảnh báo */
     -fx-border-radius: 4;
-    -fx-text-fill: #f44747;
+    -fx-text-fill: #EF4444;
     -fx-padding: 10;
     -fx-cursor: hand;
 }
 
 .delete-account-button:hover {
-    -fx-background-color: #f44747;
-    -fx-text-fill: white;
-}
-/* Container chính với hiệu ứng phát sáng viền */
-.main-container {
-    -fx-background-color: #080808;
-    -fx-border-color: #7a22ff;
-    -fx-border-width: 1.5;
-    -fx-effect: dropshadow(three-pass-box, rgba(122, 34, 255, 0.4), 20, 0, 0, 0);
+    -fx-background-color: #EF4444;
+    -fx-text-fill: -color-sapphire;
 }
 
-/* Tạo mảng màu tím chéo dùng -fx-clip hoặc hình học */
+/* Container chính với hiệu ứng mượt mà nhã nhặn */
+.main-container {
+    -fx-background-color: -color-sapphire;
+    -fx-border-color: -color-quicksand;
+    -fx-border-width: 1.5;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 20, 0, 0, 0);
+}
+
+/* Tạo mảng màu chéo dạng Cyberpunk */
 .purple-side-bg {
-    -fx-background-color: linear-gradient(to bottom right, #5e11ff, #1a004d);
-    /* Đây là thủ thuật tạo hình chéo mà không dùng Polygon trong FXML */
+    -fx-background-color: linear-gradient(to bottom right, -color-royal-blue, -color-sapphire);
     -fx-shape: "M 150 0 L 500 0 L 500 500 L 0 500 Z";
 }
 
 .title-login {
-    -fx-text-fill: white;
+    -fx-text-fill: -color-tomato-jam;
     -fx-font-size: 36px;
     -fx-font-weight: bold;
 }
 
 .label-input {
-    -fx-text-fill: #bbbbbb;
+    -fx-text-fill: #94A3B8;
     -fx-font-size: 13px;
 }
 
 .flat-field {
     -fx-background-color: transparent;
-    -fx-border-color: transparent transparent #555555 transparent;
+    -fx-border-color: transparent transparent -color-quicksand transparent;
     -fx-border-width: 0 0 1 0;
-    -fx-text-fill: white;
+    -fx-text-fill: -text-on-dark;
     -fx-padding: 5 0 5 0;
 }
 
 .flat-field:focused {
-    -fx-border-color: transparent transparent #7a22ff transparent;
+    -fx-border-color: transparent transparent -color-tomato-jam transparent;
 }
 
 .btn-login {
-    -fx-background-color: linear-gradient(to right, #6a11cb, #2575fc);
+    -fx-background-color: linear-gradient(to right, -color-blush-rose, -color-princeton-orange);
     -fx-background-radius: 20;
-    -fx-text-fill: white;
+    -fx-text-fill: -color-sapphire;
     -fx-font-weight: bold;
     -fx-cursor: hand;
 }
 
 .btn-login:hover {
-    -fx-effect: dropshadow(three-pass-box, #2575fc, 10, 0, 0, 0);
+    -fx-effect: dropshadow(three-pass-box, rgba(16, 185, 129, 0.4), 10, 0, 0, 0);
 }
 
 .welcome-main {
-    -fx-text-fill: white;
+    -fx-text-fill: -color-tomato-jam;
     -fx-font-size: 45px;
     -fx-font-weight: 900;
 }
 
 .welcome-sub {
-    -fx-text-fill: white;
+    -fx-text-fill: -color-blush-rose;
     -fx-font-size: 38px;
     -fx-font-weight: bold;
 }
 
 .welcome-desc {
-    -fx-text-fill: #e0e0e0;
+    -fx-text-fill: #94A3B8;
     -fx-font-size: 14px;
 }
 
-.small-text { -fx-text-fill: #888888; }
-.link-text { -fx-text-fill: #7a22ff; -fx-font-weight: bold; }
-.msg-label { -fx-text-fill: #ff4444; -fx-font-size: 11px; }
-/* Trang trí bên trái cho Register (Đảo ngược so với Login) */
+.small-text { -fx-text-fill: #94A3B8; }
+.link-text { -fx-text-fill: -color-tomato-jam; -fx-font-weight: bold; }
+.msg-label { -fx-text-fill: #EF4444; -fx-font-size: 11px; }
+
+/* Trang trí bên trái cho Register */
 .purple-side-register {
-    -fx-background-color: linear-gradient(to bottom left, #5e11ff, #1a004d);
+    -fx-background-color: linear-gradient(to bottom left, -color-royal-blue, -color-sapphire);
     -fx-shape: "M 0 0 L 400 0 L 300 600 L 0 600 Z";
 }
 
 /* Nút quay lại dạng viền (Outline) */
 .btn-outline {
     -fx-background-color: transparent;
-    -fx-border-color: white;
+    -fx-border-color: -color-tomato-jam;
     -fx-border-radius: 20;
-    -fx-text-fill: white;
+    -fx-text-fill: -color-tomato-jam;
     -fx-padding: 8 25 8 25;
     -fx-cursor: hand;
 }
 
 .btn-outline:hover {
-    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-color: rgba(45, 212, 191, 0.1);
 }
 
-/* Custom cho ChoiceBox */
+/* Custom cho ChoiceBox sáng sủa */
 .custom-choice-box {
-    -fx-background-color: #1a1a1a;
-    -fx-mark-color: #7a22ff;
-    -fx-border-color: #444444;
+    -fx-background-color: -color-shellstone;
+    -fx-mark-color: -color-tomato-jam;
+    -fx-border-color: -color-quicksand;
     -fx-border-radius: 5;
-    -fx-text-fill: white;
+    -fx-text-fill: -text-on-dark;
 }
 
 .custom-choice-box .label {
-    -fx-text-fill: white;
+    -fx-text-fill: -text-on-dark;
 }
 
 .custom-choice-box .context-menu {
-    -fx-background-color: #1a1a1a;
+    -fx-background-color: -color-sapphire;
 }
 
 .custom-choice-box .menu-item:focused {
-    -fx-background-color: #7a22ff;
+    -fx-background-color: -color-blush-rose;
 }
 
 .small-text-dim {
-    -fx-text-fill: #666666;
+    -fx-text-fill: #64748B;
     -fx-font-size: 11px;
 }
-/* 1. Chữ hiển thị ở ô chính (giống màu xám mờ của chữ VD: MacBook...) */
+
+/* 1. Chữ hiển thị ở ô chính */
 .combo-box > .list-cell,
 .choice-box > .label,
 .custom-combo-box > .list-cell,
 .custom-choice-box > .label {
-    -fx-text-fill: #858585 !important;
+    -fx-text-fill: -text-on-dark !important;
     -fx-font-weight: normal !important;
 }
-/* 2. Nền của cái bảng menu khi bấm sổ xuống (Màu xám tối) */
+/* 2. Nền của cái bảng menu khi bấm sổ xuống */
 .combo-box-popup .list-view,
 .choice-box .context-menu {
-    -fx-background-color: #2A2A2A !important;
-    -fx-border-color: #444444 !important;
+    -fx-background-color: -color-sapphire !important;
+    -fx-border-color: -color-quicksand !important;
     -fx-padding: 2;
 }
 /* 3. Từng dòng (item) bên trong menu sổ xuống */
 .combo-box-popup .list-cell,
 .choice-box .menu-item {
-    -fx-background-color: #2A2A2A !important;
-    -fx-text-fill: white !important; /* Chữ màu trắng nổi bật trên nền xám */
+    -fx-background-color: -color-sapphire !important;
+    -fx-text-fill: -text-on-dark !important;
     -fx-padding: 8 12;
 }
 /* Đặc trị cho ChoiceBox Label bên trong menu */
 .choice-box .menu-item > .label {
-    -fx-text-fill: white !important;
+    -fx-text-fill: -text-on-dark !important;
 }
-/* 4. Hiệu ứng khi lướt chuột (Hover) vào từng dòng trong menu */
+/* 4. Hiệu ứng khi lướt chuột (Hover) */
 .combo-box-popup .list-cell:hover,
 .combo-box-popup .list-cell:filled:selected,
 .choice-box .menu-item:hover,
 .choice-box .menu-item:focused {
-    -fx-background-color: #38bdf8 !important; /* Nền highlight xanh dương */
+    -fx-background-color: -color-blush-rose !important;
     -fx-cursor: hand !important;
 }
-/* Đảm bảo chữ vẫn giữ màu trắng khi bị highlight */
+/* Đảm bảo chữ tự động tương phản khi được chọn */
 .combo-box-popup .list-cell:hover,
 .combo-box-popup .list-cell:filled:selected,
 .choice-box .menu-item:hover > .label,
 .choice-box .menu-item:focused > .label {
-    -fx-text-fill: white !important;
+    -fx-text-fill: -color-sapphire !important;
 }
-/* Tận dụng lại các class Title, Flat-field, Btn-login từ file Login cũ */

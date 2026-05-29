@@ -5,16 +5,11 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox prefHeight="1080.0" prefWidth="1831.0"
-      style="-fx-background-image: url('com/auction/client/view/cactong.png'); -fx-background-size: cover; -fx-background-position: center; -fx-background-repeat: no-repeat;"
-      styleClass="main-root" stylesheets="@style.css"
-      xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.auction.client.controller.shop.ShopSellController">
+<VBox prefHeight="1080.0" prefWidth="1831.0" style="-fx-background-image: url('com/auction/client/view/cactong.png'); -fx-background-size: cover; -fx-background-position: center; -fx-background-repeat: no-repeat;" styleClass="main-root" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.shop.ShopSellController">
     <children>
         <HBox alignment="CENTER_LEFT" prefHeight="100.0" spacing="20.0" styleClass="header">
             <children>
@@ -22,7 +17,6 @@
                 <Label styleClass="header-sub-title" text="&gt; Sản phẩm chờ đăng bán" />
                 <Region HBox.hgrow="ALWAYS" />
                 <Button onAction="#handleBackClicked" prefHeight="45.0" prefWidth="103.0" styleClass="btn3" text="Quay lại" />
-                <TextField promptText="Tìm trong kho..." styleClass="search-input-small" />
             </children>
             <padding>
                 <Insets left="60.0" right="60.0" />
@@ -51,7 +45,6 @@
                 <HBox alignment="CENTER_RIGHT" spacing="20.0">
                     <children>
                         <Label fx:id="totalLabel" styleClass="label-value" text="Tổng cộng: 0 sản phẩm đang chờ" />
-                        <Button styleClass="btn-submit" text="Đăng sản phẩm đã chọn lên Auction" />
                     </children>
                 </HBox>
             </children>

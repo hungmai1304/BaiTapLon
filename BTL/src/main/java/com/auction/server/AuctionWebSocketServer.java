@@ -4,7 +4,7 @@ import com.auction.common.model.product.Product;
 import com.auction.common.model.product.ProductStatus;
 import com.auction.common.model.auction.Auction;
 import com.auction.server.model.ServerContext;
-import com.google.gson.*; // Thay đổi để dùng GsonBuilder
+import com.google.gson.*;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
@@ -20,15 +20,37 @@ import com.auction.server.service.AuctionManager;
 
 public class AuctionWebSocketServer extends WebSocketServer {
 
-    private final Gson gson; // Bỏ final khởi tạo trực tiếp
+    private final Gson gson;
     private final MessageDispatcher dispatcher;
     private Timer auctionTimer;
 
-    public AuctionWebSocketServer(int port) {
-        super(new InetSocketAddress(port));
+    // =========================================================================
+    // 1. THAY ĐỔI CHÍNH: Thêm constructor nhận vào InetSocketAddress để chạy Tailscale/Render linh hoạt
+    // =========================================================================
+    public AuctionWebSocketServer(InetSocketAddress address) {
+        super(address);
+        this.gson = initGson();
 
-        // KHỞI TẠO GSON CÓ TYPE ADAPTER CHO LOCALDATETIME
-        this.gson = new GsonBuilder()
+        // Khởi tạo ServerContext
+        ServerContext context = ServerContext.getInstance();
+        context.initData(this);
+
+        // Truyền gson đã cấu hình vào dispatcher
+        dispatcher = new MessageDispatcher(gson, context);
+    }
+
+    // =========================================================================
+    // 2. GIỮ LẠI (TÙY CHỌN): Constructor cũ nhận vào port để không làm gãy code chỗ khác (nếu có)
+    // =========================================================================
+    public AuctionWebSocketServer(int port) {
+        this(new InetSocketAddress(port));
+    }
+
+    // =========================================================================
+    // 3. TÁCH BIỆT: Hàm khởi tạo Gson để tái sử dụng ở các constructor, tránh trùng lặp code
+    // =========================================================================
+    private Gson initGson() {
+        return new GsonBuilder()
                 .registerTypeAdapter(LocalDateTime.class, new JsonSerializer<LocalDateTime>() {
                     @Override
                     public JsonElement serialize(LocalDateTime src, Type typeOfSrc, JsonSerializationContext context) {
@@ -42,13 +64,6 @@ public class AuctionWebSocketServer extends WebSocketServer {
                     }
                 })
                 .create();
-
-        // Khởi tạo ServerContext
-        ServerContext context = ServerContext.getInstance();
-        context.initData(this);
-
-        // Truyền gson đã cấu hình vào dispatcher
-        dispatcher = new MessageDispatcher(gson, context);
     }
 
     @Override
@@ -86,7 +101,6 @@ public class AuctionWebSocketServer extends WebSocketServer {
         ServerContext.getInstance().removeUser(conn);
 
         // VIẾT THÊM: Xóa object người dùng ra khỏi danh sách quản lý Online RAM
-        // Hàm này bên trong ServerContext đã tích hợp sẵn lệnh broadcastOnlineUsersToAdmins() để làm mới UI Admin
         ServerContext.getInstance().removeOnlineUserObject(conn);
     }
 

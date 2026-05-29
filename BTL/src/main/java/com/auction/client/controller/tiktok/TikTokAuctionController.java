@@ -11,10 +11,14 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea; // 1. NHỚ IMPORT THÊM TEXTAREA
+import javafx.scene.control.TextArea;
 import javafx.animation.Timeline;
 import javafx.animation.KeyFrame;
 
+/**
+ * Controller quản lý màn hình danh sách/luồng đấu giá phong cách TikTok.
+ * Đã gộp thành công cơ chế đồng bộ mô tả chi tiết (File 2) và nhận diện gia hạn Anti-Sniping (File 1).
+ */
 public class TikTokAuctionController {
 
     @FXML private Label name;
@@ -24,8 +28,6 @@ public class TikTokAuctionController {
     @FXML private Label lblNotifyMsg;
     @FXML private javafx.scene.image.ImageView productImage;
     @FXML private Label lblProductDesc;
-
-    // 2. KHAI BÁO THÊM BIẾN ĐỂ ÁNH XẠ VỚI TEXTAREA TRÊN FXML
     @FXML private TextArea des;
 
     @FXML
@@ -56,7 +58,7 @@ public class TikTokAuctionController {
                 step.setText("Bước giá: 0 VNĐ");
                 if (lblProductDesc != null) lblProductDesc.setText("Không có mô tả");
 
-                // 3. THÊM RESET TEXTAREA KHI KHÔNG CÓ PHIÊN ĐẤU GIÁ
+                // Khôi phục trạng thái thông tin chi tiết trống từ File 2
                 if (des != null) des.setText("Đang đợi phiên đấu giá tiếp theo...");
             });
         }
@@ -70,17 +72,18 @@ public class TikTokAuctionController {
             if (auction != null && auction.getProduct() instanceof Product) {
                 Product product = (Product) auction.getProduct();
                 name.setText(product.getName());
+
                 // Giá hiển thị là giá hiện tại của phiên (Current Price)
                 price.setText(String.format("%,.0f VNĐ", auction.getCurrentPrice()));
                 step.setText(String.format("Bước giá: %,.0f VNĐ", product.getStepPrice()));
 
-                // Đoạn lấy mô tả ngắn (nếu có) vào Label
+                // Đoạn lấy mô tả ngắn (nếu có) vào Label từ File 2
                 if (lblProductDesc != null) {
                     String desc = product.getDescription();
                     lblProductDesc.setText(desc != null && !desc.isEmpty() ? desc : "Không có mô tả");
                 }
 
-                // 4. THÊM ĐIỀN MÔ TẢ CHI TIẾT VÀO TEXTAREA 'des' VÀO ĐÂY
+                // Điền mô tả chi tiết vào TextArea 'des' từ File 2
                 if (des != null) {
                     String desc = product.getDescription();
                     des.setText(desc != null && !desc.isEmpty() ? desc : "Sản phẩm này chưa có mô tả chi tiết.");
@@ -156,8 +159,8 @@ public class TikTokAuctionController {
         NavigationService.setCenterView("/com/auction/client/view/botBidding.fxml");
     }
 
-    // THÊM HÀM NÀY ĐỂ XỬ LÝ NHẢY SỐ REAL-TIME TỪ SERVER GỬI VỀ
-    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
+    // --- ĐÃ TÍCH HỢP: Xử lý nhảy số Real-time và bổ sung tham số newEndTime phục vụ Anti-Sniping (File 1) ---
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName, String newEndTime) {
         Platform.runLater(() -> {
             // Lấy món đồ đang được hiển thị trên màn hình hiện tại
             Auction currentAuction = ClientContext.getInstance().getCurrentAuction();
@@ -165,19 +168,37 @@ public class TikTokAuctionController {
             // Nếu ID của món đồ trên màn hình TRÙNG với ID của món vừa được trả giá
             if (currentAuction != null && currentAuction.getProduct() != null
                     && currentAuction.getProduct().getId().equals(productId)) {
+
                 // 1. Nhảy số tiền trực tiếp trên UI
                 price.setText(String.format("%,.0f VNĐ", newPrice));
 
                 // 2. Cập nhật luôn giá trị vào RAM (để khi người dùng lướt Up/Down quay lại vẫn giữ giá mới)
                 currentAuction.setCurrentPrice(newPrice);
+                currentAuction.setLeaderName(leaderName);
                 if (lblTopBidder != null) {
                     lblTopBidder.setText(leaderName + " - " + String.format("%,.0f VNĐ", newPrice));
                 }
+
+                // 3. TÍNH NĂNG CHỈ ĐỊNH: Cập nhật gia hạn thời gian kết thúc (Anti-Sniping) từ File 1
+                if (newEndTime != null && !newEndTime.isEmpty()) {
+                    try {
+                        java.time.LocalDateTime extendedTime = java.time.LocalDateTime.parse(newEndTime);
+                        currentAuction.setEndTime(extendedTime);
+                        if (currentAuction.getProduct() instanceof Product) {
+                            ((Product) currentAuction.getProduct()).setEndTime(extendedTime);
+                        }
+                        System.out.println("[TikTok UI] Đã đồng bộ Anti-Sniping. Thời gian mới: " + extendedTime);
+                    } catch (Exception e) {
+                        System.err.println("[TikTok UI] Lỗi parse thời gian gia hạn Anti-Sniping: " + e.getMessage());
+                    }
+                }
+
                 System.out.println("[TikTok UI] Đã nhảy số trực tiếp trên màn hình: " + newPrice);
             }
         });
     }
-    // HÀM HIỂN THỊ THÔNG BÁO TẠM THỜI (TỰ MẤT SAU 3 GIÂY)
+
+    // HÀM HIỂN THỊ THÔNG BÁO TẠM THỜI (TỰ MẤT SAU 3 GIÂY) TỪ FILE 2
     public void showNotification(String message, boolean isError) {
         Platform.runLater(() -> {
             if (lblNotifyMsg != null) {

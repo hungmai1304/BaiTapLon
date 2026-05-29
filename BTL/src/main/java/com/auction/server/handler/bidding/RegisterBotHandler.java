@@ -2,7 +2,7 @@ package com.auction.server.handler.bidding;
 
 import com.auction.common.model.auction.Auction;
 import com.auction.common.model.auction.AutoBidConfig;
-import com.auction.common.model.product.Product; // Import thêm class Product
+import com.auction.common.model.product.Product;
 import com.auction.common.model.user.User;
 import com.auction.server.dao.UserDao;
 import com.auction.protocol.MessageType;
@@ -10,11 +10,12 @@ import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
 import com.auction.server.handler.IMessageHandler;
 import com.auction.server.model.ServerContext;
+import com.auction.server.service.AuctionManager; // Import đúng class Manager trung gian
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
-import java.util.ArrayList;
 import java.util.Map;
+import java.util.Queue;
 
 @CommandMap(value = MessageType.REGISTER_BOT_REQUEST)
 public class RegisterBotHandler implements IMessageHandler {
@@ -25,88 +26,74 @@ public class RegisterBotHandler implements IMessageHandler {
             String productId = (String) data.get("productId");
 
             if (data.get("maxPrice") == null || data.get("botStep") == null) {
-                sendError(conn, gson, "Lỗi: Thiếu cấu hình hạn mức giá tối đa hoặc bước giá của Bot!");
+                sendError(conn, gson, "Lỗi: Thiếu cấu hình của Bot!");
                 return;
             }
 
             double maxPrice = ((Number) data.get("maxPrice")).doubleValue();
             double botStep = ((Number) data.get("botStep")).doubleValue();
 
-            // BẢO MẬT: Lấy email từ session kết nối kết nối Websocket
+            if (botStep <= 0) {
+                sendError(conn, gson, "Lỗi: Bước giá của Bot phải lớn hơn 0đ!");
+                return;
+            }
+
             String userEmail = context.getUserByConn(conn);
             if (userEmail == null) {
-                sendError(conn, gson, "Lỗi bảo mật: Bạn chưa đăng nhập hoặc phiên làm việc hết hạn!");
+                sendError(conn, gson, "Lỗi bảo mật: Chưa đăng nhập!");
                 return;
             }
 
-            // KIỂM TRA TRẠNG THÁI BLACKLIST TRƯỚC KHI CHO PHÉP ĐĂNG KÝ
             User currentUser = UserDao.getInstance().getUserByEmail(userEmail);
-            if (currentUser == null) {
-                sendError(conn, gson, "Lỗi hệ thống: Không tìm thấy thông tin tài khoản của bạn!");
+            if (currentUser == null || "BLACKLIST".equalsIgnoreCase(currentUser.getStatus())) {
+                sendError(conn, gson, "Tài khoản không hợp lệ hoặc bị khóa!");
                 return;
             }
 
-            if ("BLACKLIST".equalsIgnoreCase(currentUser.getStatus())) {
-                System.err.println("[RegisterBotHandler] Từ chối tài khoản BLACKLIST " + userEmail + " cố ý cài Bot!");
-                sendError(conn, gson, "Tài khoản của bạn đã bị khóa (BLACKLIST). Không thể sử dụng tính năng Bot tự động!");
+            if (currentUser.getBalance() < maxPrice) {
+                sendError(conn, gson, "Số dư ví không đủ để cài trần Bot!");
                 return;
             }
 
             Auction currentAuction = context.getAuctionByProductId(productId);
-            if (currentAuction == null || "COMPLETED".equals(currentAuction.getStatus())) {
-                sendError(conn, gson, "Phiên đấu giá không tồn tại hoặc đã kết thúc!");
+            if (currentAuction == null || !"ACTIVE".equals(currentAuction.getStatus())) {
+                sendError(conn, gson, "Phiên đấu giá không tồn tại hoặc chưa mở sàn!");
                 return;
             }
 
-            // =========================================================================
-            // NGHIỆP VỤ MỚI: CHẶN CHỦ SẢN PHẨM (SELLER) CÀI BOT ĐẤU GIÁ
-            // =========================================================================
-            if (currentAuction.getProduct() != null) {
-                Product product = (Product) currentAuction.getProduct();
-                if (product.getOwner() != null) {
-                    String sellerEmail = product.getOwner().getEmail();
-                    String sellerId = product.getOwner().getId();
-
-                    // Đối chiếu thông tin tài khoản đang yêu cầu với chủ sở hữu sản phẩm
-                    if (userEmail.equalsIgnoreCase(sellerEmail) || currentUser.getId().equals(sellerId)) {
-                        System.err.println("[RegisterBotHandler] Từ chối Seller cài đặt Bot ảo: " + userEmail);
-                        sendError(conn, gson, "Lỗi quy định: Bạn là người bán sản phẩm này, không được phép cài Bot tự động!");
-                        return;
-                    }
+            // Nghiệp vụ chặn chủ sản phẩm cài bot
+            if (currentAuction.getProduct() != null && currentAuction.getProduct().getOwner() != null) {
+                if (userEmail.equalsIgnoreCase(currentAuction.getProduct().getOwner().getEmail())) {
+                    sendError(conn, gson, "Người bán không được phép cài Bot!");
+                    return;
                 }
             }
-            // =========================================================================
 
             // =========================================================================
-            // THAO TÁC THÊM/SỬA BOT THREAD-SAFE: Khóa đối tượng tránh xung đột với luồng Bidding
+            // ĐÃ ĐỒNG BỘ: Lấy hàng đợi từ AuctionManager thay vì gọi hàm không có thật trên Auction
             // =========================================================================
             synchronized (currentAuction) {
-                if (currentAuction.getRegisteredBots() == null) {
-                    currentAuction.setRegisteredBots(new ArrayList<>());
+                Queue<AutoBidConfig> botQueue = AuctionManager.getInstance().getBotQueue(currentAuction.getId());
+
+                if (botQueue != null) {
+                    // Nếu bot cũ của user này đã xếp hàng trước đó, xóa đi để cập nhật cấu hình mới
+                    botQueue.removeIf(bot -> bot.getEmail().equals(userEmail));
+
+                    // Khởi tạo Bot mới và ĐẨY XUỐNG CUỐI HÀNG ĐỢI (FIFO) theo cơ chế Round-Robin
+                    AutoBidConfig newBot = new AutoBidConfig(userEmail, maxPrice, botStep);
+                    botQueue.add(newBot);
                 }
-
-                // Nếu người dùng này đã từng cài Bot cho phiên này, xóa cấu hình Bot cũ đi để ghi đè Bot mới
-                currentAuction.getRegisteredBots().removeIf(bot -> bot.getEmail().equals(userEmail));
-
-                // Đóng gói cấu hình Bot mới
-                AutoBidConfig newBot = new AutoBidConfig(userEmail, maxPrice, botStep);
-                currentAuction.getRegisteredBots().add(newBot);
             }
+            // =========================================================================
 
-            // Phản hồi về Client đăng ký thành công trước để tối ưu trải nghiệm UI mượt mà
-            Response successRes = new Response(MessageType.REGISTER_BOT_RESPONSE, "SUCCESS", "Đã thiết lập cấu hình Bot tự động thành công!");
+            Response successRes = new Response(MessageType.REGISTER_BOT_RESPONSE, "SUCCESS", "Bot đã xếp vào cuối hàng đợi thành công!");
             conn.send(gson.toJson(successRes));
 
-            System.out.println("[BOT REGISTER] " + userEmail + " đã cài Bot thành công cho SP: " + productId + " (Trần giá Max: " + maxPrice + ")");
-
-            // =========================================================================
-            // KÍCH HOẠT CHIẾN TRƯỜNG BOT: Gọi hàm static xử lý bất đồng bộ qua Thread Pool an toàn
-            // =========================================================================
+            // Kích hoạt trận chiến đấu giá tự động của Bot
             PlaceBidHandler.triggerBotWar(context, gson, productId, currentAuction);
 
         } catch (Exception e) {
-            System.err.println("[RegisterBotHandler] Lỗi hệ thống: " + e.getMessage());
-            sendError(conn, gson, "Lỗi hệ thống khi đăng ký Bot: " + e.getMessage());
+            sendError(conn, gson, "Lỗi hệ thống: " + e.getMessage());
         }
     }
 

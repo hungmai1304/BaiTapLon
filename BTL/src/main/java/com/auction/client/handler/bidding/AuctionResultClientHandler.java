@@ -29,12 +29,31 @@ public class AuctionResultClientHandler implements IClientHandler {
         Platform.runLater(() -> {
             String rawMessage = response.getMessage();
             if (rawMessage == null) rawMessage = "";
+
+            // BẪY CHẶN TIN NHẮN MẬT CỦA SELLER ĐỂ BẢO VỆ POPUP CHÍNH
+            if (rawMessage.contains("của bạn đã bán thành công") || rawMessage.contains("của bạn đã kết thúc")) {
+                System.out.println(" [Mật thư Seller]: " + rawMessage);
+                // Bỏ qua, không bật Popup để nhường chỗ cho tin nhắn Public bật Popup chuẩn!
+                return;
+            }
             String winnerEmail = "Không có";
             String productName = "Sản phẩm";
             double finalPrice = 0.0;
             boolean isSuccess = !rawMessage.contains("Rất tiếc") && !rawMessage.contains("Phiên đấu giá đã kết thúc");
+            //  1. ƯU TIÊN LẤY TÊN TRỰC TIẾP TỪ DATA SERVER (CHUẨN XÁC 100%)
             try {
-                // 1. Bóc tách tên sản phẩm trước để làm dữ liệu đối chiếu phòng
+                if (response.getData() != null && response.getData().containsKey("winnerName")) {
+                    String nameFromData = String.valueOf(response.getData().get("winnerName"));
+                    if (nameFromData != null && !nameFromData.trim().isEmpty() && !"null".equals(nameFromData)) {
+                        winnerEmail = nameFromData;
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("[Data Warning] Không đọc được winnerName từ Map.");
+            }
+
+            try {
+                // Bóc tách tên sản phẩm trước để làm dữ liệu đối chiếu phòng
                 if (rawMessage.contains("'")) {
                     int firstQuote = rawMessage.indexOf("'");
                     int secondQuote = rawMessage.indexOf("'", firstQuote + 1);
@@ -42,12 +61,28 @@ public class AuctionResultClientHandler implements IClientHandler {
                         productName = rawMessage.substring(firstQuote + 1, secondQuote);
                     }
                 }
+
                 if (isSuccess) {
-                    // Bóc tách Email người thắng
-                    if (rawMessage.contains("Chúc mừng ") && rawMessage.contains(" đã chốt đơn")) {
-                        int emailStart = rawMessage.indexOf("Chúc mừng ") + "Chúc mừng ".length();
-                        int emailEnd = rawMessage.indexOf(" đã chốt đơn");
-                        winnerEmail = rawMessage.substring(emailStart, emailEnd).trim();
+                    //  2. NẾU BƯỚC 1 KHÔNG THÀNH CÔNG, DÙNG THUẬT TOÁN CẮT NÀY ĐỂ BẮT TÊN
+                    if (winnerEmail.equals("Không có") && rawMessage.contains("Chúc mừng ")) {
+                        int emailStart = rawMessage.indexOf("Chúc mừng ") + 10;
+
+                        // Dọn dẹp nếu Server dư chữ "người dùng "
+                        if (rawMessage.substring(emailStart).startsWith("người dùng ")) {
+                            emailStart += 11;
+                        }
+
+                        int emailEnd = -1;
+                        // Hỗ trợ cả 2 chuẩn thông báo của Server
+                        if (rawMessage.contains(" đã chốt đơn")) {
+                            emailEnd = rawMessage.indexOf(" đã chốt đơn");
+                        } else if (rawMessage.contains(" đã đấu giá thành công")) {
+                            emailEnd = rawMessage.indexOf(" đã đấu giá thành công");
+                        }
+
+                        if (emailEnd != -1 && emailStart < emailEnd) {
+                            winnerEmail = rawMessage.substring(emailStart, emailEnd).trim();
+                        }
                     }
                     // Bóc tách số tiền
                     if (rawMessage.contains("với giá ")) {

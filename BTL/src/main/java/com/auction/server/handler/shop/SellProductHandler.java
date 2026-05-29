@@ -4,20 +4,17 @@ import com.auction.protocol.MessageType;
 import com.auction.common.model.product.Product;
 import com.auction.common.model.product.ProductStatus;
 import com.auction.common.model.auction.Auction;
-import com.auction.common.model.user.User;
 import com.auction.protocol.Response;
 import com.auction.server.annotation.CommandMap;
-import com.auction.server.dao.AuctionDao;
 import com.auction.server.dao.ProductDao;
-import com.auction.server.dao.UserDao;
 import com.auction.server.handler.IMessageHandler;
 import com.auction.server.model.ServerContext;
+import com.auction.server.service.AuctionManager;
 import com.google.gson.*;
 import org.java_websocket.WebSocket;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -29,13 +26,10 @@ import java.util.concurrent.TimeUnit;
 @CommandMap(value = MessageType.SELL_PRODUCT_REQUEST)
 public class SellProductHandler implements IMessageHandler {
 
-    // Tạo luồng ThreadPool an toàn xử lý các tác vụ hẹn giờ đóng/mở sàn
+    // Bộ đếm giờ độc lập quản lý kích hoạt và đóng phiên
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
-    // Giá trị cấu hình mặc định (Fallback phòng trường hợp Client không truyền lên)
-    private static final long DEFAULT_TIME_WAITING_TO_START_MINUTES = 1;
-    private static final long DEFAULT_TIME_AUCTION_DURATION_MINUTES = 2;
-
+    // Bộ SafeGson chuẩn hóa cấu trúc xử lý dữ liệu thời gian LocalDateTime theo ISO chuẩn của File 2
     private static final Gson safeGson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
                     new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
@@ -46,6 +40,9 @@ public class SellProductHandler implements IMessageHandler {
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
         try {
+            // LOG DEBUG: Theo dõi dữ liệu đầu vào thực tế gửi lên từ Client
+            System.out.println("[SellProductHandler] RAW DATA từ Client gửi lên: " + data);
+
             String productId = (String) data.get("id");
 
             if (productId == null || productId.isEmpty()) {
@@ -53,7 +50,7 @@ public class SellProductHandler implements IMessageHandler {
                 return;
             }
 
-            // 1. KIỂM TRA TRẠNG THÁI SẢN PHẨM TRƯỚC KHI CHO PHÉP BÁN
+            // KIỂM TRA TRẠNG THÁI SẢN PHẨM TRƯỚC KHI LÊN SÀN (Tiêu chuẩn nghiêm ngặt File 2)
             Product pCheck = ProductDao.getInstance().getProductById(productId);
             if (pCheck == null) {
                 sendError(conn, "Sản phẩm không tồn tại trong hệ thống!");
@@ -75,43 +72,57 @@ public class SellProductHandler implements IMessageHandler {
                 return;
             }
 
-            // =========================================================================
-            // NGHIỆP VỤ ĐỘNG: Lấy thời gian cấu hình do Client/Seller tự chọn
-            // =========================================================================
-            long waitingMinutes = DEFAULT_TIME_WAITING_TO_START_MINUTES;
-            long durationMinutes = DEFAULT_TIME_AUCTION_DURATION_MINUTES;
+            // Đọc cấu hình thời gian và giá tùy biến (Hỗ trợ đa dạng cả CamelCase và Snake_case của File 2)
+            Object waitingObj = data.get("waitingMinutes") != null ? data.get("waitingMinutes") : data.get("waiting_minutes");
+            Object durationObj = data.get("durationMinutes") != null ? data.get("durationMinutes") : data.get("duration_minutes");
+            Object startPriceObj = data.get("startPrice") != null ? data.get("startPrice") : data.get("start_price");
 
-            if (data.containsKey("waitingMinutes")) {
-                waitingMinutes = ((Double) data.get("waitingMinutes")).longValue();
-            }
-            if (data.containsKey("durationMinutes")) {
-                durationMinutes = ((Double) data.get("durationMinutes")).longValue();
+            // Ép kiểu dữ liệu nghiêm ngặt qua hàm bổ trợ
+            Double waitingMinutes = parseDoubleStrict(waitingObj);
+            Double durationMinutes = parseDoubleStrict(durationObj);
+            Double liveStartPrice = parseDoubleStrict(startPriceObj);
+
+            // Phòng hờ nếu người bán không đặt giá khởi điểm riêng biệt, lấy mặc định của sản phẩm
+            if (liveStartPrice == null) {
+                liveStartPrice = pCheck.getStartPrice();
             }
 
-            // Cho phép cập nhật lại giá khởi điểm lúc lên sàn nếu client yêu cầu thay đổi
-            double liveStartPrice = pCheck.getStartPrice();
-            if (data.containsKey("startPrice")) {
-                liveStartPrice = ((Double) data.get("startPrice"));
+            // KIỂM TRA LUẬT THỜI GIAN BẮT BUỘC ĐẦU VÀO
+            if (waitingMinutes == null) {
+                sendError(conn, "Thất bại: Server không nhận được thời gian chờ hợp lệ từ Client (waitingMinutes)!");
+                return;
             }
+            if (durationMinutes == null || durationMinutes <= 0) {
+                sendError(conn, "Thất bại: Server không nhận được thời gian chạy sàn hợp lệ từ Client (durationMinutes phải > 0)!");
+                return;
+            }
+
+            System.out.println("[SellProductHandler] CHẤP NHẬN THỜI GIAN CLIENT -> Chờ: " + waitingMinutes + " phút | Chạy: " + durationMinutes + " phút");
 
             LocalDateTime now = LocalDateTime.now();
-            LocalDateTime startTime = now.plusMinutes(waitingMinutes);
-            LocalDateTime endTime = startTime.plusMinutes(durationMinutes);
 
-            // GỌI HÀM NGHIỆP VỤ CHUYÊN BIỆT (Đã tối ưu ở ProductDao thay vì dùng editProduct bừa bãi)
+            // Tính toán thời gian thực tế dựa trên số giây quy đổi từ Client gửi lên
+            long waitingSeconds = Math.round(waitingMinutes * 60);
+            long durationSeconds = Math.round(durationMinutes * 60);
+
+            LocalDateTime startTime = now.plusSeconds(waitingSeconds);
+            LocalDateTime endTime = startTime.plusSeconds(durationSeconds);
+
+            // Cập nhật Database đồng bộ hóa thông tin sản phẩm và khoảng thời gian chạy phiên
             boolean isUpdated = ProductDao.getInstance().sellProduct(productId, liveStartPrice, startTime, endTime);
 
             if (isUpdated) {
-                // Đồng bộ lại dữ liệu Object trong RAM cục bộ
+                // Thay đổi trạng thái thực thể sản phẩm trên RAM
                 pCheck.setStatus(ProductStatus.ON_AUCTION);
                 pCheck.setStartPrice(liveStartPrice);
                 pCheck.setCurrentPrice(liveStartPrice);
                 pCheck.setStartTime(startTime);
                 pCheck.setEndTime(endTime);
 
-                // Dùng UUID chuẩn thay cho Random().nextInt() nhằm tránh trùng lặp ID phiên khi hệ thống lớn
+                // Khởi tạo UUID định danh duy nhất cho phiên đấu giá (File 2)
                 String auctionId = UUID.randomUUID().toString();
 
+                // Đóng gói cấu trúc Phiên Đấu Giá mới vào Context
                 Auction newAuction = new Auction(
                         pCheck,
                         pCheck.getStartPrice(),
@@ -123,16 +134,12 @@ public class SellProductHandler implements IMessageHandler {
                 newAuction.setStatus("PENDING");
                 newAuction.setId(auctionId);
 
-                // Đưa phiên đấu giá vào bộ nhớ RAM của Server để quản lý Realtime
                 context.addAuction(newAuction);
 
-                // =========================================================================
-                // THIẾT LẬP HẸN GIỜ TỰ ĐỘNG (DỰA TRÊN THỜI GIAN ĐỘNG)
-                // =========================================================================
-                long delayToActiveSeconds = waitingMinutes * 60;
-                long delayToCompletedSeconds = (waitingMinutes + durationMinutes) * 60;
+                long delayToActiveSeconds = waitingSeconds;
+                long delayToCompletedSeconds = waitingSeconds + durationSeconds;
 
-                // HẸN GIỜ 1: MỞ BÁT PHIÊN ĐẤU GIÁ (PENDING -> ACTIVE) - Sử dụng Đơn vị GIÂY để tăng độ chính xác
+                // HẸN GIỜ 1: KÍCH HOẠT PHIÊN ĐẤU GIÁ (PENDING -> ACTIVE)
                 scheduler.schedule(() -> {
                     try {
                         Auction auctionToStart = context.getAuctionByProductId(productId);
@@ -140,97 +147,37 @@ public class SellProductHandler implements IMessageHandler {
                             auctionToStart.setStatus("ACTIVE");
                             context.updateAuction(auctionToStart);
                             System.out.println(" [Timer] SP " + productId + " đã CHÍNH THỨC LÊN SÀN ĐẤU GIÁ!");
-                            broadcastNewAuctionSession(context); // Phát loa cập nhật lại giao diện client
+                            broadcastNewAuctionSession(context);
                         }
                     } catch (Exception e) {
                         System.err.println("[Timer Error] Lỗi khi kích hoạt phiên: " + e.getMessage());
                     }
                 }, delayToActiveSeconds, TimeUnit.SECONDS);
 
-                // HẸN GIỜ 2: ĐÓNG PHIÊN VÀ CHỐT ĐƠN (ACTIVE/PENDING -> COMPLETED)
+                // HẸN GIỜ 2: ĐÓNG PHIÊN ĐẤU GIÁ VÀ HẠ SẢN PHẨM CHỐT ĐƠN (ACTIVE -> COMPLETED)
                 scheduler.schedule(() -> {
                     try {
                         Auction auctionToEnd = context.getAuctionByProductId(productId);
-                        if (auctionToEnd != null && !"COMPLETED".equals(auctionToEnd.getStatus())) {
-
-                            // A. Khóa phiên ngay lập tức trên RAM chặn mọi lượt Bid muộn
-                            auctionToEnd.setStatus("COMPLETED");
-                            context.updateAuction(auctionToEnd);
-
-                            Product p = auctionToEnd.getProduct();
-                            if (p != null) {
-                                // TRƯỜNG HỢP 1: CÓ NGƯỜI ĐẶT GIÁ CAO NHẤT
-                                if (auctionToEnd.getHighestBidder() != null) {
-                                    String winnerEmail = auctionToEnd.getHighestBidder().getEmail();
-                                    double finalPrice = auctionToEnd.getCurrentPrice();
-
-                                    // Kiểm tra số dư tài khoản thực tế lúc chốt đơn
-                                    User winnerUser = UserDao.getInstance().getUserByEmail(winnerEmail);
-                                    if (winnerUser != null && winnerUser.getBalance() >= finalPrice) {
-
-                                        // Đủ tiền -> Tiến hành trừ tiền tài khoản người mua
-                                        UserDao.getInstance().deductBalance(winnerEmail, finalPrice);
-                                        p.setStatus(ProductStatus.SOLD);
-                                        p.setCurrentPrice(finalPrice);
-
-                                        System.out.println("[CHỐT ĐƠN THÀNH CÔNG] SP: " + p.getName() + " | Winner: " + winnerEmail + " | Giá chốt: " + finalPrice);
-                                        String thongBao = " Chúc mừng " + winnerEmail + " đã đấu giá thành công sản phẩm '" + p.getName() + "' với giá " + String.format("%,.0fđ", finalPrice) + "!";
-                                        broadcastAuctionResult(context, thongBao);
-                                    } else {
-                                        // BÙNG KÈO / HẾT TIỀN: Chuyển hàng về lại kho cho người khác đấu lại
-                                        p.setStatus(ProductStatus.AVAILABLE);
-                                        System.out.println("[CHỐT ĐƠN THẤT BẠI - TÀI KHOẢN KHÔNG ĐỦ TIỀN] Tài khoản " + winnerEmail + " bùng kèo sản phẩm " + p.getName());
-                                        String thongBaoGia = "⚠ Phiên đấu giá '" + p.getName() + "' thất bại do tài khoản người thắng không đủ số dư thanh toán tại thời điểm chốt!";
-                                        broadcastAuctionResult(context, thongBaoGia);
-                                        winnerEmail = null; // Ghi nhận lịch sử không có người mua thực tế
-                                    }
-
-                                    // Lưu log lịch sử đấu giá thành công/thất bại vào Database
-                                    AuctionDao.getInstance().saveCompletedAuction(auctionToEnd.getId(), p.getId(), winnerEmail, finalPrice);
-
-                                } else {
-                                    // TRƯỜNG HỢP 2: HẾT GIỜ MÀ KHÔNG CÓ AI ĐẶT GIÁ
-                                    System.out.println(" [PHIÊN KẾT THÚC] Sản phẩm: " + p.getName() + " tự động trả về kho do không có lượt đặt giá.");
-                                    p.setStatus(ProductStatus.AVAILABLE);
-                                    String thongBaoE = "Rất tiếc, sản phẩm '" + p.getName() + "' đã hết giờ đấu giá mà không có ai đặt lệnh!";
-                                    broadcastAuctionResult(context, thongBaoE);
-
-                                    AuctionDao.getInstance().saveCompletedAuction(auctionToEnd.getId(), p.getId(), null, p.getStartPrice());
-                                }
-
-                                if (p.getStatus() != ProductStatus.SOLD) {
-                                    p.setStartTime(null);
-                                    p.setEndTime(null);
-                                }
-
-                                // Đồng bộ trạng thái cuối cùng (SOLD hoặc AVAILABLE) xuống DB
-                                ProductDao.getInstance().editProduct(p);
-                            }
-
-                            // Giải phóng bộ nhớ RAM Server sau khi phiên kết thúc (Tránh tràn RAM / Memory Leak)
-                            context.removeAuction(auctionToEnd.getId());
-
-                            // Cập nhật Realtime UI cho toàn bộ Client và Admin đang online
+                        if (auctionToEnd != null) {
+                            AuctionManager.getInstance().endAuction(auctionToEnd);
                             broadcastNewAuctionSession(context);
                             broadcastToAdmins(context);
-
-                            System.out.println("[Timer] SP " + productId + " đã HẾT GIỜ. Hủy phiên trên RAM hoàn tất!");
+                            System.out.println("[Timer] SP " + productId + " đã được xử lý chốt đơn bởi Timer.");
                         }
                     } catch (Exception e) {
-                        System.err.println("[LỖI NGHIÊM TRỌNG] LUỒNG HẸN GIỜ ĐÓNG PHIÊN BỊ CRASH: " + e.getMessage());
+                        System.err.println("[Timer Error] Lỗi khi kết thúc phiên hẹn giờ: " + e.getMessage());
                     }
                 }, delayToCompletedSeconds, TimeUnit.SECONDS);
 
-                // 3. Phản hồi kết quả thành công ngay cho Seller gửi yêu cầu
+                // Phản hồi gói tin thành công cho Client gửi yêu cầu bán sản phẩm
                 Response response = new Response(MessageType.SELL_PRODUCT_RESPONSE, "SUCCESS", "Đã đưa sản phẩm lên sàn đấu giá thành công!");
                 conn.send(safeGson.toJson(response));
 
-                System.out.println("-> [SellProduct] Thành công: ID " + productId);
-
-                // 4. Phát loa thông báo cho toàn hệ thống
+                // Đồng bộ dữ liệu real-time toàn server ngay lập tức
                 broadcastNewAuctionSession(context);
                 broadcastToAdmins(context);
 
+                System.out.println("-> [SellProduct] Thành công tạo phiên đấu giá cho sản phẩm ID: " + productId);
             } else {
                 sendError(conn, "Lỗi khi cập nhật trạng thái lên Database!");
             }
@@ -241,7 +188,26 @@ public class SellProductHandler implements IMessageHandler {
         }
     }
 
-    // PHÁT LOA ĐỒNG BỘ DANH SÁCH CHO CÁC CLIENT THƯỜNG
+    /**
+     * HÀM PARSE DỮ LIỆU NGHIÊM NGẶT (Tiêu chuẩn gốc File 2)
+     */
+    private Double parseDoubleStrict(Object value) {
+        if (value == null) return null;
+        try {
+            if (value instanceof Number) {
+                return ((Number) value).doubleValue();
+            } else if (value instanceof String) {
+                return Double.parseDouble(((String) value).trim());
+            }
+        } catch (Exception e) {
+            System.err.println("[Format Error] Không thể parse giá trị: " + value);
+        }
+        return null;
+    }
+
+    /**
+     * PHÁT LOA DANH SÁCH AUCTION MỚI NHẤT CHO TOÀN BỘ USER ONLINE
+     */
     private void broadcastNewAuctionSession(ServerContext context) {
         List<Auction> activeAuctions = context.getActiveAuctions();
 
@@ -256,77 +222,44 @@ public class SellProductHandler implements IMessageHandler {
         }
     }
 
-    // PHÁT LOA ĐỒNG BỘ DANH SÁCH CHO CÁC ADMIN ĐANG ONLINE
+    /**
+     * PHÁT LOA ĐỒNG BỘ LUỒNG QUẢN LÝ DÀNH CHO ADMIN
+     */
     private void broadcastToAdmins(ServerContext context) {
         try {
             Map<String, Object> responseMap = new HashMap<>();
             responseMap.put("type", "ADMIN_GET_ONLINE_AUCTIONS_RESPONSE");
             responseMap.put("status", "SUCCESS");
-            responseMap.put("message", "Danh sách phiên trực tuyến vừa có sự thay đổi!");
+            responseMap.put("auctionList", context.getActiveAuctions());
 
-            List<Auction> rawActiveAuctions;
-            synchronized (context.getActiveAuctions()) {
-                rawActiveAuctions = new ArrayList<>(context.getActiveAuctions());
-            }
-
-            List<Map<String, Object>> formattedAuctions = new ArrayList<>();
-            for (Auction auction : rawActiveAuctions) {
-                if (auction == null) continue;
-
-                Map<String, Object> flatItem = new HashMap<>();
-                flatItem.put("id", auction.getId());
-
-                if (auction.getProduct() != null) {
-                    flatItem.put("productName", auction.getProduct().getName());
-                    flatItem.put("status", auction.getProduct().getStatus());
-                    if (auction.getProduct().getOwner() != null) {
-                        flatItem.put("ownerEmail", auction.getProduct().getOwner().getEmail());
-                    } else {
-                        flatItem.put("ownerEmail", "Ẩn danh");
-                    }
-                } else {
-                    flatItem.put("productName", "Sản phẩm không xác định");
-                    flatItem.put("status", "UNKNOWN");
-                    flatItem.put("ownerEmail", "N/A");
-                }
-                formattedAuctions.add(flatItem);
-            }
-
-            Map<String, Object> dataMap = new HashMap<>();
-            dataMap.put("list", formattedAuctions);
-            responseMap.put("data", dataMap);
-
-            String jsonMessage = safeGson.toJson(responseMap);
-
+            String message = safeGson.toJson(responseMap);
             for (WebSocket client : context.getConnectedClients()) {
                 if (client.isOpen()) {
-                    String email = context.getUserByConn(client);
-                    if (email != null) {
-                        User user = context.getUserCacheByEmail(email);
-                        if (user == null) {
-                            user = UserDao.getInstance().getUserByEmail(email);
-                        }
-                        if (user != null && "ADMIN".equalsIgnoreCase(user.getRole())) {
-                            client.send(jsonMessage);
-                        }
-                    }
+                    client.send(message);
                 }
             }
         } catch (Exception e) {
-            System.err.println("[Admin Broadcast] Lỗi khi phát dữ liệu cho Admin: " + e.getMessage());
+            System.err.println("[Broadcast Admin Error] Lỗi phát tin admin: " + e.getMessage());
         }
     }
 
-    private void broadcastAuctionResult(ServerContext context, String thongBao) {
+    /**
+     * TÍNH NĂNG BỔ TRỢ TỪ FILE 1: Phát thông báo thông tin chốt đơn/kết quả phiên
+     */
+    private void broadcastAuctionResult(ServerContext context, Gson gson, String thongBao) {
         Response res = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBao);
-        String msg = safeGson.toJson(res);
+        String msg = gson.toJson(res);
         for (WebSocket client : context.getConnectedClients()) {
-            if (client.isOpen()) client.send(msg);
+            if (client.isOpen()) {
+                client.send(msg);
+            }
         }
     }
 
-    private void sendError(WebSocket conn, String msg) {
-        Response response = new Response(MessageType.SELL_PRODUCT_RESPONSE, "ERROR", msg);
-        conn.send(safeGson.toJson(response));
+    private void sendError(WebSocket conn, String errorMsg) {
+        Response response = new Response(MessageType.SELL_PRODUCT_RESPONSE, "ERROR", errorMsg);
+        if (conn.isOpen()) {
+            conn.send(safeGson.toJson(response));
+        }
     }
 }

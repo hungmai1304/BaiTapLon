@@ -54,12 +54,13 @@ public class ProductDao {
     }
 
     /**
-     * 2. LƯU SẢN PHẨM MỚI
+     * 2. LƯU SẢN PHẨM MỚI (TUYỆT ĐỐI KHÔNG DÙNG GIÁ TRỊ MẶC ĐỊNH)
      */
     public boolean saveProduct(Product product) {
         String sql = "INSERT INTO products (id, name, category, description, image_path, start_price, " +
-                "current_price, step_price, status, owner_id, time_created, start_time, end_time) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "current_price, step_price, status, owner_id, time_created, start_time, end_time, " +
+                "waiting_minutes, duration_minutes) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -77,6 +78,19 @@ public class ProductDao {
             pstmt.setTimestamp(11, (product.getTimeCreated() != null) ? Timestamp.valueOf(product.getTimeCreated()) : null);
             pstmt.setTimestamp(12, (product.getStartTime() != null) ? Timestamp.valueOf(product.getStartTime()) : null);
             pstmt.setTimestamp(13, (product.getEndTime() != null) ? Timestamp.valueOf(product.getEndTime()) : null);
+
+            // Nạp dữ liệu nghiêm ngặt: Nếu client không truyền thì để NULL trong DB chứ không tự điền bừa
+            if (product.getWaitingMinutes() != null) {
+                pstmt.setDouble(14, product.getWaitingMinutes());
+            } else {
+                pstmt.setNull(14, Types.DOUBLE);
+            }
+
+            if (product.getDurationMinutes() != null) {
+                pstmt.setDouble(15, product.getDurationMinutes());
+            } else {
+                pstmt.setNull(15, Types.DOUBLE);
+            }
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -103,14 +117,15 @@ public class ProductDao {
     }
 
     /**
-     * 4. CHỈNH SỬA SẢN PHẨM
+     * 4. CHỈNH SỬA SẢN PHẨM (ĐÃ ĐỒNG BỘ: Cập nhật cả số phút từ client, không giữ mặc định)
      */
     public boolean editProduct(Product product) {
         if (product == null || product.getId() == null) return false;
 
         String sql = "UPDATE products SET name = ?, category = ?, description = ?, image_path = ?, " +
                 "start_price = ?, current_price = ?, step_price = ?, " +
-                "status = ?, owner_id = ?, time_created = ?, start_time = ?, end_time = ? " +
+                "status = ?, owner_id = ?, time_created = ?, start_time = ?, end_time = ?, " +
+                "waiting_minutes = ?, duration_minutes = ? " +
                 "WHERE id = ?";
 
         try (Connection conn = Db.getConnection();
@@ -128,7 +143,20 @@ public class ProductDao {
             pstmt.setTimestamp(10, (product.getTimeCreated() != null) ? Timestamp.valueOf(product.getTimeCreated()) : null);
             pstmt.setTimestamp(11, (product.getStartTime() != null) ? Timestamp.valueOf(product.getStartTime()) : null);
             pstmt.setTimestamp(12, (product.getEndTime() != null) ? Timestamp.valueOf(product.getEndTime()) : null);
-            pstmt.setString(13, product.getId());
+
+            if (product.getWaitingMinutes() != null) {
+                pstmt.setDouble(13, product.getWaitingMinutes());
+            } else {
+                pstmt.setNull(13, Types.DOUBLE);
+            }
+
+            if (product.getDurationMinutes() != null) {
+                pstmt.setDouble(14, product.getDurationMinutes());
+            } else {
+                pstmt.setNull(14, Types.DOUBLE);
+            }
+
+            pstmt.setString(15, product.getId());
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -138,7 +166,7 @@ public class ProductDao {
     }
 
     /**
-     * 5. LẤY DANH SÁCH THEO USER ID - Đã tối ưu JOIN
+     * 5. HÀM LẤY SẢN PHẨM CỦA SHOP DỰA TRÊN ID NGƯỜI DÙNG
      */
     public List<Product> getProductsByUserId(String userId) {
         List<Product> productList = new ArrayList<>();
@@ -159,7 +187,6 @@ public class ProductDao {
 
     /**
      * 6. CHUYỂN TRẠNG THÁI SẢN PHẨM SANG ĐANG ĐẤU GIÁ (ĐÃ ĐỘNG HÓA NGHIỆP VỤ)
-     * Khi đưa lên sàn, cập nhật lại: Giá hiện tại = Giá bắt đầu, set thời gian sống động cho phiên.
      */
     public boolean sellProduct(String productId, double startPrice, LocalDateTime startTime, LocalDateTime endTime) {
         String sql = "UPDATE products SET status = 'ON_AUCTION', start_price = ?, current_price = ?, start_time = ?, end_time = ? WHERE id = ?";
@@ -167,7 +194,7 @@ public class ProductDao {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setDouble(1, startPrice);
-            pstmt.setDouble(2, startPrice); // Lúc vừa mở sàn, current_price mặc định bằng start_price
+            pstmt.setDouble(2, startPrice);
             pstmt.setTimestamp(3, Timestamp.valueOf(startTime));
             pstmt.setTimestamp(4, Timestamp.valueOf(endTime));
             pstmt.setString(5, productId);
@@ -180,14 +207,16 @@ public class ProductDao {
     }
 
     /**
-     * NGHIỆP VỤ BỔ SUNG: Cập nhật nhanh trạng thái sản phẩm (ví dụ: SOLD, COMPLETED, PENDING)
+     * NGHIỆP VỤ BỔ SUNG: Cập nhật nhanh trạng thái sản phẩm CHO ADMIN
      */
     public boolean updateProductStatus(String productId, ProductStatus status) {
         String sql = "UPDATE products SET status = ? WHERE id = ?";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, status.toString());
+
+            pstmt.setString(1, status.name());
             pstmt.setString(2, productId);
+
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("[ProductDao] Lỗi updateProductStatus: " + e.getMessage());
@@ -233,7 +262,7 @@ public class ProductDao {
     }
 
     /**
-     * HÀM PHỤ TRỢ ĐÃ ĐƯỢC TỐI ƯU
+     * HÀM MAPPING CHI TIẾT (Đã bổ sung đọc chính xác số phút lưu từ DB đổ ngược lại vào Object)
      */
     private Product mapResultSetToProduct(ResultSet rs) throws SQLException {
         Product product = new Product();
@@ -255,6 +284,17 @@ public class ProductDao {
 
         Timestamp endTimeTs = rs.getTimestamp("end_time");
         if (endTimeTs != null) product.setEndTime(endTimeTs.toLocalDateTime());
+
+        // FIX QUAN TRỌNG: Đọc trực tiếp thời gian thực từ DB đổ lại vào Object, xử lý giá trị NULL an toàn
+        double waitingMins = rs.getDouble("waiting_minutes");
+        if (!rs.wasNull()) {
+            product.setWaitingMinutes(waitingMins);
+        }
+
+        double durationMins = rs.getDouble("duration_minutes");
+        if (!rs.wasNull()) {
+            product.setDurationMinutes(durationMins);
+        }
 
         String ownerId = rs.getString("owner_id");
         if (ownerId != null) {
@@ -301,18 +341,16 @@ public class ProductDao {
         }
         return product;
     }
-    // tao 1 conbot , 10s chay 1 lan, luon check xem product nao co endtime qua thoi gian hien tai roi thi doi status sang AVAILABLE
+
     /**
-     * NGHIỆP VỤ BOT: Tự động quét và hạ sàn các sản phẩm đã quá giờ kết thúc
-     * Chuyển trạng thái từ 'ON_AUCTION' sang 'AVAILABLE'
-     * @return Số lượng sản phẩm đã được xử lý thành công
+     * NGHIỆP VỤ BOT: Tự động quét và hạ sàn các sản phẩm đã quá giờ kết thúc thực tế
      */
     public int autoExpireProducts() {
         String sql = "UPDATE products SET status = 'AVAILABLE' WHERE status = 'ON_AUCTION' AND end_time <= ?";
         try (Connection conn = Db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // Truyền mốc thời gian hiện tại của Server vào câu lệnh
+            // Lấy thời điểm hiện hành thực tế của hệ thống để so sánh với thời gian kết thúc của phiên client đặt
             pstmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
 
             int rowsAffected = pstmt.executeUpdate();

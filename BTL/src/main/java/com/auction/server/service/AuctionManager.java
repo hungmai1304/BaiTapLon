@@ -1,6 +1,7 @@
 package com.auction.server.service;
 
 import com.auction.common.model.auction.Auction;
+import com.auction.common.model.auction.AutoBidConfig;
 import com.auction.common.model.product.Product;
 import com.auction.common.model.user.User;
 import com.auction.server.dao.ProductDao;
@@ -19,10 +20,13 @@ import org.java_websocket.WebSocket;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.stream.Collectors;
-
-import static com.auction.server.handler.bidding.PlaceBidHandler.updateClientBalance;
+import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class AuctionManager {
 
@@ -31,9 +35,20 @@ public class AuctionManager {
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
             .create();
-    private final Random random = new Random();
 
-    private AuctionManager() {}
+    // Khởi tạo luồng quét ngầm hệ thống (Tiêu chuẩn File 2)
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+
+    // Bộ lưu trữ hàng đợi Bot an toàn cho từng phiên đấu giá
+    private final Map<String, Queue<AutoBidConfig>> botQueuesMap = new ConcurrentHashMap<>();
+
+    // Quản lý trạng thái đóng băng 10s của từng phiên đấu giá
+    private final Map<String, Boolean> botFreezeMap = new ConcurrentHashMap<>();
+
+    private AuctionManager() {
+        // KHỞI CHẠY HỆ THỐNG QUÉT TỰ ĐỘNG NGAY KHI MANAGER ĐƯỢC TẠO
+        startAutoAuctionEngine();
+    }
 
     public static synchronized AuctionManager getInstance() {
         if (instance == null) {
@@ -42,272 +57,238 @@ public class AuctionManager {
         return instance;
     }
 
-    // ========== LOGIC CHỌN PHIÊN ĐẤU GIÁ LÊN SÀN ==========
+    // ========== BOT MANAGEMENT & ANTISNIPPING HELPERS ==========
 
-    public Auction pickNextProduct() {
-        ServerContext context = ServerContext.getInstance();
-
-        // 1. Lọc danh sách các phiên đấu giá đang ở trạng thái PENDING từ RAM
-        List<Auction> pendingAuctions = context.getActiveAuctions().stream()
-                .filter(a -> "PENDING".equals(a.getStatus()))
-                .collect(Collectors.toList());
-
-        if (pendingAuctions.isEmpty()) {
-            System.out.println("[AuctionManager] Không còn phiên đấu giá PENDING nào để kích hoạt!");
-            return null;
-        }
-
-        // 2. Chọn ngẫu nhiên 1 phiên đấu giá chuẩn bị mở
-        Auction selectedAuction = pendingAuctions.get(random.nextInt(pendingAuctions.size()));
-
-        // 3. Cập nhật trạng thái của phiên đấu giá thành ACTIVE và set thời gian chạy sàn
-        selectedAuction.setStatus("ACTIVE");
-        selectedAuction.setStartTime(LocalDateTime.now());
-        selectedAuction.setEndTime(LocalDateTime.now().plusMinutes(30)); // Giả sử mỗi phiên kéo dài 30 phút
-
-        // Đồng thời cập nhật trạng thái của Product nằm trong phiên đấu giá đó sang ON_AUCTION
-        if (selectedAuction.getProduct() != null) {
-            selectedAuction.getProduct().setStatus(ProductStatus.ON_AUCTION);
-        }
-
-        // 4. Đồng bộ cập nhật lại phiên đấu giá này vào ServerContext trên RAM
-        context.updateAuction(selectedAuction);
-
-        System.out.println("[AuctionManager] Phiên đấu giá lên sàn ID: " + selectedAuction.getId());
-        if (selectedAuction.getProduct() != null) {
-            System.out.println("[AuctionManager] Sản phẩm lên sàn: " + selectedAuction.getProduct().getName());
-        }
-        System.out.println("[AuctionManager] Kết thúc lúc: " + selectedAuction.getEndTime());
-
-        // 5. Broadcast thông báo cho tất cả client
-        broadcastNewAuction(selectedAuction);
-
-        return selectedAuction;
+    public boolean isBotFrozen(String auctionId) {
+        return botFreezeMap.getOrDefault(auctionId, false);
     }
 
-    // ========== BROADCAST CHO TẤT CẢ CLIENT ==========
+    public void setBotFreeze(String auctionId, boolean freeze) {
+        if (freeze) {
+            botFreezeMap.put(auctionId, true);
+        } else {
+            botFreezeMap.remove(auctionId);
+        }
+    }
+
+    public Queue<AutoBidConfig> getBotQueue(String auctionId) {
+        if (auctionId == null) return null;
+        return botQueuesMap.computeIfAbsent(auctionId, k -> new ConcurrentLinkedQueue<>());
+    }
+
+    // ========== BỘ MÁY QUÉT TỰ ĐỘNG (AUTOMATED ENGINE) ==========
 
     /**
-     * Thông báo cho tất cả client về phiên đấu giá mới vừa hoạt động
+     * Cứ mỗi 5 giây quét một lần để tự động Bắt đầu và Kết thúc các phiên song song
      */
-    private void broadcastNewAuction(Auction auction) {
+    private void startAutoAuctionEngine() {
+        // Vòng lặp quét kích hoạt phiên mới
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                checkAndStartIncomingAuctions();
+            } catch (Exception e) {
+                System.err.println("[Engine] Lỗi khi quét mở phiên mới: " + e.getMessage());
+            }
+        }, 0, 5, TimeUnit.SECONDS);
+
+        // Vòng lặp quét đóng các phiên hết hạn
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                checkAndEndExpiredAuctions();
+            } catch (Exception e) {
+                System.err.println("[Engine] Lỗi khi quét đóng phiên cũ: " + e.getMessage());
+            }
+        }, 2, 5, TimeUnit.SECONDS);
+    }
+
+    /**
+     * 1. HÀM TỰ ĐỘNG MỞ PHIÊN: Phiên nào đến giờ StartTime là tự động mở song song!
+     */
+    private void checkAndStartIncomingAuctions() {
         ServerContext context = ServerContext.getInstance();
+        LocalDateTime now = LocalDateTime.now();
 
-        // Tạo response chứa đối tượng đấu giá Auction vừa kích hoạt
-        Response response = new Response(
-                MessageType.GET_ACTIVE_AUCTIONS_RESPONSE,
-                "SUCCESS",
-                "Có phiên đấu giá mới vừa lên sàn!"
-        );
-        response.getData().put("auction", auction);
-
-        String message = gson.toJson(response);
-
-        // Gửi cho tất cả client đang online
-        for (WebSocket conn : context.getServer().getConnections()) {
-            if (conn.isOpen()) {
-                conn.send(message);
+        // Lọc ra tất cả các phiên PENDING đã đến hoặc quá thời gian bắt đầu
+        List<Auction> incomingAuctions = new ArrayList<>();
+        for (Auction a : context.getActiveAuctions()) {
+            if ("PENDING".equals(a.getStatus()) && a.getStartTime() != null && !now.isBefore(a.getStartTime())) {
+                incomingAuctions.add(a);
             }
         }
 
-        System.out.println("[AuctionManager] Đã broadcast phiên đấu giá mới cho " +
-                context.getServer().getConnections().size() + " client!");
+        // Kích hoạt đồng loạt (Song song)
+        for (Auction auction : incomingAuctions) {
+            synchronized (auction) {
+                if (!"PENDING".equals(auction.getStatus())) continue;
+
+                auction.setStatus("ACTIVE");
+                if (auction.getProduct() != null) {
+                    auction.getProduct().setStatus(ProductStatus.ON_AUCTION);
+                }
+
+                context.updateAuction(auction);
+                System.out.println("[KÍCH HOẠT SONG SONG] Phiên Đấu Giá ID: " + auction.getId() + " ĐÃ LÊN SÀN!");
+
+                broadcastNewAuction(auction);
+
+                // Kích hoạt Bot War riêng cho phiên này
+                if (auction.getProduct() != null) {
+                    PlaceBidHandler.triggerBotWar(context, gson, auction.getProduct().getId(), auction);
+                }
+            }
+        }
     }
 
     /**
-     * Kết thúc phiên đấu giá hiện tại
+     * Thông báo cho toàn bộ Client khi có phiên đấu giá chuyển sang ACTIVE
+     */
+    private void broadcastNewAuction(Auction auction) {
+        ServerContext context = ServerContext.getInstance();
+        Response response = new Response(MessageType.GET_ACTIVE_AUCTIONS_RESPONSE, "SUCCESS", "Có phiên đấu giá mới vừa lên sàn!");
+        response.getData().put("auction", auction);
+        String message = gson.toJson(response);
+
+        for (WebSocket conn : context.getServer().getConnections()) {
+            if (conn.isOpen()) conn.send(message);
+        }
+    }
+
+    /**
+     * 2. HÀM TỰ ĐỘNG KẾT THÚC: Quét độc lập từng phiên, hết giờ là đóng, không ảnh hưởng phiên khác
+     */
+    public void checkAndEndExpiredAuctions() {
+        ServerContext context = ServerContext.getInstance();
+        LocalDateTime now = LocalDateTime.now();
+        List<Auction> expiredAuctions = new ArrayList<>();
+
+        for (Auction auction : context.getActiveAuctions()) {
+            if (auction != null && "ACTIVE".equals(auction.getStatus()) && auction.getEndTime() != null && now.isAfter(auction.getEndTime())) {
+                expiredAuctions.add(auction);
+            }
+        }
+
+        for (Auction auction : expiredAuctions) {
+            System.out.println("[HẾT GIỜ TỰ ĐỘNG] Phát hiện phiên ID " + auction.getId() + " đã hết hạn thời gian.");
+            endAuction(auction); // Gọi hàm đóng phiên độc lập
+        }
+    }
+
+    // ========== KẾT THÚC PHIÊN ĐẤU GIÁ ĐỘC LẬP ==========
+
+    /**
+     * Kết thúc phiên đấu giá hiện tại an toàn và xử lý hóa đơn, tài chính (Thread-safe)
      * @param auction Phiên đấu giá cần kết thúc
      */
-    // lỗi ở đây
-    // ========== KẾT THÚC PHIÊN ĐẤU GIÁ ==========
-
     public void endAuction(Auction auction) {
         if (auction == null) return;
-
         ServerContext context = ServerContext.getInstance();
-        auction.setStatus("COMPLETED");
 
+        String winnerEmail = null;
+        String winnerName = "Không có";
+        double finalPrice = auction.getCurrentPrice();
+        String thongBaoChung = "";
         Product product = auction.getProduct();
-        if (product != null) {
-            String winnerEmail = null;
-            String winnerName = "Không có"; // Khởi tạo mặc định tránh lỗi null
-            double finalPrice = auction.getCurrentPrice();
-            String thongBaoChung = "";
 
-            if (auction.getHighestBidder() != null) {
-                // 1. TRƯỜNG HỢP CÓ NGƯỜI MUA (CHỐT ĐƠN)
+        synchronized (auction) {
+            // Chống chốt đơn trùng lặp (Double closing)
+            if ("COMPLETED".equals(auction.getStatus())) return;
+            auction.setStatus("COMPLETED");
 
-                winnerEmail = auction.getHighestBidder().getEmail();
-                // FIX LỖI TÊN "Không có": Lấy Username, nếu trống thì lấy Email
-                winnerName = auction.getHighestBidder().getUsername() != null ? auction.getHighestBidder().getUsername() : winnerEmail;
-                auction.setLeaderName(winnerName);
+            if (product != null) {
+                // TRƯỜNG HỢP 1: CÓ NGƯỜI ĐẤU GIÁ THÀNH CÔNG
+                if (auction.getHighestBidder() != null) {
+                    winnerEmail = auction.getHighestBidder().getEmail();
+                    winnerName = auction.getHighestBidder().getUsername() != null ? auction.getHighestBidder().getUsername() : winnerEmail;
+                    auction.setLeaderName(winnerName);
 
-                product.setStatus(ProductStatus.SOLD);
-                product.setCurrentPrice(finalPrice);
+                    product.setStatus(ProductStatus.SOLD);
+                    product.setCurrentPrice(finalPrice);
 
-                thongBaoChung = "Chúc mừng " + winnerName + " đã chốt đơn sản phẩm '" + product.getName() + "' với giá " + String.format("%,.0fđ", finalPrice) + "!";
-                System.out.println("[AuctionManager] Sản phẩm " + product.getName() + " ĐÃ BÁN cho " + winnerEmail);
+                    thongBaoChung = "Chúc mừng " + winnerName + " đã chốt đơn sản phẩm '" + product.getName() + "' với giá " + String.format("%,.0fđ", finalPrice) + "!";
+                    System.out.println("[AuctionManager] Sản phẩm " + product.getName() + " ĐÃ BÁN THÀNH CÔNG cho " + winnerEmail);
 
+                    // Xử lý chuyển tiền ký quỹ / cộng số dư tài khoản cho chủ sản phẩm (Seller)
+                    String sellerEmail = null;
+                    if (product.getOwner() != null) {
+                        if (product.getOwner().getEmail() != null && !product.getOwner().getEmail().trim().isEmpty()) {
+                            sellerEmail = product.getOwner().getEmail();
+                        } else if (product.getOwner().getId() != null) {
+                            User sellerFromDB = UserDao.getInstance().findById(product.getOwner().getId());
+                            if (sellerFromDB != null) sellerEmail = sellerFromDB.getEmail();
+                        }
+                    }
 
-                // =========================================================
-                // 🚀 XỬ LÝ RIÊNG TƯ CHO NGƯỜI BÁN (SELLER) - BẢN ĐÃ FIX LỖI EMAIL
-                // =========================================================
-                String sellerId = null;
-                if (product.getOwner() != null && product.getOwner().getId() != null) {
-                    sellerId = product.getOwner().getId();
-                }
-
-                if (sellerId != null) {
-
-                    User seller = com.auction.server.dao.UserDao.getInstance().findById(sellerId);
-
-                    if (seller != null && seller.getEmail() != null) {
-                        String sellerEmail = seller.getEmail();
-
-                        // A. Cộng tiền vào Database cho Seller
+                    if (sellerEmail != null && !sellerEmail.trim().isEmpty()) {
                         UserDao.getInstance().depositMoney(sellerEmail, finalPrice);
-                        System.out.println("💰 [Payout] Đã chuyển " + String.format("%,.0fđ", finalPrice) + " cho Seller: " + sellerEmail);
-
-                        // B. Nháy số dư trên màn hình Seller
                         PlaceBidHandler.updateClientBalance(context, gson, sellerEmail);
 
-                        // C. Đóng gói thông báo RIÊNG TƯ chỉ dành cho Seller
                         String thongBaoRieng = "Sản phẩm '" + product.getName() + "' của bạn đã bán thành công. Bạn nhận được: " + String.format("%,.0fđ", finalPrice);
                         Response sellerRes = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBaoRieng);
                         String sellerMsg = gson.toJson(sellerRes);
 
-                        // D. Bắn thông báo mật
                         for (WebSocket client : context.getServer().getConnections()) {
-                            if (sellerEmail.equals(context.getUserByConn(client))) {
-                                if (client.isOpen()) client.send(sellerMsg);
+                            if (sellerEmail.equals(context.getUserByConn(client)) && client.isOpen()) {
+                                client.send(sellerMsg);
                                 break;
                             }
                         }
-                    } else {
-                        System.err.println("LỖI PAYOUT: Không tìm thấy Seller trong DB với ID: " + sellerId);
                     }
+
+                    // TRƯỜNG HỢP 2: PHIÊN ĐẤU GIÁ BỊ Ế (KHÔNG CÓ AI ĐẶT GIÁ)
                 } else {
-                    System.err.println("LỖI PAYOUT: Sản phẩm Không có thông tin Owner ID!");
-                }
+                    product.setStatus(ProductStatus.AVAILABLE);
+                    finalPrice = product.getStartPrice();
 
-            } else {
-                // 2. TRƯỜNG HỢP Ế HÀNG
-                
-                product.setStatus(ProductStatus.AVAILABLE);
-                finalPrice = product.getStartPrice();
+                    thongBaoChung = "Rất tiếc, sản phẩm '" + product.getName() + "' đã hết giờ mà không có ai đặt giá!";
+                    System.out.println("[AuctionManager] Sản phẩm " + product.getName() + " Ế HÀNG -> Trả về kho");
 
-                thongBaoChung = "Rất tiếc, sản phẩm '" + product.getName() + "' đã hết giờ mà không có ai chốt đơn!";
-                System.out.println("[AuctionManager] Sản phẩm " + product.getName() + " Ế HÀNG -> Hủy bỏ");
-
-                // (Tùy chọn) Gửi thông báo ế hàng riêng cho Seller
-                if (product.getOwner() != null) {
-                    String sellerEmail = product.getOwner().getEmail();
-                    String thongBaoRieng = "Sản phẩm '" + product.getName() + "' của bạn đã kết thúc mà không có ai đặt giá.";
-                    Response sellerRes = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBaoRieng);
-                    String sellerMsg = gson.toJson(sellerRes);
-                    for (WebSocket client : context.getServer().getConnections()) {
-                        if (sellerEmail.equals(context.getUserByConn(client))) {
-                            if (client.isOpen()) client.send(sellerMsg);
-                            break;
+                    if (product.getOwner() != null) {
+                        String sellerEmail = product.getOwner().getEmail();
+                        if (sellerEmail != null && !sellerEmail.trim().isEmpty()) {
+                            String thongBaoRieng = "Sản phẩm '" + product.getName() + "' của bạn đã kết thúc mà không có ai đặt giá.";
+                            Response sellerRes = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBaoRieng);
+                            String sellerMsg = gson.toJson(sellerRes);
+                            for (WebSocket client : context.getServer().getConnections()) {
+                                if (sellerEmail.equals(context.getUserByConn(client)) && client.isOpen()) {
+                                    client.send(sellerMsg);
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
-            }
 
-            // 3. LƯU TRẠNG THÁI SẢN PHẨM XUỐNG DB
-            product.setStartTime(null);
-            product.setEndTime(null);
-            ProductDao.getInstance().editProduct(product);
+                // Hoàn tất dọn dẹp các mốc thời gian trên Product nếu không bán được
+                if (product.getStatus() != ProductStatus.SOLD) {
+                    product.setStartTime(null);
+                    product.setEndTime(null);
+                }
 
-            // 4. LƯU VÀO SỔ CÁI ĐẤU GIÁ
-            AuctionDao.getInstance().saveCompletedAuction(
-                    String.valueOf(auction.getId()),
-                    product.getId(),
-                    winnerEmail,
-                    finalPrice
-            );
+                // Cập nhật trạng thái sản phẩm cuối cùng vào Database
+                ProductDao.getInstance().editProduct(product);
 
+                // Ghi nhận lịch sử phiên đấu giá hoàn tất vào Database cấu trúc SQL/NoSQL
+                AuctionDao.getInstance().saveCompletedAuction(
+                        String.valueOf(auction.getId()), product.getId(), winnerEmail, finalPrice
+                );
 
-            // 5. PHÁT LOA CHUNG CHO CẢ SÀN (Kèm theo tên người thắng)
+                // Phát loa thông báo kết quả chung tới toàn hệ thống Clients
+                Response publicRes = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBaoChung);
+                publicRes.getData().put("auction", auction);
+                publicRes.getData().put("winnerName", winnerName);
 
-            Response publicRes = new Response("AUCTION_RESULT_NOTIFICATION", "SUCCESS", thongBaoChung);
-            publicRes.getData().put("auction", auction);
-            publicRes.getData().put("winnerName", winnerName); // Đóng gói tên để Client đọc
-
-            String publicMsg = gson.toJson(publicRes);
-            for (WebSocket client : context.getServer().getConnections()) {
-                if (client.isOpen()) client.send(publicMsg);
-            }
-        }
-
-        // 6. DỌN DẸP RAM
-        context.removeAuction(auction.getId());
-
-        // Chọn phiên tiếp theo
-        scheduleNextAuction();
-    }
-
-    /**
-     * Broadcast thông báo kết thúc phiên đấu giá
-     */
-    private void broadcastAuctionEnd(Auction auction) {
-        ServerContext context = ServerContext.getInstance();
-
-        Response response = new Response(
-                "AUCTION_END",
-                "SUCCESS",
-                "Phiên đấu giá kết thúc!"
-        );
-        response.getData().put("auction", auction);
-
-        String message = gson.toJson(response);
-
-        for (WebSocket conn : context.getServer().getConnections()) {
-            if (conn.isOpen()) {
-                conn.send(message);
-            }
-        }
-
-        System.out.println("[AuctionManager] Đã broadcast kết thúc phiên đấu giá ID: " + auction.getId());
-    }
-
-    /**
-     * Lên lịch chọn phiên đấu giá kế tiếp sau 10 giây
-     */
-    private void scheduleNextAuction() {
-        new Thread(() -> {
-            try {
-                System.out.println("[AuctionManager] Chờ 10 giây trước khi chọn phiên đấu giá mới...");
-                Thread.sleep(10000); // 10 giây
-                pickNextProduct();
-            } catch (InterruptedException e) {
-                System.err.println("[AuctionManager] Lỗi khi lên lịch: " + e.getMessage());
-            }
-        }).start();
-    }
-
-    // ========== TỰ ĐỘNG KẾT THÚC KHI HẾT GIỜ ==========
-
-    /**
-     * Kiểm tra và tự động kết thúc tất cả các phiên đấu giá đã quá giờ chạy sàn
-     * Gọi định kỳ mỗi 1 giây từ vòng lặp Server
-     */
-    public void checkAndEndExpiredAuctions() {
-        ServerContext context = ServerContext.getInstance();
-        List<Auction> activeAuctions = context.getActiveAuctions();
-
-        // Sử dụng một bản sao danh sách để tránh lỗi ConcurrentModificationException
-        synchronized (activeAuctions) {
-            List<Auction> runningAuctions = new ArrayList<>(activeAuctions);
-            for (Auction auction : runningAuctions) {
-                if (auction != null &&
-                        "ACTIVE".equals(auction.getStatus()) &&
-                        LocalDateTime.now().isAfter(auction.getEndTime())) {
-
-                    System.out.println("[AuctionManager] Phiên đấu giá ID " + auction.getId() + " ĐÃ HẾT GIỜ!");
-                    endAuction(auction);
+                String publicMsg = gson.toJson(publicRes);
+                for (WebSocket client : context.getServer().getConnections()) {
+                    if (client.isOpen()) client.send(publicMsg);
                 }
             }
         }
+
+        // Giải phóng tài nguyên dữ liệu RAM và dọn sạch hàng đợi Bot chuyên biệt của phiên này
+        context.removeAuction(auction.getId());
+        botQueuesMap.remove(auction.getId());
+        botFreezeMap.remove(auction.getId());
+
+        System.out.println("[AuctionManager] Đã dọn dẹp bộ nhớ RAM và đóng hoàn toàn phiên ID: " + auction.getId());
     }
 }
