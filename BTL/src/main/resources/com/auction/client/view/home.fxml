@@ -23,11 +23,11 @@
          <children>
             <VBox alignment="TOP_CENTER" spacing="10.0">
                <children>
-                  <ToggleButton fx:id="backToAdmin" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleBackToAdmin" prefHeight="39.0" prefWidth="85.0" toggleGroup="$menu">
+                  <ToggleButton fx:id="backToAdmin" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleBackToAdmin" prefHeight="39.0" prefWidth="85.0">
                      <graphic>
-                        <ImageView fitHeight="38.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true" rotate="180.0">
+                        <ImageView fitHeight="38.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
                            <image>
-                              <Image url="@arrow.png" />
+                              <Image url="@back.png" />
                            </image>
                         </ImageView>
                      </graphic>
@@ -35,12 +35,15 @@
                         <String fx:value="transparent" />
                         <String fx:value="toggle-button" />
                      </styleClass>
+                     <toggleGroup>
+                        <ToggleGroup fx:id="menu" />
+                     </toggleGroup>
                   </ToggleButton>
 
                   <ToggleButton maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleHomeClicked" selected="true" toggleGroup="$menu">
                      <graphic>
                         <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
-                           <image><Image url="@home-button.png" /></image>
+                           <image><Image url="@home.png" /></image>
                         </ImageView>
                      </graphic>
                      <styleClass>
@@ -52,7 +55,7 @@
                   <ToggleButton maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSearchClicked" toggleGroup="$menu">
                      <graphic>
                         <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
-                           <image><Image url="@3d-magnifier.png" /></image>
+                           <image><Image url="@search.png" /></image>
                         </ImageView>
                      </graphic>
                      <styleClass>
@@ -64,7 +67,7 @@
                   <ToggleButton maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleBankButtonClicked" toggleGroup="$menu">
                      <graphic>
                         <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
-                           <image><Image url="@dollar-symbol.png" /></image>
+                           <image><Image url="@bank.png" /></image>
                         </ImageView>
                      </graphic>
                      <styleClass>
@@ -76,7 +79,7 @@
                   <ToggleButton maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleTikTokAuction" toggleGroup="$menu">
                      <graphic>
                         <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
-                           <image><Image url="@shopping-cart.png" /></image>
+                           <image><Image url="@tik-tok.png" /></image>
                         </ImageView>
                      </graphic>
                      <styleClass>
