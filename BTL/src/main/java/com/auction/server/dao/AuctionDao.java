@@ -72,7 +72,7 @@ public class AuctionDao {
     }
 
     /**
-     * Lưu thông tin khi phiên đấu giá kết thúc thành công.
+     * Lưu thông tin khi phiên đấu giá kết thúc thành công (Hoặc ế hàng).
      */
     public boolean saveCompletedAuction(String auctionId, String productId, String winnerEmail, double finalPrice) {
         // Kiểm tra tính hợp lệ của dữ liệu đầu vào trước khi mở kết nối DB
@@ -88,7 +88,14 @@ public class AuctionDao {
 
             pstmt.setString(1, auctionId);
             pstmt.setString(2, productId);
-            pstmt.setString(3, winnerEmail != null ? winnerEmail : "No Winner");
+
+            // XỬ LÝ FIX LỖI: Nếu không có người thắng cuộc, lưu giá trị NULL thực sự vào DB thay vì chuỗi rác
+            if (winnerEmail == null || winnerEmail.trim().isEmpty() || "No Winner".equalsIgnoreCase(winnerEmail.trim())) {
+                pstmt.setNull(3, Types.VARCHAR);
+            } else {
+                pstmt.setString(3, winnerEmail.trim());
+            }
+
             pstmt.setDouble(4, finalPrice);
 
             return pstmt.executeUpdate() > 0;
