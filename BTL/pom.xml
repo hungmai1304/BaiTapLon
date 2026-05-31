@@ -201,6 +201,9 @@
 				<configuration>
 					<name>BTL_Auction</name>
 					<type>EXE</type>
+
+					<destination>${project.build.directory}/dist</destination>
+
 					<mainJar>app.jar</mainJar>
 					<mainClass>com.auction.client.AuctionClient</mainClass>
 					<input>${project.build.directory}/libs</input>
