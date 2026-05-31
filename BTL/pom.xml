@@ -221,7 +221,7 @@
 					<appVersion>1.0.0</appVersion>
 
 					<mainJar>app.jar</mainJar>
-					<mainClass>com.auction.client.AuctionClient</mainClass>
+					<mainClass>com.auction.client.AppLauncher</mainClass>
 					<input>${project.build.directory}/libs</input>
 					<icon>src/main/resources/law-and-justice.ico</icon>
 					<vendor>EnixCompany</vendor>
