@@ -6,14 +6,12 @@
 
 	<groupId>com.auction</groupId>
 	<artifactId>BTL</artifactId>
-	<version>1.0-SNAPSHOT</version>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>17</maven.compiler.source>
-		<maven.compiler.target>17</maven.compiler.target>
-		<javafx.version>17.0.2</javafx.version>
-	</properties>
+	<version>1.0.0</version> <properties>
+	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	<maven.compiler.source>17</maven.compiler.source>
+	<maven.compiler.target>17</maven.compiler.target>
+	<javafx.version>17.0.2</javafx.version>
+</properties>
 
 	<dependencies>
 		<dependency>
@@ -131,7 +129,7 @@
 				<artifactId>javafx-maven-plugin</artifactId>
 				<version>0.0.8</version>
 				<configuration>
-					<mainClass>com.auction.client.AuctionClient</mainClass>
+					<mainClass>com.auction.client.AppLauncher</mainClass>
 					<options>
 						<option>--add-opens</option>
 						<option>java.base/jdk.internal.reflect=ALL-UNNAMED</option>
@@ -144,7 +142,7 @@
 					<execution>
 						<id>default-cli</id>
 						<configuration>
-							<mainClass>com.auction.client.AuctionClient</mainClass>
+							<mainClass>com.auction.client.AppLauncher</mainClass>
 						</configuration>
 					</execution>
 				</executions>
@@ -202,8 +200,8 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<classpathPrefix>libs/</classpathPrefix>
-							<mainClass>com.auction.client.AuctionClient</mainClass>
+							<classpathPrefix></classpathPrefix>
+							<mainClass>com.auction.client.AppLauncher</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
@@ -217,9 +215,7 @@
 					<name>BTL_Auction</name>
 					<type>EXE</type>
 					<destination>${project.build.directory}/dist</destination>
-
 					<appVersion>1.0.0</appVersion>
-
 					<mainJar>app.jar</mainJar>
 					<mainClass>com.auction.client.AppLauncher</mainClass>
 					<input>${project.build.directory}/libs</input>
@@ -227,6 +223,14 @@
 					<vendor>EnixCompany</vendor>
 					<winShortcut>true</winShortcut>
 					<winMenu>true</winMenu>
+
+					<javaOptions>
+						<option>-Dglass.win.uiScale=100%</option>
+						<option>-Dprism.allowhidpi=false</option>
+						<option>-Dsun.java2d.uiScale=1.0</option>
+						<option>--add-opens</option>
+						<option>java.base/jdk.internal.reflect=ALL-UNNAMED</option>
+					</javaOptions>
 				</configuration>
 			</plugin>
 
