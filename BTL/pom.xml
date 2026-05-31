@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.auction</groupId>
@@ -14,7 +14,6 @@
 		<maven.compiler.target>17</maven.compiler.target>
 		<javafx.version>17.0.2</javafx.version>
 	</properties>
-
 
 	<dependencies>
 		<dependency>
@@ -82,6 +81,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.cloudinary</groupId>
+			<artifactId>cloudinary-http44</artifactId>
+			<version>1.36.0</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
 			<version>5.9.0</version>
@@ -104,11 +109,6 @@
 			<artifactId>mockito-junit-jupiter</artifactId>
 			<version>5.20.0</version>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.cloudinary</groupId>
-			<artifactId>cloudinary-http44</artifactId>
-			<version>1.36.0</version>
 		</dependency>
 	</dependencies>
 
@@ -137,6 +137,49 @@
 						<option>-Dprism.allowhidpi=false</option>
 						<option>-Dsun.java2d.uiScale=1.0</option>
 					</options>
+				</configuration>
+				<executions>
+					<execution>
+						<id>default-cli</id>
+						<configuration>
+							<mainClass>com.auction.client.AuctionClient</mainClass>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.6.1</version>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/libs</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.panteleyev</groupId>
+				<artifactId>jpackage-maven-plugin</artifactId>
+				<version>1.6.0</version>
+				<configuration>
+					<name>BTL_Auction</name>
+					<type>EXE</type>
+					<mainJar>${project.artifactId}-${project.version}.jar</mainJar>
+					<mainClass>com.auction.client.AuctionClient</mainClass>
+					<input>${project.build.directory}/libs</input>
+					<icon>src/main/resources/law-and-justice.ico</icon>
+					<vendor>EnixCompany</vendor>
+					<winShortcut>true</winShortcut>
+					<winMenu>true</winMenu>
 				</configuration>
 			</plugin>
 

@@ -1,0 +1,41 @@
+name: Đóng gói ứng dụng Windows (.EXE)
+
+# Kích hoạt script này mỗi khi bạn "git push" lên nhánh main (hoặc master)
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-windows:
+    # Ép GitHub mở một máy ảo chạy hệ điều hành Windows bản mới nhất
+    runs-on: windows-latest
+
+    steps:
+      # Bước 1: Lấy code từ kho lưu trữ của bạn về máy ảo
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # Bước 2: Cài đặt môi trường Java 17 (Temurin) trên máy ảo Windows
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # Bước 3: Chạy lệnh Biên dịch dự án (Tạo ra các file .class và copy thư viện phụ thuộc)
+      - name: Build project với Maven
+        run: mvn clean package
+
+      # Bước 4: Gọi JPackage để đúc thành file cài đặt .EXE và nhúng kèm Icon
+      - name: Đóng gói thành file cài đặt .EXE
+        run: mvn jpackage:jpackage
+
+      # Bước 5: Đẩy file .EXE sau khi build xong lên hệ thống GitHub để bạn tải về
+      - name: Tải file cài đặt lên GitHub Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: BTL-Auction-Windows-Installer
+          path: target/dist/*.exe
