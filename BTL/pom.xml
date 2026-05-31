@@ -113,6 +113,8 @@
 	</dependencies>
 
 	<build>
+		<finalName>app</finalName>
+
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -167,13 +169,39 @@
 			</plugin>
 
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.3.1</version>
+				<executions>
+					<execution>
+						<id>copy-main-jar</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/libs</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.build.directory}</directory>
+									<includes>
+										<include>app.jar</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
 				<groupId>org.panteleyev</groupId>
 				<artifactId>jpackage-maven-plugin</artifactId>
 				<version>1.6.0</version>
 				<configuration>
 					<name>BTL_Auction</name>
 					<type>EXE</type>
-					<mainJar>${project.artifactId}-${project.version}.jar</mainJar>
+					<mainJar>app.jar</mainJar>
 					<mainClass>com.auction.client.AuctionClient</mainClass>
 					<input>${project.build.directory}/libs</input>
 					<icon>src/main/resources/law-and-justice.ico</icon>
