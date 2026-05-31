@@ -18,6 +18,7 @@ import com.google.gson.GsonBuilder;
 import org.java_websocket.WebSocket;
 
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +41,7 @@ public class AuctionManager {
 
     // Bộ lưu trữ hàng đợi Bot an toàn cho từng phiên đấu giá
     private final Map<String, Queue<AutoBidConfig>> botQueuesMap = new ConcurrentHashMap<>();
-    // THÊM DÒNG NÀY: Quản lý trạng thái đóng băng 10s của từng phiên đấu giá
+    // Quản lý trạng thái đóng băng 10s của từng phiên đấu giá
     private final Map<String, Boolean> botFreezeMap = new ConcurrentHashMap<>();
 
     // Thêm hàm bổ trợ này để các Handler tiện check trạng thái
@@ -55,8 +56,9 @@ public class AuctionManager {
             botFreezeMap.remove(auctionId);
         }
     }
+
     private AuctionManager() {
-        // KHỞI CHẠY HỆ THỐNG QUÉT TỰ ĐỘNG NGAY KHI MANAGER ĐƯỢC TẠO
+        // KHỞI CHẠY BỘ QUÉT: Bây giờ CHỈ quét để KÍCH HOẠT phiên mới
         startAutoAuctionEngine();
     }
 
@@ -73,30 +75,23 @@ public class AuctionManager {
     }
 
     /**
-     * BỘ MÁY QUÉT TỰ ĐỘNG: Cứ mỗi 5 giây quét một lần để tự động Bắt đầu và Kết thúc các phiên song song
+     * BỘ MÁY QUÉT TỰ ĐỘNG: Định kỳ quét kích hoạt phiên mới lên sàn.
      */
     private void startAutoAuctionEngine() {
-        // Vòng lặp quét kích hoạt phiên mới
+        // Vòng lặp quét kích hoạt phiên mới (Giữ nguyên chu kỳ ngắn để mở phiên trơn tru)
         scheduler.scheduleAtFixedRate(() -> {
             try {
                 checkAndStartIncomingAuctions();
             } catch (Exception e) {
                 System.err.println("[Engine] Lỗi khi quét mở phiên mới: " + e.getMessage());
             }
-        }, 0, 5, TimeUnit.SECONDS);
+        }, 0, 2, TimeUnit.SECONDS);
 
-        // Vòng lặp quét đóng các phiên hết hạn
-        scheduler.scheduleAtFixedRate(() -> {
-            try {
-                checkAndEndExpiredAuctions();
-            } catch (Exception e) {
-                System.err.println("[Engine] Lỗi khi quét đóng phiên cũ: " + e.getMessage());
-            }
-        }, 2, 5, TimeUnit.SECONDS);
+        // --- ĐÃ XÓA BỎ VÒNG LẶP QUÉT ĐÓNG PHIÊN 5 GIÂY VỚ VẨN ---
     }
 
     /**
-     * 1. HÀM TỰ ĐỘNG MỞ PHIÊN: Phiên nào đến giờ StartTime là tự động mở song song!
+     * 1. HÀM TỰ ĐỘNG MỞ PHIÊN VÀ ĐẶT LỊCH ĐÓNG PHIÊN REAL-TIME
      */
     private void checkAndStartIncomingAuctions() {
         ServerContext context = ServerContext.getInstance();
@@ -125,6 +120,23 @@ public class AuctionManager {
 
                 broadcastNewAuction(auction);
 
+                // ==================== ĐOẠN NÂNG CẤP XỬ LÝ REAL-TIME CHUẨN ĐÉT ====================
+                if (auction.getEndTime() != null) {
+                    long delayMillis = Duration.between(LocalDateTime.now(), auction.getEndTime()).toMillis();
+
+                    if (delayMillis > 0) {
+                        // Lên lịch đóng phiên độc lập, nổ súng chính xác đến từng mili-giây!
+                        scheduler.schedule(() -> {
+                            System.out.println("[TIMER CHÍNH XÁC] Đã chạm mili-giây kết thúc! Tiến hành ĐÓNG PHIÊN ID: " + auction.getId());
+                            endAuction(auction);
+                        }, delayMillis, TimeUnit.MILLISECONDS);
+                    } else {
+                        // Trường hợp bất khả kháng: Vừa mở ra mà hệ thống tính toán đã lỡ quá giờ thì hạ màn luôn
+                        endAuction(auction);
+                    }
+                }
+                // ===============================================================================
+
                 // Kích hoạt Bot War riêng cho phiên này
                 if (auction.getProduct() != null) {
                     PlaceBidHandler.triggerBotWar(context, gson, auction.getProduct().getId(), auction);
@@ -145,27 +157,7 @@ public class AuctionManager {
     }
 
     /**
-     * 2. HÀM TỰ ĐỘNG KẾT THÚC: Quét độc lập từng phiên, hết giờ là đóng, không ảnh hưởng phiên khác
-     */
-    public void checkAndEndExpiredAuctions() {
-        ServerContext context = ServerContext.getInstance();
-        LocalDateTime now = LocalDateTime.now();
-        List<Auction> expiredAuctions = new ArrayList<>();
-
-        for (Auction auction : context.getActiveAuctions()) {
-            if (auction != null && "ACTIVE".equals(auction.getStatus()) && auction.getEndTime() != null && now.isAfter(auction.getEndTime())) {
-                expiredAuctions.add(auction);
-            }
-        }
-
-        for (Auction auction : expiredAuctions) {
-            System.out.println("[HẾT GIỜ TỰ ĐỘNG] Phát hiện phiên ID " + auction.getId() + " đã hết hạn thời gian.");
-            endAuction(auction); // Gọi hàm đóng phiên độc lập
-        }
-    }
-
-    /**
-     * KẾT THÚC PHIÊN ĐẤU GIÁ ĐỘC LẬP
+     * KẾT THÚC PHIÊN ĐẤU GIÁ ĐỘC LẬP REAL-TIME
      */
     public void endAuction(Auction auction) {
         if (auction == null) return;
@@ -266,7 +258,5 @@ public class AuctionManager {
         // Giải phóng dữ liệu và dọn sạch hàng đợi Bot của RIÊNG phiên này
         context.removeAuction(auction.getId());
         botQueuesMap.remove(auction.getId());
-
-        // ĐÃ XÓA BỎ HÀM CHỜ ĐỢI 10 GIÂY THỦ CÔNG -> MỌI THỨ CHẠY THEO THỜI GIAN THỰC TỰ ĐỘNG!
     }
 }

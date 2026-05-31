@@ -14,18 +14,17 @@ import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Timer;
-import java.util.TimerTask;
 import com.auction.server.service.AuctionManager;
 
 public class AuctionWebSocketServer extends WebSocketServer {
 
     private final Gson gson;
     private final MessageDispatcher dispatcher;
-    private Timer auctionTimer;
+
+    // --- ĐÃ XÓA BIẾN auctionTimer THỪA THÃI Ở ĐÂY ---
 
     // =========================================================================
-    // 1. THAY ĐỔI CHÍNH: Thêm constructor nhận vào InetSocketAddress để chạy Tailscale/Render linh hoạt
+    // 1. Thêm constructor nhận vào InetSocketAddress để chạy Tailscale/Render linh hoạt
     // =========================================================================
     public AuctionWebSocketServer(InetSocketAddress address) {
         super(address);
@@ -40,7 +39,7 @@ public class AuctionWebSocketServer extends WebSocketServer {
     }
 
     // =========================================================================
-    // 2. GIỮ LẠI (TÙY CHỌN): Constructor cũ nhận vào port để không làm gãy code chỗ khác (nếu có)
+    // 2. GIỮ LẠI (TÙY CHỌN): Constructor cũ nhận vào port để không làm gãy code chỗ khác
     // =========================================================================
     public AuctionWebSocketServer(int port) {
         this(new InetSocketAddress(port));
@@ -50,19 +49,12 @@ public class AuctionWebSocketServer extends WebSocketServer {
     // 3. TÁCH BIỆT: Hàm khởi tạo Gson để tái sử dụng ở các constructor, tránh trùng lặp code
     // =========================================================================
     private Gson initGson() {
+        // Thay thế bằng Lambda Expression cho gọn gàng và tránh sinh lớp ẩn danh $
         return new GsonBuilder()
-                .registerTypeAdapter(LocalDateTime.class, new JsonSerializer<LocalDateTime>() {
-                    @Override
-                    public JsonElement serialize(LocalDateTime src, Type typeOfSrc, JsonSerializationContext context) {
-                        return new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-                    }
-                })
-                .registerTypeAdapter(LocalDateTime.class, new JsonDeserializer<LocalDateTime>() {
-                    @Override
-                    public LocalDateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-                        return LocalDateTime.parse(json.getAsString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-                    }
-                })
+                .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
+                        new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
+                .registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, typeOfT, context) ->
+                        LocalDateTime.parse(json.getAsString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME))
                 .create();
     }
 
@@ -113,25 +105,12 @@ public class AuctionWebSocketServer extends WebSocketServer {
     @Override
     public void onStart() {
         System.out.println("[WebSocketServer] WebSocket Server đã sẵn sàng!");
-
-        // Khởi tạo và chạy Timer kiểm tra đấu giá hết hạn (mỗi 1 giây)
-        auctionTimer = new Timer(true);
-        auctionTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    AuctionManager.getInstance().checkAndEndExpiredAuctions();
-                } catch (Exception e) {
-                    System.err.println("[Timer] Lỗi khi kiểm tra đấu giá hết hạn: " + e.getMessage());
-                }
-            }
-        }, 1000, 1000);
+        // --- ĐÃ XÓA BỎ HOÀN TOÀN ĐOẠN ĐẶT LỊCH QUÉT TIMER 1 GIÂY THỪA THÃI TẠI ĐÂY ---
+        // Giờ đây AuctionManager sẽ tự kiểm soát vòng đời đóng phiên qua các luồng bắn tỉa Real-time
     }
 
     public void shutdown() {
-        if (auctionTimer != null) {
-            auctionTimer.cancel();
-        }
+        // --- ĐÃ XÓA ĐOẠN auctionTimer.cancel() VÌ KHÔNG CÒN SỬ DỤNG ---
         try {
             this.stop();
             System.out.println("[WebSocketServer] WebSocket Server đã dừng!");
