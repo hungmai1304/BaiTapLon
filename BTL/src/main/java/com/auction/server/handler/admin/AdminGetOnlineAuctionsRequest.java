@@ -13,9 +13,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap("ADMIN_GET_ONLINE_AUCTIONS")
 public class AdminGetOnlineAuctionsRequest implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(AdminGetOnlineAuctionsRequest.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -85,7 +87,7 @@ public class AdminGetOnlineAuctionsRequest implements IMessageHandler {
             conn.send(gson.toJson(responseMap));
 
         } catch (Exception e) {
-            System.err.println("[AdminGetOnlineAuctions] Lỗi bóc tách RAM: " + e.getMessage());
+            LOGGER.severe("[AdminGetOnlineAuctions] Lỗi bóc tách RAM: " + e.getMessage());
             responseMap.put("status", "ERROR");
             responseMap.put("message", "Có lỗi xảy ra khi xử lý dữ liệu hệ thống!");
             responseMap.put("data", new HashMap<>());

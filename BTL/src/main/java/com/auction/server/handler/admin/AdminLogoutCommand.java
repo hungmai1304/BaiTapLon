@@ -13,9 +13,11 @@ import org.java_websocket.WebSocket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap("ADMIN_LOGOUT_COMMAND")
 public class AdminLogoutCommand implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(AdminLogoutCommand.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -31,7 +33,7 @@ public class AdminLogoutCommand implements IMessageHandler {
         // Bước 1.1: Kiểm tra xem kết nối (conn) này đã đăng nhập vào hệ thống chưa
         String adminEmail = context.getUserByConn(conn);
         if (adminEmail == null) {
-            System.err.println("[AdminLogoutCommand] Từ chối: Thao tác từ một kết nối chưa đăng nhập!");
+            LOGGER.severe("[AdminLogoutCommand] Từ chối: Thao tác từ một kết nối chưa đăng nhập!");
             responseMap.put("status", "ERROR");
             responseMap.put("message", "Bạn cần đăng nhập để thực hiện thao tác này!");
             conn.send(gson.toJson(responseMap));
@@ -43,7 +45,7 @@ public class AdminLogoutCommand implements IMessageHandler {
         User currentRequester = userDao.getUserByEmail(adminEmail);
 
         if (currentRequester == null || !"ADMIN".equalsIgnoreCase(currentRequester.getRole())) {
-            System.err.println("[AdminLogoutCommand] Cảnh báo: Tài khoản " + adminEmail + " cố tình hack quyền Đăng xuất Admin!");
+            LOGGER.severe("[AdminLogoutCommand] Cảnh báo: Tài khoản " + adminEmail + " cố tình hack quyền Đăng xuất Admin!");
             responseMap.put("status", "ERROR");
             responseMap.put("message", "Bạn không có quyền thực hiện hành động này!");
             conn.send(gson.toJson(responseMap));
@@ -53,7 +55,7 @@ public class AdminLogoutCommand implements IMessageHandler {
         // =========================================================================
         // 2. XỬ LÝ ĐĂNG XUẤT (Cho email này rời khỏi cả 2 danh sách đang online)
         // =========================================================================
-        System.out.println("[AdminLogoutCommand] Nhận lệnh đăng xuất từ Admin: " + adminEmail);
+        LOGGER.info("[AdminLogoutCommand] Nhận lệnh đăng xuất từ Admin: " + adminEmail);
 
         // Gọi hàm xóa đồng bộ ở cả 2 danh sách (onlineUsers & onlineUserObjects) trong ServerContext
         context.removeOnlineUserByEmail(adminEmail);
@@ -79,7 +81,7 @@ public class AdminLogoutCommand implements IMessageHandler {
         String jsonResponse = gson.toJson(response);
         if (conn != null && conn.isOpen()) {
             conn.send(jsonResponse);
-            System.out.println("[Server Handler] Đã gửi danh sách phản hồi về Client (" + requestList.size() + " hàng).");
+            LOGGER.info("[Server Handler] Đã gửi danh sách phản hồi về Client (" + requestList.size() + " hàng).");
         }
     }
 }

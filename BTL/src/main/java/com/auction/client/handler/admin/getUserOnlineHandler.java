@@ -13,10 +13,11 @@ import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.logging.Logger;
 
 @ResponseHandler(type = MessageType.GET_ONLINE_USERS_RESPONSE)
 public class getUserOnlineHandler implements IClientHandler {
-
+private static final Logger LOGGER = Logger.getLogger(getUserOnlineHandler.class.getName());
     // Tích hợp bộ cấu hình Gson có khả năng xử lý LocalDateTime bằng biểu thức Lambda
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
@@ -42,10 +43,10 @@ public class getUserOnlineHandler implements IClientHandler {
 
                 // Đổ dữ liệu vào Context của Admin, UI sẽ tự động làm mới ngay lập tức thông qua Binding
                 AdminContext.getInstance().setOnlineUsers(listUsers);
-                System.out.println("[getUserOnlineHandler] Đã cập nhật " + listUsers.size() + " users online vào hệ thống.");
+                LOGGER.info("[getUserOnlineHandler] Đã cập nhật " + listUsers.size() + " users online vào hệ thống.");
             }
         } else {
-            System.err.println("[getUserOnlineHandler] Lỗi từ Server: " + response.getMessage());
+            LOGGER.severe("[getUserOnlineHandler] Lỗi từ Server: " + response.getMessage());
         }
     }
 }

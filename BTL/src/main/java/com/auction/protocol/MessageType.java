@@ -35,23 +35,17 @@ public class MessageType {
     public static final String EDIT_PRODUCT_REQUEST = "EDIT_PRODUCT_REQUEST";
     public static final String EDIT_PRODUCT_RESPONSE = "EDIT_PRODUCT_RESPONSE";
 
-    // Server thông báo với client (Dùng sau khi có người vừa đăng bán thành công)
-    public static final String UPDATE_AUCTION_LIST_RESPONSE = "UPDATE_AUCTION_LIST_RESPONSE";
 
     // Hệ thống lắng nghe thời gian (TikTok Listener)
     public static final String TIK_TOK_LISTENER_REQUEST = "TIK_TOK_LISTENER_REQUEST";
-    public static final String TIK_TOK_LISTENER_RESPONSE = "TIK_TOK_LISTENER_RESPONSE";
 
     // Ngắt hệ thống lắng nghe thời gian
     public static final String STOP_TIK_TOK_LISTENER_REQUEST = "STOP_TIK_TOK_LISTENER_REQUEST";
-    public static final String STOP_TIK_TOK_LISTENER_RESPONSE = "STOP_TIK_TOK_LISTENER_RESPONSE";
 
     // 1. Client xin danh sách các phiên đấu giá đang diễn ra
     public static final String GET_ACTIVE_AUCTIONS_REQUEST = "GET_ACTIVE_AUCTIONS_REQUEST";
     public static final String GET_ACTIVE_AUCTIONS_RESPONSE = "GET_ACTIVE_AUCTIONS_RESPONSE";
 
-    // 2. Server broadcast khi có 1 phiên đấu giá mới vừa được Shop đưa lên sàn
-    public static final String UPDATE_ACTIVE_AUCTIONS_RESPONSE = "UPDATE_ACTIVE_AUCTIONS_RESPONSE";
 
     // 3. Client gửi lệnh xin ra giá (Bid)
     public static final String PLACE_BID_REQUEST = "PLACE_BID_REQUEST";
@@ -80,12 +74,6 @@ public class MessageType {
     //  CÁC TÍN HIỆU DỰ PHÒNG CHO LOGIC KẾT THÚC ĐẤU GIÁ
     // =========================================================================
 
-    // Server thông báo phiên đấu giá đã kết thúc thành công (Có người thắng) hoặc thất bại (Không ai mua)
-    public static final String AUCTION_ENDED_BROADCAST = "AUCTION_ENDED_BROADCAST";
-
-    // Người thắng cuộc vào nhận sản phẩm và hệ thống tự động trừ tiền trong ví
-    public static final String CLAIM_PRIZE_REQUEST = "CLAIM_PRIZE_REQUEST";
-    public static final String CLAIM_PRIZE_RESPONSE = "CLAIM_PRIZE_RESPONSE";
 
     // xoa san pham
     public static final String DELETE_PRODUCT_REQUEST = "DELETE_PRODUCT_REQUEST";
@@ -98,9 +86,6 @@ public class MessageType {
     // Admin quản lý danh sách người dùng online
     public static final String GET_ONLINE_USERS_REQUEST = "ADMIN_GET_ONLINE_USERS_REQUEST";
     public static final String GET_ONLINE_USERS_RESPONSE = "ADMIN_GET_ONLINE_USERS_RESPONSE";
-
-    public static final String ADMIN_ONLINE_AUCTIONS_LIST_REQUEST="ADMIN_ONLINE_AUCTIONS_LIST";
-    public static final String ADMIN_ONLINE_AUCTIONS_LIST_RESPONSE="ADMIN_ONLINE_AUCTIONS_LIST_RESPONSE";
 
     public static final String GET_ADMIN_REQUEST_LIST = "GET_ADMIN_REQUEST_LIST";
     public static final String GET_ADMIN_REQUEST_LIST_RESPONSE = "GET_ADMIN_REQUEST_LIST_RESPONSE";

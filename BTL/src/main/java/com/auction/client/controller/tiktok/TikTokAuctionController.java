@@ -15,8 +15,10 @@ import javafx.scene.control.TextArea; // 1. NHỚ IMPORT THÊM TEXTAREA
 import javafx.animation.Timeline;
 import javafx.animation.KeyFrame;
 
-public class TikTokAuctionController {
+import java.util.logging.Logger;
 
+public class TikTokAuctionController {
+private static final Logger LOGGER = Logger.getLogger(TikTokAuctionController.class.getName());
     @FXML private Label name;
     @FXML private Label price;
     @FXML private Label step;
@@ -107,7 +109,7 @@ public class TikTokAuctionController {
                             javafx.scene.image.Image img = new javafx.scene.image.Image(imageSource, true);
                             productImage.setImage(img);
                         } catch (Exception e) {
-                            System.out.println("[TikTok UI] Không thể load ảnh từ Cloudinary: " + e.getMessage());
+                            LOGGER.info("[TikTok UI] Không thể load ảnh từ Cloudinary: " + e.getMessage());
                             productImage.setImage(null);
                         }
                     } else {
@@ -125,7 +127,7 @@ public class TikTokAuctionController {
         if (hasPrev) {
             renderCurrentAuction();
         } else {
-            System.out.println("[TikTokController] Đã ở đầu danh sách!");
+            LOGGER.info("[TikTokController] Đã ở đầu danh sách!");
         }
     }
 
@@ -136,7 +138,7 @@ public class TikTokAuctionController {
         if (hasNext) {
             renderCurrentAuction();
         } else {
-            System.out.println("[TikTokController] Hết danh sách! Đang tải thêm...");
+            LOGGER.info("[TikTokController] Hết danh sách! Đang tải thêm...");
             RequestSender.sendGetActiveAuctionsRequest();
         }
     }
@@ -173,7 +175,7 @@ public class TikTokAuctionController {
                 if (lblTopBidder != null) {
                     lblTopBidder.setText(leaderName + " - " + String.format("%,.0f VNĐ", newPrice));
                 }
-                System.out.println("[TikTok UI] Đã nhảy số trực tiếp trên màn hình: " + newPrice);
+                LOGGER.info("[TikTok UI] Đã nhảy số trực tiếp trên màn hình: " + newPrice);
             }
         });
     }
@@ -190,7 +192,7 @@ public class TikTokAuctionController {
                 }));
                 timeline.play();
             } else {
-                System.out.println("[Notification] " + message);
+                LOGGER.info("[Notification] " + message);
             }
         });
     }

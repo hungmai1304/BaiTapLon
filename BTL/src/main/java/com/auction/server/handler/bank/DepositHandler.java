@@ -11,13 +11,15 @@ import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap(value = MessageType.DEPOSIT_REQUEST)
 public class DepositHandler implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(DepositHandler.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
-        System.out.println("[DepositHandler] Đang xử lý yêu cầu nạp tiền...");
+        LOGGER.info("[DepositHandler] Đang xử lý yêu cầu nạp tiền...");
 
         try {
             // 1. Kiểm tra đăng nhập (Lấy email người dùng từ connection session)
@@ -66,7 +68,7 @@ public class DepositHandler implements IMessageHandler {
                 response.getData().put("newBalance", updatedUser.getBalance());
 
                 conn.send(gson.toJson(response));
-                System.out.println("[DepositHandler] Nạp tiền thành công cho " + userEmail + ": +" + amount);
+                LOGGER.info("[DepositHandler] Nạp tiền thành công cho " + userEmail + ": +" + amount);
             } else {
                 sendError(conn, gson, "Không thể cập nhật số dư vào hệ thống!");
             }

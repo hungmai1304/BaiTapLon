@@ -12,9 +12,11 @@ import org.java_websocket.WebSocket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap("ADMIN_GET_ALL_SHOP")
 public class AdminGetAllShop implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(AdminGetAllShop.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -53,7 +55,7 @@ public class AdminGetAllShop implements IMessageHandler {
             conn.send(gson.toJson(responseMap));
 
         } catch (Exception e) {
-            System.err.println("[AdminGetAllShop] Lỗi truy vấn Shop: " + e.getMessage());
+            LOGGER.severe("[AdminGetAllShop] Lỗi truy vấn Shop: " + e.getMessage());
             responseMap.put("status", "ERROR");
             responseMap.put("message", "Lỗi máy chủ khi kết nối Database!");
             responseMap.put("data", new HashMap<>());

@@ -21,9 +21,10 @@ import javafx.scene.shape.Circle;
 
 import java.io.ByteArrayInputStream;
 import java.util.Base64;
+import java.util.logging.Logger;
 
 public class MainController {
-
+private static final Logger LOGGER = Logger.getLogger(MainController.class.getName());
     @FXML
     private GridPane gidpane_main;
 
@@ -95,7 +96,7 @@ public class MainController {
                     Image image = new Image(new ByteArrayInputStream(imageBytes));
                     main_avatar.setImage(image);
                 } catch (Exception e) {
-                    System.err.println("[MainController] Lỗi load avatar: " + e.getMessage());
+                    LOGGER.severe("[MainController] Lỗi load avatar: " + e.getMessage());
                 }
             });
         }

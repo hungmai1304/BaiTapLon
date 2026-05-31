@@ -6,10 +6,13 @@ import com.auction.client.network.IClientHandler;
 import com.auction.client.utils.ControllerRegistry;
 import com.auction.protocol.Response;
 
+import java.util.logging.Logger;
+
 import static com.auction.client.utils.NavigationService.navigate;
 
 @ResponseHandler(type = "REGISTER_RESPONSE")
 public class RegisterHandler implements IClientHandler {
+    private static final Logger LOGGER = Logger.getLogger(RegisterHandler.class.getName());
 
     @Override
     public void handle(Response response) {

@@ -15,9 +15,11 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.logging.Logger;
 
 @ResponseHandler(type = "GET_ACTIVE_AUCTIONS_RESPONSE")
 public class GetActiveAuctionsClientHandler implements IClientHandler {
+    private static final Logger LOGGER = Logger.getLogger(GetActiveAuctionsClientHandler.class.getName());
 
     // CẬP NHẬT: Bộ Gson an toàn đọc được cả chuỗi Local lẫn chuỗi có Múi giờ (+07:00)
     private static final Gson gson = new GsonBuilder()
@@ -38,7 +40,7 @@ public class GetActiveAuctionsClientHandler implements IClientHandler {
     @Override
     public void handle(Response response) {
         try {
-            System.out.println(">>> [HANDLER] Nhận dữ liệu auctionList từ Server.");
+            LOGGER.info(">>> [HANDLER] Nhận dữ liệu auctionList từ Server.");
 
             Object rawData = response.getData().get("auctionList");
 
@@ -61,16 +63,16 @@ public class GetActiveAuctionsClientHandler implements IClientHandler {
                             try {
                                 searchCtrl.getClass().getMethod("renderResults", List.class).invoke(searchCtrl, auctionList);
                             } catch (Exception e) {
-                                System.err.println("[Handler] Lỗi gọi renderResults ở SearchController: " + e.getMessage());
+                                LOGGER.severe("[Handler] Lỗi gọi renderResults ở SearchController: " + e.getMessage());
                             }
                         }
                     });
                 }
             } else {
-                System.err.println(">>> [LỖI] Server trả về data null cho key 'auctionList'");
+                LOGGER.severe(">>> [LỖI] Server trả về data null cho key 'auctionList'");
             }
         } catch (Exception e) {
-            System.err.println(">>> [LỖI PARSE] " + e.getMessage());
+            LOGGER.severe(">>> [LỖI PARSE] " + e.getMessage());
             e.printStackTrace();
         }
     }

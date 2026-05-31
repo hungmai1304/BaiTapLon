@@ -24,9 +24,10 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import java.time.ZoneId;
+import java.util.logging.Logger;
 
 public class BotBiddingController {
-
+private static final Logger LOGGER = Logger.getLogger(BotBiddingController.class.getName());
     @FXML private Label lblProductName;
     @FXML private Label lblStartPrice;
     @FXML private Label lblPriceStep;
@@ -133,7 +134,7 @@ public class BotBiddingController {
                         && currentUser.getEmail().equalsIgnoreCase(product.getOwner().getEmail())) {
                     lblBotNotification.setText("Bạn không có quyền đăng ký Bot cho sản phẩm của chính mình!");
                     lblBotNotification.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
-                    System.out.println("[Client Block] Từ chối người bán tự cài Bot qua SomeGlobal.");
+                    LOGGER.info("[Client Block] Từ chối người bán tự cài Bot qua SomeGlobal.");
                     return;
                 }
             }

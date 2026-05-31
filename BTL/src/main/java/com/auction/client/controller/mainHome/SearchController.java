@@ -26,9 +26,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 public class SearchController implements Initializable {
-
+private static final Logger LOGGER = Logger.getLogger(SearchController.class.getName());
     @FXML private TextField tfSearchKeyword;
     @FXML private FlowPane fpSearchResults;
     @FXML private Label lblResultCount;

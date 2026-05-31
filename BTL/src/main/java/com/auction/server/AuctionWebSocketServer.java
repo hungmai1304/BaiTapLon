@@ -14,9 +14,12 @@ import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.logging.Logger;
+
 import com.auction.server.service.AuctionManager;
 
 public class AuctionWebSocketServer extends WebSocketServer {
+    private static final Logger LOGGER = Logger.getLogger(AuctionWebSocketServer.class.getName());
 
     private final Gson gson;
     private final MessageDispatcher dispatcher;
@@ -60,7 +63,7 @@ public class AuctionWebSocketServer extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        System.out.println("⚡ Client vào phòng: " + conn.getRemoteSocketAddress());
+        LOGGER.info("⚡ Client vào phòng: " + conn.getRemoteSocketAddress());
         conn.send("{\"type\":\"SYSTEM_NOTIFICATION\", \"message\":\"Chào mừng bạn đến với sàn đấu giá!\"}");
         broadcast("{\"type\":\"USER_COUNT_UPDATE\", \"count\":" + getConnections().size() + "}");
     }
@@ -69,22 +72,22 @@ public class AuctionWebSocketServer extends WebSocketServer {
     public void onMessage(WebSocket conn, String message) {
         // Debug thông minh: Không in cả cục Base64
         if (message != null && message.length() > 200) {
-            System.out.println("[Server Nhận] Gói tin lớn: " + message.substring(0, 150) + "... [Độ dài: " + message.length() + "]");
+            LOGGER.info("[Server Nhận] Gói tin lớn: " + message.substring(0, 150) + "... [Độ dài: " + message.length() + "]");
         } else {
-            System.out.println("[Server Nhận]: " + message);
+            LOGGER.info("[Server Nhận]: " + message);
         }
 
         try {
             dispatcher.dispatch(conn, message);
         } catch (Exception e) {
-            System.err.println("Lỗi xử lý message:");
+            LOGGER.severe("Lỗi xử lý message:");
             e.printStackTrace();
         }
     }
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        System.out.println("Client thoát: " + (conn != null ? conn.getRemoteSocketAddress() : "Unknown"));
+        LOGGER.info("Client thoát: " + (conn != null ? conn.getRemoteSocketAddress() : "Unknown"));
 
         // Gửi số lượng kết nối thô còn lại phòng hờ hệ thống đo tải
         broadcast("{\"type\":\"USER_COUNT_UPDATE\", \"count\":" + getConnections().size() + "}");
@@ -98,13 +101,13 @@ public class AuctionWebSocketServer extends WebSocketServer {
 
     @Override
     public void onError(WebSocket conn, Exception ex) {
-        System.err.println("[WebSocket] WebSocket Error:");
+        LOGGER.severe("[WebSocket] WebSocket Error:");
         ex.printStackTrace();
     }
 
     @Override
     public void onStart() {
-        System.out.println("[WebSocketServer] WebSocket Server đã sẵn sàng!");
+        LOGGER.info("[WebSocketServer] WebSocket Server đã sẵn sàng!");
         // --- ĐÃ XÓA BỎ HOÀN TOÀN ĐOẠN ĐẶT LỊCH QUÉT TIMER 1 GIÂY THỪA THÃI TẠI ĐÂY ---
         // Giờ đây AuctionManager sẽ tự kiểm soát vòng đời đóng phiên qua các luồng bắn tỉa Real-time
     }
@@ -113,7 +116,7 @@ public class AuctionWebSocketServer extends WebSocketServer {
         // --- ĐÃ XÓA ĐOẠN auctionTimer.cancel() VÌ KHÔNG CÒN SỬ DỤNG ---
         try {
             this.stop();
-            System.out.println("[WebSocketServer] WebSocket Server đã dừng!");
+            LOGGER.info("[WebSocketServer] WebSocket Server đã dừng!");
         } catch (Exception e) {
             e.printStackTrace();
         }

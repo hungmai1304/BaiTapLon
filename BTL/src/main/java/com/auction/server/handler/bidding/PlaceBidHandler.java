@@ -21,9 +21,11 @@ import java.util.Queue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 @CommandMap(value = MessageType.PLACE_BID_REQUEST)
 public class PlaceBidHandler implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(PlaceBidHandler.class.getName());
 
     private static final ScheduledExecutorService botScheduler = Executors.newScheduledThreadPool(4);
 
@@ -169,7 +171,7 @@ public class PlaceBidHandler implements IMessageHandler {
                     // TH 2: Vượt quá giá trần -> Cút lập tức, check con tiếp theo
                     if (nextBotPrice > currentBot.getMaxPrice()) {
                         queue.poll();
-                        System.out.println("[BOT OUT] Bot " + currentBot.getEmail() + " vượt trần, bị loại.");
+                        LOGGER.info("[BOT OUT] Bot " + currentBot.getEmail() + " vượt trần, bị loại.");
                         continue;
                     }
 
@@ -177,7 +179,7 @@ public class PlaceBidHandler implements IMessageHandler {
                     User botUserInfo = UserDao.getInstance().getUserByEmail(currentBot.getEmail());
                     if (botUserInfo == null || botUserInfo.getBalance() < nextBotPrice) {
                         queue.poll();
-                        System.out.println("[BOT OUT] Bot " + currentBot.getEmail() + " hết tiền, bị loại.");
+                        LOGGER.info("[BOT OUT] Bot " + currentBot.getEmail() + " hết tiền, bị loại.");
                         continue;
                     }
 
@@ -231,8 +233,8 @@ public class PlaceBidHandler implements IMessageHandler {
                     broadcastNewBid(context, gson, productId, nextBotPrice, safeBotName);
                     updateClientBalance(context, gson, currentBot.getEmail());
 
-                    System.out.println("[BOT BID THÀNH CÔNG] Bot " + currentBot.getEmail() + " ăn đỉnh: " + nextBotPrice);
-                    System.out.println("[KHÓA TUYỆT ĐỐI] Toàn bộ hàng đợi Bot của phiên này chính thức ĐÓNG BĂNG trong 10 giây.");
+                    LOGGER.info("[BOT BID THÀNH CÔNG] Bot " + currentBot.getEmail() + " ăn đỉnh: " + nextBotPrice);
+                    LOGGER.info("[KHÓA TUYỆT ĐỐI] Toàn bộ hàng đợi Bot của phiên này chính thức ĐÓNG BĂNG trong 10 giây.");
 
                     // Hẹn giờ mở khóa sau 10 giây
                     botScheduler.schedule(() -> {
@@ -240,7 +242,7 @@ public class PlaceBidHandler implements IMessageHandler {
                             if ("ACTIVE".equals(currentAuction.getStatus())) {
                                 // TẮT CỜ ĐÓNG BĂNG
                                 AuctionManager.getInstance().setBotFreeze(auctionId, false);
-                                System.out.println("[MỞ KHÓA] Hết 10 giây đóng băng, giải phóng hàng đợi Bot để tiếp tục chiến đấu!");
+                                LOGGER.info("[MỞ KHÓA] Hết 10 giây đóng băng, giải phóng hàng đợi Bot để tiếp tục chiến đấu!");
 
                                 // Gọi lại bộ kích hoạt để lượt quét mới diễn ra bình thường
                                 triggerBotWar(context, gson, productId, currentAuction);

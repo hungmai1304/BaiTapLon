@@ -17,9 +17,11 @@ import org.java_websocket.WebSocket;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 @CommandMap(value = MessageType.IMPORT_PRODUCT_REQUEST)
 public class ImportProductRequestHandler implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(ImportProductRequestHandler.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -42,7 +44,7 @@ public class ImportProductRequestHandler implements IMessageHandler {
 
             // Chặn ngay lập tức nếu Shop/User này nằm trong danh sách đen
             if ("BLACKLIST".equalsIgnoreCase(currentUser.getStatus())) {
-                System.err.println("[ImportProductRequestHandler] Từ chối: Tài khoản BLACKLIST " + userEmail + " cố ý import sản phẩm!");
+                LOGGER.severe("[ImportProductRequestHandler] Từ chối: Tài khoản BLACKLIST " + userEmail + " cố ý import sản phẩm!");
                 sendError(conn, gson, "Tài khoản của bạn đã bị đưa vào danh sách đen (BLACKLIST). Bạn không có quyền đăng bán sản phẩm mới!");
                 return;
             }
@@ -91,7 +93,7 @@ public class ImportProductRequestHandler implements IMessageHandler {
                 // Gửi phản hồi thành công trực tiếp cho client
                 Response response = new Response(MessageType.IMPORT_PRODUCT_RESPONSE, "SUCCESS", "Sản phẩm đã được lưu!");
                 conn.send(gson.toJson(response));
-                System.out.println("[Server] Import thành công SP và lưu Database: " + product.getName() + " | ID: " + product.getId());
+                LOGGER.info("[Server] Import thành công SP và lưu Database: " + product.getName() + " | ID: " + product.getId());
             } else {
                 sendError(conn, gson, "Lỗi lưu Database.");
             }

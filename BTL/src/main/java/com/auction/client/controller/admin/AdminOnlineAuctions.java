@@ -15,9 +15,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 public class AdminOnlineAuctions implements Initializable {
-
+private static final Logger LOGGER = Logger.getLogger(AdminOnlineAuctions.class.getName());
     @FXML
     private TableView<AuctionItem> auctionTable;
     @FXML

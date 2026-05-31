@@ -32,8 +32,10 @@ import java.io.File;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class AboutYouController {
+    private static final Logger LOGGER = Logger.getLogger(AboutYouController.class.getName());
     @FXML
     private Label userName;
 
@@ -83,7 +85,7 @@ public class AboutYouController {
                 Image image = new Image(new ByteArrayInputStream(imageBytes));
                 userAvatar.setImage(image);
             } catch (Exception e) {
-                System.err.println("[AboutYou] Lỗi load avatar: " + e.getMessage());
+                LOGGER.severe("[AboutYou] Lỗi load avatar: " + e.getMessage());
             }
         }
     }

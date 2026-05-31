@@ -9,8 +9,11 @@ import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
 import javafx.application.Platform;
 
+import java.util.logging.Logger;
+
 @ResponseHandler(type = MessageType.BROADCAST_NEW_BID)
 public class NewBidClientHandler implements IClientHandler {
+    private static final Logger LOGGER = Logger.getLogger(NewBidClientHandler.class.getName());
 
     @Override
     public void handle(Response response) {
@@ -21,7 +24,7 @@ public class NewBidClientHandler implements IClientHandler {
                     String leaderName = (String) response.getData().get("leaderName");
                     String productId = (String) response.getData().get("productId");
 
-                    System.out.println("[Client] Nhận giá mới: " + newPrice + " từ " + leaderName);
+                    LOGGER.info("[Client] Nhận giá mới: " + newPrice + " từ " + leaderName);
 
                     // GỌI CONTROLLER QUA REGISTRY ĐỂ NHẢY SỐ UI
 
@@ -35,7 +38,7 @@ public class NewBidClientHandler implements IClientHandler {
                         // Truyền dữ liệu sang UI để nó tự nhảy số
                         controller.updateRealtimeBid(productId, newPrice, leaderName);
                     } else {
-                        System.out.println("[Client] Giao diện TikTok chưa mở, không cần nhảy số.");
+                        LOGGER.info("[Client] Giao diện TikTok chưa mở, không cần nhảy số.");
                     }
 
                 } catch (Exception e) {

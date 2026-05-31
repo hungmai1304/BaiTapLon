@@ -10,9 +10,11 @@ import org.java_websocket.WebSocket;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap("ADMIN_LET_USER_LOGOUT")
 public class AdminLetUserLogout implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(AdminLetUserLogout.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -23,7 +25,7 @@ public class AdminLetUserLogout implements IMessageHandler {
         // =========================================================================
         String adminEmail = context.getUserByConn(conn);
         if (adminEmail == null) {
-            System.err.println("[AdminLetUserLogout] Từ chối: Thao tác từ một kết nối chưa đăng nhập!");
+            LOGGER.severe("[AdminLetUserLogout] Từ chối: Thao tác từ một kết nối chưa đăng nhập!");
             responseMap.put("status", "ERROR");
             responseMap.put("message", "Bạn cần đăng nhập để thực hiện thao tác này!");
             conn.send(gson.toJson(responseMap));
@@ -34,7 +36,7 @@ public class AdminLetUserLogout implements IMessageHandler {
         User currentRequester = userDao.getUserByEmail(adminEmail);
 
         if (currentRequester == null || !"ADMIN".equalsIgnoreCase(currentRequester.getRole())) {
-            System.err.println("[AdminLetUserLogout] Cảnh báo: Tài khoản " + adminEmail + " cố tình hack quyền đăng xuất Admin!");
+            LOGGER.severe("[AdminLetUserLogout] Cảnh báo: Tài khoản " + adminEmail + " cố tình hack quyền đăng xuất Admin!");
             responseMap.put("status", "ERROR");
             responseMap.put("message", "Bạn không có quyền thực hiện hành động này!");
             conn.send(gson.toJson(responseMap));
@@ -49,14 +51,14 @@ public class AdminLetUserLogout implements IMessageHandler {
         String targetEmail = (String) data.get("email");
 
         if (targetEmail == null || targetEmail.trim().isEmpty()) {
-            System.err.println("[AdminLetUserLogout] Thất bại: Thiếu thông tin email của user cần kick!");
+            LOGGER.severe("[AdminLetUserLogout] Thất bại: Thiếu thông tin email của user cần kick!");
             responseMap.put("status", "ERROR");
             responseMap.put("message", "Email người dùng không hợp lệ!");
             conn.send(gson.toJson(responseMap));
             return;
         }
 
-        System.out.println("[AdminLetUserLogout] Admin [" + adminEmail + "] yêu cầu ép đăng xuất user: " + targetEmail);
+        LOGGER.info("[AdminLetUserLogout] Admin [" + adminEmail + "] yêu cầu ép đăng xuất user: " + targetEmail);
 
         // Bước 2.2: Tìm kết nối WebSocket (conn) của user bị chỉ định trước khi thực hiện xóa
         WebSocket targetConn = null;
@@ -79,7 +81,7 @@ public class AdminLetUserLogout implements IMessageHandler {
             // Ép thành chuỗi JSON: {"type":"ADMIN_FORCE_LOGOUT","status":"SUCCESS"}
             targetConn.send(gson.toJson(forceLogoutSignal));
 
-            System.out.println("[AdminLetUserLogout] Đã gửi JSON ADMIN_FORCE_LOGOUT tới kết nối của: " + targetEmail);
+            LOGGER.info("[AdminLetUserLogout] Đã gửi JSON ADMIN_FORCE_LOGOUT tới kết nối của: " + targetEmail);
         }
 
         // Bước 2.4: THỰC HIỆN XÓA TRÊN CẢ 2 HÀM NHƯ BẠN YÊU CẦU
@@ -87,12 +89,12 @@ public class AdminLetUserLogout implements IMessageHandler {
         // 1. Gọi hàm xóa bằng Kết nối (Xóa trong onlineUsers và dọn dẹp tiktok listener)
         if (targetConn != null) {
             context.removeUser(targetConn);
-            System.out.println("[AdminLetUserLogout] Đã gọi context.removeUser(targetConn)");
+            LOGGER.info("[AdminLetUserLogout] Đã gọi context.removeUser(targetConn)");
         }
 
         // 2. Gọi hàm xóa bằng Email (Xóa triệt để trong onlineUsers, onlineUserObjects, dọn dẹp listener và Broadcast)
         context.removeOnlineUserByEmail(targetEmail);
-        System.out.println("[AdminLetUserLogout] Đã gọi context.removeOnlineUserByEmail(targetEmail)");
+        LOGGER.info("[AdminLetUserLogout] Đã gọi context.removeOnlineUserByEmail(targetEmail)");
 
 
         // Bước 2.5: Phản hồi thông báo thành công về cho Admin phát lệnh

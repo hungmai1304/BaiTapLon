@@ -10,8 +10,11 @@ import javafx.scene.layout.VBox;
 
 
 import java.io.IOException;
+import java.util.logging.Logger;
+
 public class ShopController
 {
+    private static final Logger LOGGER = Logger.getLogger(ShopController.class.getName());
     @FXML
     public  void handleShopImport(ActionEvent event) throws IOException{
         VBox shopimport_view=FXMLLoader.load(getClass().getResource("/com/auction/client/view/ShopImport.fxml"));

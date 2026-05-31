@@ -20,11 +20,12 @@ import javafx.stage.FileChooser;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.logging.Logger;
 
 import static com.auction.common.model.product.ProductStatus.AVAILABLE;
 
 public class ShopImportController {
-
+private static final Logger LOGGER = Logger.getLogger(ShopImportController.class.getName());
     @FXML private TextField name;
     @FXML private TextField price;
     @FXML private TextField wait;      // Ô nhập mới 1
@@ -217,7 +218,7 @@ public class ShopImportController {
 
                 this.selectedImageBase64 = product.getImageBase64();
             } catch (Exception e) {
-                System.err.println("[ShopImport Error] Không thể dựng ảnh từ dữ liệu Base64!");
+                LOGGER.severe("[ShopImport Error] Không thể dựng ảnh từ dữ liệu Base64!");
                 e.printStackTrace();
                 setDefaultUploadState();
             }

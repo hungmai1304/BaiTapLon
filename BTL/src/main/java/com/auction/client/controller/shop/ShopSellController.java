@@ -17,8 +17,10 @@ import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class ShopSellController {
+    private static final Logger LOGGER = Logger.getLogger(ShopSellController.class.getName());
     @FXML private TableView<Product> productTable;
     @FXML private TableColumn<Product, Integer> colSTT;
     @FXML private TableColumn<Product, String> colName;
@@ -147,7 +149,7 @@ public class ShopSellController {
     private void handleSell(Product product) {
         if (product == null) return;
 
-        System.out.println("-> Đang đóng gói dữ liệu lên sàn cho SP: " + product.getName());
+        LOGGER.info("-> Đang đóng gói dữ liệu lên sàn cho SP: " + product.getName());
 
         // Tạo cấu trúc dữ liệu JSON gửi đi
         java.util.Map<String, Object> payload = new java.util.HashMap<>();

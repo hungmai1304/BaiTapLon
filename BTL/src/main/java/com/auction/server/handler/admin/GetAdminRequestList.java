@@ -13,19 +13,21 @@ import org.java_websocket.WebSocket;
 
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap(MessageType.GET_ADMIN_REQUEST_LIST)
 public class GetAdminRequestList implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(GetAdminRequestList.class.getName());
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
-        System.out.println("[Server Handler] Đang xử lý yêu cầu lấy danh sách xin làm Admin...");
+        LOGGER.info("[Server Handler] Đang xử lý yêu cầu lấy danh sách xin làm Admin...");
 
         // XÁC MINH DANH TÍNH NGƯỜI GỬI
         User currentUser = context.getUserByConnObject(conn);
 
         // Kiểm tra xem đối tượng có phải là một thực thể của lớp Admin hay không
         if (!(currentUser instanceof Admin)) {
-            System.err.println("[CẢNH BÁO] Kết nối chưa xác thực hoặc không phải đối tượng Admin cố gắng truy cập dữ liệu!");
+            LOGGER.severe("[CẢNH BÁO] Kết nối chưa xác thực hoặc không phải đối tượng Admin cố gắng truy cập dữ liệu!");
 
             // SỬA: Sử dụng cấu trúc Response chuẩn thay vì Map thủ công
             Response errorResponse = new Response(
@@ -41,7 +43,7 @@ public class GetAdminRequestList implements IMessageHandler {
         }
 
         // NẾU XÁC THỰC THÀNH CÔNG -> TIẾP TỤC XỬ LÝ LẤY DỮ LIỆU
-        System.out.println("[Server Handler] Đã xác thực thành công Admin: " + currentUser.getUsername());
+        LOGGER.info("[Server Handler] Đã xác thực thành công Admin: " + currentUser.getUsername());
 
         // 1. Tìm các user trong database có role là ADMIN_REQUEST thông qua UserDao
         List<User> requestList = UserDao.getInstance().getUsersByRole("ADMIN_REQUEST");
@@ -60,7 +62,7 @@ public class GetAdminRequestList implements IMessageHandler {
         String jsonResponse = gson.toJson(response);
         if (conn != null && conn.isOpen()) {
             conn.send(jsonResponse);
-            System.out.println("[Server Handler] Đã gửi danh sách phản hồi về Client (" + requestList.size() + " hàng).");
+            LOGGER.info("[Server Handler] Đã gửi danh sách phản hồi về Client (" + requestList.size() + " hàng).");
         }
     }
 }

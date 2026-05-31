@@ -9,8 +9,11 @@ import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
 import javafx.application.Platform;
 
+import java.util.logging.Logger;
+
 @ResponseHandler(type = "IMPORT_PRODUCT_RESPONSE")
 public class ImportProductResponseHandler implements IClientHandler {
+    private static final Logger LOGGER = Logger.getLogger(ImportProductResponseHandler.class.getName());
 
     @Override
     public void handle(Response response) {
@@ -29,7 +32,7 @@ public class ImportProductResponseHandler implements IClientHandler {
             Platform.runLater(() -> {
                 if (isSuccess) {
                     // Logic khi thành công (ví dụ: hiện chữ xanh, xóa form)
-                    System.out.println("[importproductresponsehandler]Import thành công: " + message);
+                    LOGGER.info("[importproductresponsehandler]Import thành công: " + message);
                     controller.updateSuccessLabel(message, true);
                     RequestSender.send(MessageType.GET_SHOP_PRODUCTS_REQUEST, null);
 
@@ -37,7 +40,7 @@ public class ImportProductResponseHandler implements IClientHandler {
                     // controller.clearFields();
                 } else {
                     // Logic khi thất bại (ví dụ: hiện chữ đỏ)
-                    System.err.println("[importproductresponsehandler] Import thất bại: " + message);
+                    LOGGER.severe("[importproductresponsehandler] Import thất bại: " + message);
                     controller.updateSuccessLabel("[importproductresponsehandler]Lỗi: " + message, false);
                 }
             });

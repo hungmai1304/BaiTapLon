@@ -22,9 +22,11 @@ import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 @CommandMap(value = MessageType.SELL_PRODUCT_REQUEST)
 public class SellProductHandler implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(SellProductHandler.class.getName());
 
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
@@ -39,7 +41,7 @@ public class SellProductHandler implements IMessageHandler {
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
         try {
             // LOG THẦN THÁNH: In ra toàn bộ những gì client thực sự gửi lên để debug
-            System.out.println("[SellProductHandler] RAW DATA từ Client gửi lên: " + data);
+            LOGGER.info("[SellProductHandler] RAW DATA từ Client gửi lên: " + data);
 
             String productId = (String) data.get("id");
 
@@ -96,7 +98,7 @@ public class SellProductHandler implements IMessageHandler {
                 return;
             }
 
-            System.out.println("[SellProductHandler] CHẤP NHẬN THỜI GIAN CLIENT -> Chờ: " + waitingMinutes + " phút | Chạy: " + durationMinutes + " phút");
+            LOGGER.info("[SellProductHandler] CHẤP NHẬN THỜI GIAN CLIENT -> Chờ: " + waitingMinutes + " phút | Chạy: " + durationMinutes + " phút");
 
             LocalDateTime now = LocalDateTime.now();
 
@@ -141,11 +143,11 @@ public class SellProductHandler implements IMessageHandler {
                         if (auctionToStart != null && "PENDING".equals(auctionToStart.getStatus())) {
                             auctionToStart.setStatus("ACTIVE");
                             context.updateAuction(auctionToStart);
-                            System.out.println(" [Timer] SP " + productId + " đã CHÍNH THỨC LÊN SÀN ĐẤU GIÁ!");
+                            LOGGER.info(" [Timer] SP " + productId + " đã CHÍNH THỨC LÊN SÀN ĐẤU GIÁ!");
                             broadcastNewAuctionSession(context);
                         }
                     } catch (Exception e) {
-                        System.err.println("[Timer Error] Lỗi khi kích hoạt phiên: " + e.getMessage());
+                        LOGGER.severe("[Timer Error] Lỗi khi kích hoạt phiên: " + e.getMessage());
                     }
                 }, delayToActiveSeconds, TimeUnit.SECONDS);
 
@@ -159,7 +161,7 @@ public class SellProductHandler implements IMessageHandler {
                             broadcastToAdmins(context);
                         }
                     } catch (Exception e) {
-                        System.err.println("[Timer Error] Lỗi khi kết thúc phiên hẹn giờ: " + e.getMessage());
+                        LOGGER.severe("[Timer Error] Lỗi khi kết thúc phiên hẹn giờ: " + e.getMessage());
                     }
                 }, delayToCompletedSeconds, TimeUnit.SECONDS);
 
@@ -175,7 +177,7 @@ public class SellProductHandler implements IMessageHandler {
             }
 
         } catch (Exception e) {
-            System.err.println("[SellProductHandler] Lỗi hệ thống: " + e.getMessage());
+            LOGGER.severe("[SellProductHandler] Lỗi hệ thống: " + e.getMessage());
             sendError(conn, "Lỗi hệ thống: " + e.getMessage());
         }
     }
@@ -192,7 +194,7 @@ public class SellProductHandler implements IMessageHandler {
                 return Double.parseDouble(((String) value).trim());
             }
         } catch (Exception e) {
-            System.err.println("[Format Error] Không thể parse giá trị: " + value);
+            LOGGER.severe("[Format Error] Không thể parse giá trị: " + value);
         }
         return null;
     }
@@ -225,7 +227,7 @@ public class SellProductHandler implements IMessageHandler {
                 }
             }
         } catch (Exception e) {
-            System.err.println("[Broadcast Admin Error] Lỗi phát tin admin: " + e.getMessage());
+            LOGGER.severe("[Broadcast Admin Error] Lỗi phát tin admin: " + e.getMessage());
         }
     }
 

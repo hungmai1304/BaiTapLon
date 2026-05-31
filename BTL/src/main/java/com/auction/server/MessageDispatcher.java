@@ -12,8 +12,10 @@ import org.reflections.Reflections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 public class MessageDispatcher {
+    private static final Logger LOGGER = Logger.getLogger(MessageDispatcher.class.getName());
     private final Map<String, IMessageHandler> handlers = new HashMap<>();
     private final Gson gson;
     private final ServerContext context;
@@ -35,9 +37,9 @@ public class MessageDispatcher {
 
                 // Key chuẩn hóa: Trim và Uppercase
                 handlers.put(commandName.trim().toUpperCase(), handlerInstance);
-                System.out.println("[Dispatcher] Registered: " + commandName);
+                LOGGER.info("[Dispatcher] Registered: " + commandName);
             } catch (Exception e) {
-                System.err.println("[Dispatcher] Error loading " + clazz.getSimpleName());
+                LOGGER.severe("[Dispatcher] Error loading " + clazz.getSimpleName());
             }
         }
     }
@@ -61,7 +63,7 @@ public class MessageDispatcher {
 
                 // LOGIC: Nếu không phải lệnh Auth VÀ cũng không online thì chặn đứng
                 if (!isAuthRequest && !isOnline) {
-                    System.err.println("[Dispatcher] Unauthorized access attempt from: " + conn.getRemoteSocketAddress());
+                    LOGGER.severe("[Dispatcher] Unauthorized access attempt from: " + conn.getRemoteSocketAddress());
                     conn.send("{\"type\":\"ERROR\",\"message\":\"UNAUTHORIZED_PLEASE_LOGIN\"}");
                     return;
                 }
@@ -71,12 +73,12 @@ public class MessageDispatcher {
                 if (handler != null) {
                     handler.handle(conn, request.getData(), gson, context);
                 } else {
-                    System.err.println("[Dispatcher] No handler for: " + type);
+                    LOGGER.severe("[Dispatcher] No handler for: " + type);
                     conn.send("{\"type\":\"ERROR\",\"message\":\"COMMAND_NOT_FOUND\"}");
                 }
             }
         } catch (Exception e) {
-            System.err.println("[Dispatcher] JSON Error: " + e.getMessage());
+            LOGGER.severe("[Dispatcher] JSON Error: " + e.getMessage());
             conn.send("{\"type\":\"ERROR\",\"message\":\"INVALID_JSON\"}");
         }
     }

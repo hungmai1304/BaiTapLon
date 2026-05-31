@@ -14,8 +14,10 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 public class ServerContext {
+    private static final Logger LOGGER = Logger.getLogger(ServerContext.class.getName());
 
     private static ServerContext instance;
     private AuctionWebSocketServer server;
@@ -75,7 +77,7 @@ public class ServerContext {
     public void addAuction(Auction auction) {
         if (auction != null && auction.getId() != null) {
             activeAuctionsMap.put(auction.getId(), auction);
-            System.out.println("[ServerContext] Đã thêm Phiên Đấu Giá (ID: " + auction.getId() + ") vào RAM.");
+            LOGGER.info("[ServerContext] Đã thêm Phiên Đấu Giá (ID: " + auction.getId() + ") vào RAM.");
             broadcastAuctionUpdate(); // Phát loa cập nhật
         }
     }
@@ -84,7 +86,7 @@ public class ServerContext {
         if (auctionId == null) return;
         Auction removed = activeAuctionsMap.remove(auctionId);
         if (removed != null) {
-            System.out.println("[ServerContext] Đã xóa Phiên Đấu Giá (ID: " + auctionId + ") khỏi RAM.");
+            LOGGER.info("[ServerContext] Đã xóa Phiên Đấu Giá (ID: " + auctionId + ") khỏi RAM.");
             broadcastAuctionUpdate();
         }
     }
@@ -93,7 +95,7 @@ public class ServerContext {
         if (updatedAuction == null || updatedAuction.getId() == null) return;
 
         activeAuctionsMap.put(updatedAuction.getId(), updatedAuction);
-        System.out.println("[ServerContext] Đã cập nhật Auction ID: " + updatedAuction.getId());
+        LOGGER.info("[ServerContext] Đã cập nhật Auction ID: " + updatedAuction.getId());
         broadcastAuctionUpdate();
     }
 
@@ -147,7 +149,7 @@ public class ServerContext {
                 response.getData().put("auctionList", new ArrayList<>(activeAuctionsMap.values()));
 
                 String json = gson.toJson(response);
-                System.out.println("[AsyncBroadcast] Broadcast cập nhật tới " + tiktokListeners.size() + " listeners.");
+                LOGGER.info("[AsyncBroadcast] Broadcast cập nhật tới " + tiktokListeners.size() + " listeners.");
 
                 Iterator<WebSocket> it = tiktokListeners.iterator();
                 while (it.hasNext()) {
@@ -159,7 +161,7 @@ public class ServerContext {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("[AsyncBroadcast] Lỗi khi xử lý phát loa đấu giá: " + e.getMessage());
+                LOGGER.severe("[AsyncBroadcast] Lỗi khi xử lý phát loa đấu giá: " + e.getMessage());
             }
         });
     }
@@ -169,7 +171,7 @@ public class ServerContext {
         if (userId == null || conn == null) return;
         onlineUsers.put(userId, conn);
         connToUserKey.put(conn, userId); // Lưu vào bản đồ ngược để phục vụ getUserByConn với tốc độ O(1)
-        System.out.println("[ServerContext] User [" + userId + "] đã online!");
+        LOGGER.info("[ServerContext] User [" + userId + "] đã online!");
     }
 
     public void removeUser(WebSocket conn) {
@@ -235,7 +237,7 @@ public class ServerContext {
     public void addOnlineUserObject(WebSocket conn, User user) {
         if (conn != null && user != null) {
             onlineUserObjects.put(conn, user);
-            System.out.println("[ServerContext] Lưu trữ thông tin đối tượng User: " + user.getUsername() + " | Trạng thái: " + user.getStatus());
+            LOGGER.info("[ServerContext] Lưu trữ thông tin đối tượng User: " + user.getUsername() + " | Trạng thái: " + user.getStatus());
             broadcastOnlineUsersToAdmins(); // Tự động đồng bộ tới Admin khi có người vào
         }
     }
@@ -247,7 +249,7 @@ public class ServerContext {
         if (conn != null) {
             User removedUser = onlineUserObjects.remove(conn);
             if (removedUser != null) {
-                System.out.println("[ServerContext] Đã xóa đối tượng User khỏi RAM: " + removedUser.getUsername());
+                LOGGER.info("[ServerContext] Đã xóa đối tượng User khỏi RAM: " + removedUser.getUsername());
                 broadcastOnlineUsersToAdmins(); // Tự động đồng bộ tới Admin khi có người ra
             }
         }
@@ -273,7 +275,7 @@ public class ServerContext {
         User user = getUserCacheByEmail(email);
         if (user != null) {
             user.setStatus(newStatus);
-            System.out.println("[ServerContext] Đã cập nhật trạng thái của User [" + email + "] trên RAM thành: " + newStatus);
+            LOGGER.info("[ServerContext] Đã cập nhật trạng thái của User [" + email + "] trên RAM thành: " + newStatus);
             broadcastOnlineUsersToAdmins(); // Đồng bộ ngay lập tức sang Admin Client
         }
     }
@@ -290,7 +292,7 @@ public class ServerContext {
             connToUserKey.remove(connToRemove);
             onlineUserObjects.remove(connToRemove);
             removeTikTokListener(connToRemove); // Dọn dẹp luôn các bộ lắng nghe TikTok nếu có
-            System.out.println("[ServerContext] Đã xóa hoàn toàn User có email [" + email + "] khỏi các danh sách online.");
+            LOGGER.info("[ServerContext] Đã xóa hoàn toàn User có email [" + email + "] khỏi các danh sách online.");
 
             // Phát tín hiệu cập nhật (Broadcast) đồng bộ danh sách mới về cho tất cả Admin
             broadcastOnlineUsersToAdmins();
@@ -313,12 +315,12 @@ public class ServerContext {
                         User cachedUser = onlineUserObjects.get(conn);
                         if (cachedUser != null && "ADMIN".equalsIgnoreCase(cachedUser.getRole())) {
                             conn.send(jsonResponse);
-                            System.out.println("[AsyncAdminBroadcast] Đã đẩy danh sách Online Users tới Admin: " + email);
+                            LOGGER.info("[AsyncAdminBroadcast] Đã đẩy danh sách Online Users tới Admin: " + email);
                         }
                     }
                 });
             } catch (Exception e) {
-                System.err.println("[AsyncAdminBroadcast] Lỗi khi xử lý gửi tin tới Admin: " + e.getMessage());
+                LOGGER.severe("[AsyncAdminBroadcast] Lỗi khi xử lý gửi tin tới Admin: " + e.getMessage());
             }
         });
     }

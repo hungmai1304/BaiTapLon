@@ -8,8 +8,10 @@ import com.auction.server.db.Db;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class AuctionDao {
+    private static final Logger LOGGER = Logger.getLogger(AuctionDao.class.getName());
 
     private static AuctionDao instance;
 
@@ -77,7 +79,7 @@ public class AuctionDao {
     public boolean saveCompletedAuction(String auctionId, String productId, String winnerEmail, double finalPrice) {
         // Kiểm tra tính hợp lệ của dữ liệu đầu vào trước khi mở kết nối DB
         if (auctionId == null || auctionId.trim().isEmpty() || productId == null || productId.trim().isEmpty()) {
-            System.err.println("[AuctionDao] Lỗi dữ liệu: id phiên hoặc id sản phẩm bị null/rỗng.");
+            LOGGER.severe("[AuctionDao] Lỗi dữ liệu: id phiên hoặc id sản phẩm bị null/rỗng.");
             return false;
         }
 
@@ -101,7 +103,7 @@ public class AuctionDao {
             return pstmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("[AuctionDao] Lỗi SQL nghiêm trọng khi lưu lịch sử đấu giá: " + e.getMessage());
+            LOGGER.severe("[AuctionDao] Lỗi SQL nghiêm trọng khi lưu lịch sử đấu giá: " + e.getMessage());
             return false;
         }
     }

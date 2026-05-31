@@ -9,8 +9,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class ResponseSender {
+    private static final Logger LOGGER = Logger.getLogger(ResponseSender.class.getName());
     // Khởi tạo Gson xử lý chuẩn hóa LocalDateTime giống Client
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->

@@ -11,9 +11,11 @@ import org.java_websocket.WebSocket;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap(MessageType.ADMIN_ACCEPT_REQUEST)
 public class AdminAcceptRequest implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(AdminAcceptRequest.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -29,7 +31,7 @@ public class AdminAcceptRequest implements IMessageHandler {
         // Bước 1.1: Kiểm tra xem kết nối (conn) này đã đăng nhập vào hệ thống chưa
         String adminEmail = context.getUserByConn(conn);
         if (adminEmail == null) {
-            System.err.println("[AdminAcceptRequest] Từ chối: Thao tác từ một kết nối chưa đăng nhập!");
+            LOGGER.severe("[AdminAcceptRequest] Từ chối: Thao tác từ một kết nối chưa đăng nhập!");
             responseMap.put("status", "ERROR");
             responseMap.put("message", "Bạn cần đăng nhập để thực hiện thao tác này!");
             conn.send(gson.toJson(responseMap));
@@ -41,7 +43,7 @@ public class AdminAcceptRequest implements IMessageHandler {
         User currentRequester = userDao.getUserByEmail(adminEmail);
 
         if (currentRequester == null || !"ADMIN".equalsIgnoreCase(currentRequester.getRole())) {
-            System.err.println("[AdminAcceptRequest] Cảnh báo: Tài khoản " + adminEmail + " cố tình hack quyền duyệt Admin!");
+            LOGGER.severe("[AdminAcceptRequest] Cảnh báo: Tài khoản " + adminEmail + " cố tình hack quyền duyệt Admin!");
             responseMap.put("status", "ERROR");
             responseMap.put("message", "Bạn không có quyền thực hiện hành động này!");
             conn.send(gson.toJson(responseMap));
@@ -56,7 +58,7 @@ public class AdminAcceptRequest implements IMessageHandler {
         String userId = (String) data.get("userId");
 
         if (userId == null || userId.trim().isEmpty()) {
-            System.err.println("[AdminAcceptRequest] Lỗi: Không tìm thấy hoặc ID cần duyệt bị trống!");
+            LOGGER.severe("[AdminAcceptRequest] Lỗi: Không tìm thấy hoặc ID cần duyệt bị trống!");
             responseMap.put("status", "ERROR");
             responseMap.put("message", "ID người dùng cần duyệt không hợp lệ.");
             conn.send(gson.toJson(responseMap));
@@ -68,13 +70,13 @@ public class AdminAcceptRequest implements IMessageHandler {
 
         // 3. Kiểm tra kết quả cập nhật và phản hồi lại qua WebSocket
         if (isUpdated) {
-            System.out.println("[AdminAcceptRequest] Thành công: Admin [" + adminEmail + "] đã duyệt User [" + userId + "] thành ADMIN.");
+            LOGGER.info("[AdminAcceptRequest] Thành công: Admin [" + adminEmail + "] đã duyệt User [" + userId + "] thành ADMIN.");
 
             responseMap.put("status", "SUCCESS");
             responseMap.put("userId", userId);
             responseMap.put("message", "Đã duyệt quyền Admin thành công!");
         } else {
-            System.err.println("[AdminAcceptRequest] Thất bại: Không thể cập nhật database cho User [" + userId + "].");
+            LOGGER.severe("[AdminAcceptRequest] Thất bại: Không thể cập nhật database cho User [" + userId + "].");
 
             responseMap.put("status", "FAILED");
             responseMap.put("message", "Cập nhật cơ sở dữ liệu thất bại. Vui lòng kiểm tra lại ID.");

@@ -16,9 +16,11 @@ import org.java_websocket.WebSocket;
 
 import java.util.Map;
 import java.util.Queue;
+import java.util.logging.Logger;
 
 @CommandMap(value = MessageType.REGISTER_BOT_REQUEST)
 public class RegisterBotHandler implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(RegisterBotHandler.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {

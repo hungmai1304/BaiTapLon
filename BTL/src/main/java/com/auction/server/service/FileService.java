@@ -3,8 +3,10 @@ package com.auction.server.service;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class FileService {
+    private static final Logger LOGGER = Logger.getLogger(FileService.class.getName());
     // Thông tin lấy từ Dashboard Cloudinary của mày
     private static final Cloudinary cloudinary = new Cloudinary(ObjectUtils.asMap(
             "cloud_name", "dlylyya7s",
@@ -31,11 +33,11 @@ public class FileService {
 
             // Trả về link URL (ví dụ: https://res.cloudinary.com/...)
             String url = (String) uploadResult.get("secure_url");
-            System.out.println("[Cloudinary] Upload thành công: " + url);
+            LOGGER.info("[Cloudinary] Upload thành công: " + url);
             return url;
 
         } catch (Exception e) {
-            System.err.println("[Cloudinary ERROR] Không thể upload ảnh: " + e.getMessage());
+            LOGGER.severe("[Cloudinary ERROR] Không thể upload ảnh: " + e.getMessage());
             e.printStackTrace();
             return null;
         }

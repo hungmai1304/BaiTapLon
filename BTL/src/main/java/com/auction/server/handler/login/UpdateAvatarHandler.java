@@ -10,9 +10,11 @@ import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap(value = MessageType.UPDATE_AVATAR_REQUEST)
 public class UpdateAvatarHandler implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(UpdateAvatarHandler.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -39,7 +41,7 @@ public class UpdateAvatarHandler implements IMessageHandler {
                 Response response = new Response(MessageType.UPDATE_AVATAR_RESPONSE, "SUCCESS", "Cập nhật ảnh đại diện thành công!");
                 response.getData().put("avatarBase64", avatarBase64);
                 conn.send(gson.toJson(response));
-                System.out.println("[Server] User " + userEmail + " đã cập nhật avatar mới.");
+                LOGGER.info("[Server] User " + userEmail + " đã cập nhật avatar mới.");
             } else {
                 sendError(conn, gson, "Lỗi khi lưu ảnh vào cơ sở dữ liệu.");
             }

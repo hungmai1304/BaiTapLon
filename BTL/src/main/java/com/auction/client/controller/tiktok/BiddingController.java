@@ -19,6 +19,7 @@ import com.auction.common.model.auction.BidTransaction;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.ZoneId;
+import java.util.logging.Logger;
 
 
 import javafx.animation.Animation;
@@ -27,7 +28,7 @@ import javafx.animation.Timeline;
 import javafx.scene.control.Button;
 
 public class BiddingController {
-
+private static final Logger LOGGER = Logger.getLogger(BiddingController.class.getName());
     @FXML private Label lblProductName;
     @FXML private Label lblProductDesc;
     @FXML private Label lblStartPrice;
@@ -273,7 +274,7 @@ public class BiddingController {
                 bidCount++;
                 priceSeries.getData().add(new XYChart.Data<>(String.valueOf(bidCount), newPrice));
 
-                System.out.println("[Bidding UI] Đã nhảy số và vẽ biểu đồ realtime!");
+                LOGGER.info("[Bidding UI] Đã nhảy số và vẽ biểu đồ realtime!");
             }
         });
     }

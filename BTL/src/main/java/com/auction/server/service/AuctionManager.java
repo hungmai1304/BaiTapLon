@@ -28,8 +28,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 public class AuctionManager {
+    private static final Logger LOGGER = Logger.getLogger(AuctionManager.class.getName());
 
     private static AuctionManager instance;
     private final Gson gson = new GsonBuilder()
@@ -83,7 +85,7 @@ public class AuctionManager {
             try {
                 checkAndStartIncomingAuctions();
             } catch (Exception e) {
-                System.err.println("[Engine] Lỗi khi quét mở phiên mới: " + e.getMessage());
+                LOGGER.severe("[Engine] Lỗi khi quét mở phiên mới: " + e.getMessage());
             }
         }, 0, 2, TimeUnit.SECONDS);
 
@@ -116,7 +118,7 @@ public class AuctionManager {
                 }
 
                 context.updateAuction(auction);
-                System.out.println("[KÍCH HOẠT SONG SONG] Phiên Đấu Giá ID: " + auction.getId() + " ĐÃ LÊN SÀN!");
+                LOGGER.info("[KÍCH HOẠT SONG SONG] Phiên Đấu Giá ID: " + auction.getId() + " ĐÃ LÊN SÀN!");
 
                 broadcastNewAuction(auction);
 
@@ -127,7 +129,7 @@ public class AuctionManager {
                     if (delayMillis > 0) {
                         // Lên lịch đóng phiên độc lập, nổ súng chính xác đến từng mili-giây!
                         scheduler.schedule(() -> {
-                            System.out.println("[TIMER CHÍNH XÁC] Đã chạm mili-giây kết thúc! Tiến hành ĐÓNG PHIÊN ID: " + auction.getId());
+                            LOGGER.info("[TIMER CHÍNH XÁC] Đã chạm mili-giây kết thúc! Tiến hành ĐÓNG PHIÊN ID: " + auction.getId());
                             endAuction(auction);
                         }, delayMillis, TimeUnit.MILLISECONDS);
                     } else {
@@ -183,7 +185,7 @@ public class AuctionManager {
                     product.setCurrentPrice(finalPrice);
 
                     thongBaoChung = "Chúc mừng " + winnerName + " đã chốt đơn sản phẩm '" + product.getName() + "' với giá " + String.format("%,.0fđ", finalPrice) + "!";
-                    System.out.println("[AuctionManager] Sản phẩm " + product.getName() + " ĐÃ BÁN THÀNH CÔNG cho " + winnerEmail);
+                    LOGGER.info("[AuctionManager] Sản phẩm " + product.getName() + " ĐÃ BÁN THÀNH CÔNG cho " + winnerEmail);
 
                     String sellerEmail = null;
                     if (product.getOwner() != null) {
@@ -216,7 +218,7 @@ public class AuctionManager {
                     finalPrice = product.getStartPrice();
 
                     thongBaoChung = "Rất tiếc, sản phẩm '" + product.getName() + "' đã hết giờ mà không có ai đặt giá!";
-                    System.out.println("[AuctionManager] Sản phẩm " + product.getName() + " Ế HÀNG -> Trả về kho");
+                    LOGGER.info("[AuctionManager] Sản phẩm " + product.getName() + " Ế HÀNG -> Trả về kho");
 
                     if (product.getOwner() != null) {
                         String sellerEmail = product.getOwner().getEmail();

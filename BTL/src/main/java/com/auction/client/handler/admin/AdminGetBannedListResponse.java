@@ -15,10 +15,11 @@ import javafx.collections.FXCollections;
 import java.time.LocalDateTime; // Thêm import này
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @ResponseHandler(type = "ADMIN_GET_BANNED_LIST_RESPONSE")
 public class AdminGetBannedListResponse implements IClientHandler {
-
+private static final Logger LOGGER = Logger.getLogger(AdminGetBannedListResponse.class.getName());
     // THAY ĐỔI TẠI ĐÂY: Khởi tạo Gson có cấu hình nạp Adapter bảo vệ java.time
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
@@ -50,7 +51,7 @@ public class AdminGetBannedListResponse implements IClientHandler {
                 });
             }
         } catch (Exception e) {
-            System.err.println("[Client] Lỗi bóc dữ liệu bảng ban: " + e.getMessage());
+            LOGGER.severe("[Client] Lỗi bóc dữ liệu bảng ban: " + e.getMessage());
             e.printStackTrace(); // In ra để xem cụ thể nếu còn sót kiểu dữ liệu khác
         }
     }

@@ -5,8 +5,10 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class AdminContext {
+    private static final Logger LOGGER = Logger.getLogger(AdminContext.class.getName());
     private static AdminContext instance;
 
     // 1. Danh sách người dùng trực tuyến

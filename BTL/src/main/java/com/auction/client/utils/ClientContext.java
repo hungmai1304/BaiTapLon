@@ -8,8 +8,10 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class    ClientContext {
+    private static final Logger LOGGER = Logger.getLogger(ClientContext.class.getName());
     private static ClientContext instance;
 
     private final ObservableList<Auction> activeAuctions = FXCollections.observableArrayList();

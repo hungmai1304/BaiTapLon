@@ -12,9 +12,11 @@ import org.java_websocket.WebSocket;
 
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap(MessageType.GET_WON_AUCTIONS_REQUEST)
 public class GetWonAuctionsHandler implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(GetWonAuctionsHandler.class.getName());
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
 
@@ -37,7 +39,7 @@ public class GetWonAuctionsHandler implements IMessageHandler {
 
         } catch (Exception e) {
             // Khi DB lỗi, log lỗi ở Server hệ thống
-            System.err.println("[GetWonAuctionsHandler] Lỗi hệ thống khi tải dữ liệu cho: " + email + " | " + e.getMessage());
+            LOGGER.severe("[GetWonAuctionsHandler] Lỗi hệ thống khi tải dữ liệu cho: " + email + " | " + e.getMessage());
 
             // Trả về đúng mã phản hồi lỗi thực tế cho Client biết đường xử lý UI
             Response errResponse = new Response(MessageType.GET_WON_AUCTIONS_RESPONSE, "ERROR", "Lỗi máy chủ: Không thể kết nối đến cơ sở dữ liệu lúc này.");

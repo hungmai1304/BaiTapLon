@@ -11,9 +11,11 @@ import org.java_websocket.WebSocket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap("ADMIN_GET_BANNED_LIST")
 public class AdminGetBannedList implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(AdminGetBannedList.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -26,7 +28,7 @@ public class AdminGetBannedList implements IMessageHandler {
         // =========================================================================
         String adminEmail = context.getUserByConn(conn);
         if (adminEmail == null) {
-            System.err.println("[AdminGetBannedList] Từ chối: Kết nối chưa đăng nhập!");
+            LOGGER.severe("[AdminGetBannedList] Từ chối: Kết nối chưa đăng nhập!");
             responseMap.put("status", "ERROR");
             responseMap.put("message", "Bạn cần đăng nhập để thực hiện thao tác này!");
             conn.send(gson.toJson(responseMap));
@@ -37,7 +39,7 @@ public class AdminGetBannedList implements IMessageHandler {
         User currentRequester = userDao.getUserByEmail(adminEmail);
 
         if (currentRequester == null || !"ADMIN".equalsIgnoreCase(currentRequester.getRole())) {
-            System.err.println("[AdminGetBannedList] Cảnh báo: " + adminEmail + " hack quyền xem danh sách BAN!");
+            LOGGER.severe("[AdminGetBannedList] Cảnh báo: " + adminEmail + " hack quyền xem danh sách BAN!");
             responseMap.put("status", "ERROR");
             responseMap.put("message", "Bạn không có quyền thực hiện hành động này!");
             conn.send(gson.toJson(responseMap));
@@ -47,7 +49,7 @@ public class AdminGetBannedList implements IMessageHandler {
         // =========================================================================
         // 2. XỬ LÝ LẤY DANH SÁCH BANNED & BLACKLIST VÀ GỘP LẠI
         // =========================================================================
-        System.out.println("[AdminGetBannedList] Admin [" + adminEmail + "] đang yêu cầu lấy danh sách tài khoản bị hạn chế (BANNED & BLACKLIST).");
+        LOGGER.info("[AdminGetBannedList] Admin [" + adminEmail + "] đang yêu cầu lấy danh sách tài khoản bị hạn chế (BANNED & BLACKLIST).");
 
         try {
             // Lấy danh sách tài khoản BANNED từ DB
@@ -75,10 +77,10 @@ public class AdminGetBannedList implements IMessageHandler {
 
             // Tiến hành gửi chuỗi JSON đi
             conn.send(gson.toJson(responseMap));
-            System.out.println("[AdminGetBannedList] Đã gửi thành công tổng cộng " + restrictedUsers.size() + " tài khoản (BANNED/BLACKLIST) cho Admin.");
+            LOGGER.info("[AdminGetBannedList] Đã gửi thành công tổng cộng " + restrictedUsers.size() + " tài khoản (BANNED/BLACKLIST) cho Admin.");
 
         } catch (Exception e) {
-            System.err.println("[AdminGetBannedList] Lỗi hệ thống: " + e.getMessage());
+            LOGGER.severe("[AdminGetBannedList] Lỗi hệ thống: " + e.getMessage());
 
             responseMap.put("status", "ERROR");
             responseMap.put("message", "Có lỗi xảy ra khi truy vấn dữ liệu từ Server!");

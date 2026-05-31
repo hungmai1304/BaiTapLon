@@ -13,8 +13,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class ProductDao {
+    private static final Logger LOGGER = Logger.getLogger(ProductDao.class.getName());
 
     private static ProductDao instance;
 
@@ -48,7 +50,7 @@ public class ProductDao {
                 list.add(mapResultSetToProduct(rs));
             }
         } catch (SQLException e) {
-            System.err.println("[ProductDao] Lỗi getAllProducts: " + e.getMessage());
+            LOGGER.severe("[ProductDao] Lỗi getAllProducts: " + e.getMessage());
         }
         return list;
     }
@@ -94,7 +96,7 @@ public class ProductDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("[ProductDao] Lỗi saveProduct: " + e.getMessage());
+            LOGGER.severe("[ProductDao] Lỗi saveProduct: " + e.getMessage());
             return false;
         }
     }
@@ -111,7 +113,7 @@ public class ProductDao {
                 if (rs.next()) return mapResultSetToProduct(rs);
             }
         } catch (SQLException e) {
-            System.err.println("[ProductDao] Lỗi getProductById: " + e.getMessage());
+            LOGGER.severe("[ProductDao] Lỗi getProductById: " + e.getMessage());
         }
         return null;
     }
@@ -160,7 +162,7 @@ public class ProductDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("[ProductDao] Lỗi editProduct: " + e.getMessage());
+            LOGGER.severe("[ProductDao] Lỗi editProduct: " + e.getMessage());
             return false;
         }
     }
@@ -180,7 +182,7 @@ public class ProductDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("[ProductDao] Lỗi getProductsByUserId: " + e.getMessage());
+            LOGGER.severe("[ProductDao] Lỗi getProductsByUserId: " + e.getMessage());
         }
         return productList;
     }
@@ -201,7 +203,7 @@ public class ProductDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("[ProductDao] Lỗi sellProduct: " + e.getMessage());
+            LOGGER.severe("[ProductDao] Lỗi sellProduct: " + e.getMessage());
             return false;
         }
     }
@@ -219,7 +221,7 @@ public class ProductDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("[ProductDao] Lỗi updateProductStatus: " + e.getMessage());
+            LOGGER.severe("[ProductDao] Lỗi updateProductStatus: " + e.getMessage());
             return false;
         }
     }
@@ -241,7 +243,7 @@ public class ProductDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("[ProductDao] Lỗi getProductsByUserEmail: " + e.getMessage());
+            LOGGER.severe("[ProductDao] Lỗi getProductsByUserEmail: " + e.getMessage());
         }
         return productList;
     }
@@ -256,7 +258,7 @@ public class ProductDao {
             pstmt.setString(1, productId);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("[ProductDao] Lỗi xóa sản phẩm: " + e.getMessage());
+            LOGGER.severe("[ProductDao] Lỗi xóa sản phẩm: " + e.getMessage());
             return false;
         }
     }
@@ -355,11 +357,11 @@ public class ProductDao {
 
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
-                System.out.println("[ProductBot] Đã hạ sàn thành công " + rowsAffected + " sản phẩm hết hạn.");
+                LOGGER.info("[ProductBot] Đã hạ sàn thành công " + rowsAffected + " sản phẩm hết hạn.");
             }
             return rowsAffected;
         } catch (SQLException e) {
-            System.err.println("[ProductDao] Lỗi thực thi autoExpireProducts: " + e.getMessage());
+            LOGGER.severe("[ProductDao] Lỗi thực thi autoExpireProducts: " + e.getMessage());
             return 0;
         }
     }

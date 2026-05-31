@@ -12,10 +12,12 @@ import org.java_websocket.WebSocket;
 
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @CommandMap(value = MessageType.GET_SHOP_PRODUCTS_REQUEST)
 public class GetShopProductsHandler implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(GetShopProductsHandler.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -25,13 +27,13 @@ public class GetShopProductsHandler implements IMessageHandler {
             String userEmail = context.getUserByConn(conn);
 
             if (userEmail == null) {
-                System.err.println("[GetShopProductsHandler] Cảnh báo: Truy cập trái phép từ " + conn.getRemoteSocketAddress());
+                LOGGER.severe("[GetShopProductsHandler] Cảnh báo: Truy cập trái phép từ " + conn.getRemoteSocketAddress());
                 Response errorResponse = new Response(MessageType.GET_SHOP_PRODUCTS_RESPONSE, "ERROR", "Bạn cần đăng nhập để xem danh sách sản phẩm!");
                 conn.send(gson.toJson(errorResponse));
                 return;
             }
 
-            System.out.println("[GetShopProductsHandler] User: " + userEmail + " đang lấy danh sách shop...");
+            LOGGER.info("[GetShopProductsHandler] User: " + userEmail + " đang lấy danh sách shop...");
 
             // 2. Lấy filter status nếu có (từ request data)
             String statusFilter = (String) data.get("status");
@@ -62,10 +64,10 @@ public class GetShopProductsHandler implements IMessageHandler {
             // Gửi dữ liệu về (chỉ chứa Text và Link Ảnh, siêu nhẹ)
             conn.send(gson.toJson(response));
 
-            System.out.println("[GetShopProductsHandler] Đã gửi " + result.size() + " sản phẩm cho shop của " + userEmail);
+            LOGGER.info("[GetShopProductsHandler] Đã gửi " + result.size() + " sản phẩm cho shop của " + userEmail);
 
         } catch (Exception e) {
-            System.err.println("[GetShopProductsHandler] Lỗi: " + e.getMessage());
+            LOGGER.severe("[GetShopProductsHandler] Lỗi: " + e.getMessage());
             e.printStackTrace();
             conn.send(gson.toJson(new Response(MessageType.GET_SHOP_PRODUCTS_RESPONSE, "ERROR", "Lỗi hệ thống: " + e.getMessage())));
         }

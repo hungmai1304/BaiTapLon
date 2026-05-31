@@ -6,11 +6,13 @@ import com.auction.protocol.Response;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 
+import java.util.logging.Logger;
+
 import static com.auction.client.utils.NavigationService.navigate;
 
 @ResponseHandler(type = "BACK_TO_ADMIN_RESPONSE")
 public class BackToAdminResponse implements IClientHandler {
-
+private static final Logger LOGGER = Logger.getLogger(BackToAdminResponse.class.getName());
     @Override
     public void handle(Response response) {
         // 1. Kiểm tra nếu Server xác thực thành công (SUCCESS)
@@ -18,7 +20,7 @@ public class BackToAdminResponse implements IClientHandler {
 
             // Ép chạy về luồng UI của JavaFX
             Platform.runLater(() -> {
-                System.out.println("[BackToLoginResponse] Xác thực thành công. Đang chuyển về màn hình Admin...");
+                LOGGER.info("[BackToLoginResponse] Xác thực thành công. Đang chuyển về màn hình Admin...");
 
                 // Gọi hàm navigate sẵn có của bạn tại đây:
                 // Tùy thuộc vào hàm của bạn thuộc class nào (ví dụ: NavigationService.navigate hoặc gọi thẳng nếu kế thừa)
@@ -29,7 +31,7 @@ public class BackToAdminResponse implements IClientHandler {
             // 2. Nếu thất bại (Bị hack quyền hoặc lỗi hệ thống)
             Platform.runLater(() -> {
                 String errorMsg = (response != null) ? response.getMessage() : "Lỗi không xác định!";
-                System.err.println("[BackToLoginResponse] Từ chối chuyển view: " + errorMsg);
+                LOGGER.severe("[BackToLoginResponse] Từ chối chuyển view: " + errorMsg);
 
                 // Hiển thị thông báo lỗi trực quan
                 Alert alert = new Alert(Alert.AlertType.ERROR);

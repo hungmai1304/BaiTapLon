@@ -19,9 +19,10 @@ import javafx.scene.image.ImageView;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class WonAuctionsController {
-
+private static final Logger LOGGER = Logger.getLogger(WonAuctionsController.class.getName());
     @FXML private TableView<Auction> wonAuctionsTable;
     @FXML private TableColumn<Auction, String> colProductName;
     @FXML private TableColumn<Auction, String> colProductImage;

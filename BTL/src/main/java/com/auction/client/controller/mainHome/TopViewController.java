@@ -23,8 +23,10 @@ import java.io.ByteArrayInputStream;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.logging.Logger;
 
 public class TopViewController {
+    private static final Logger LOGGER = Logger.getLogger(TopViewController.class.getName());
     @FXML
     private Label clock;
     @FXML
@@ -83,7 +85,7 @@ public class TopViewController {
                     Image image = new Image(new ByteArrayInputStream(imageBytes));
                     top_avatar.setImage(image);
                 } catch (Exception e) {
-                    System.err.println("[TopView] Lỗi load avatar: " + e.getMessage());
+                    LOGGER.severe("[TopView] Lỗi load avatar: " + e.getMessage());
                 }
             });
         }

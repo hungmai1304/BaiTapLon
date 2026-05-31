@@ -11,13 +11,16 @@ import com.auction.common.model.user.User;
 import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
 
+import java.util.logging.Logger;
+
 @ResponseHandler(type = MessageType.UPDATE_AVATAR_RESPONSE)
 public class UpdateAvatarResponseHandler implements IClientHandler {
+    private static final Logger LOGGER = Logger.getLogger(UpdateAvatarResponseHandler.class.getName());
     @Override
     public void handle(Response response) {
         if ("SUCCESS".equals(response.getStatus())) {
             String newBase64 = (String) response.getData().get("avatarBase64");
-            System.out.println("[Client] " + response.getMessage());
+            LOGGER.info("[Client] " + response.getMessage());
 
             // Cập nhật vào Global
             User user = SomeGlobal.getCurrentUser();
@@ -43,7 +46,7 @@ public class UpdateAvatarResponseHandler implements IClientHandler {
                 topCtrl.updateAvatar(newBase64);
             }
         } else {
-            System.err.println("[Client] Cập nhật avatar thất bại: " + response.getMessage());
+            LOGGER.severe("[Client] Cập nhật avatar thất bại: " + response.getMessage());
         }
     }
 }

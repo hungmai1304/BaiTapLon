@@ -14,9 +14,11 @@ import org.java_websocket.WebSocket;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap("ADMIN_CANCEL_AUCTION")
 public class AdminCancelAuction implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(AdminCancelAuction.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -29,7 +31,7 @@ public class AdminCancelAuction implements IMessageHandler {
         // =========================================================================
         String adminEmail = context.getUserByConn(conn);
         if (adminEmail == null) {
-            System.err.println("[AdminCancelAuction] Từ chối: Kết nối này chưa đăng nhập hệ thống!");
+            LOGGER.severe("[AdminCancelAuction] Từ chối: Kết nối này chưa đăng nhập hệ thống!");
             responseMap.put("status", "ERROR");
             responseMap.put("message", "Bạn cần đăng nhập để thực hiện thao tác này!");
             conn.send(gson.toJson(responseMap));
@@ -40,7 +42,7 @@ public class AdminCancelAuction implements IMessageHandler {
         User currentRequester = userDao.getUserByEmail(adminEmail);
 
         if (currentRequester == null || !"ADMIN".equalsIgnoreCase(currentRequester.getRole())) {
-            System.err.println("[AdminCancelAuction] Cảnh báo nguy hiểm: Tài khoản [" + adminEmail + "] cố gắng can thiệp hủy đấu giá công khai!");
+            LOGGER.severe("[AdminCancelAuction] Cảnh báo nguy hiểm: Tài khoản [" + adminEmail + "] cố gắng can thiệp hủy đấu giá công khai!");
             responseMap.put("status", "ERROR");
             responseMap.put("message", "Bạn không có quyền hạn tối cao để thực hiện hành động này!");
             conn.send(gson.toJson(responseMap));
@@ -60,7 +62,7 @@ public class AdminCancelAuction implements IMessageHandler {
                 return;
             }
 
-            System.out.println("[AdminCancelAuction] Admin [" + adminEmail + "] đang yêu cầu hủy đấu giá cho ID: " + targetId);
+            LOGGER.info("[AdminCancelAuction] Admin [" + adminEmail + "] đang yêu cầu hủy đấu giá cho ID: " + targetId);
 
             Auction targetAuction = null;
 
@@ -99,7 +101,7 @@ public class AdminCancelAuction implements IMessageHandler {
             if (targetAuction != null || dbUpdated) {
                 responseMap.put("status", "SUCCESS");
                 responseMap.put("message", "Hệ thống đã can thiệp dừng cuộc họp đấu giá & cập nhật trạng thái sản phẩm!");
-                System.out.println("[AdminCancelAuction] Hủy thành công phiên đấu giá liên quan đến ID [" + dbProductId + "] bởi Admin.");
+                LOGGER.info("[AdminCancelAuction] Hủy thành công phiên đấu giá liên quan đến ID [" + dbProductId + "] bởi Admin.");
             } else {
                 responseMap.put("status", "ERROR");
                 responseMap.put("message", "Không tìm thấy phiên đấu giá hoặc sản phẩm tương ứng trên hệ thống DB!");
@@ -108,7 +110,7 @@ public class AdminCancelAuction implements IMessageHandler {
             conn.send(gson.toJson(responseMap));
 
         } catch (Exception e) {
-            System.err.println("[AdminCancelAuction] Lỗi hệ thống phát sinh: " + e.getMessage());
+            LOGGER.severe("[AdminCancelAuction] Lỗi hệ thống phát sinh: " + e.getMessage());
             e.printStackTrace();
 
             responseMap.put("status", "ERROR");
