@@ -62,6 +62,7 @@ public class PlaceBidHandler implements IMessageHandler {
                     ? currentUser.getUsername() : userEmail;
 
             boolean userBidSuccessful = false;
+            LocalDateTime updatedEndTime = null;
 
             // --- PHẠM VI KHÓA ĐƯỢC THU HẸP TỐI ĐA ---
             synchronized (currentAuction) {
@@ -130,6 +131,7 @@ public class PlaceBidHandler implements IMessageHandler {
 
                 context.updateAuction(currentAuction);
                 userBidSuccessful = true;
+                updatedEndTime = currentAuction.getEndTime();
             }
             // --- KẾT THÚC KHÓA (SÀN ĐẤU GIÁ ĐÃ ĐƯỢC GIẢI PHÓNG CHO NGƯỜI KHÁC BẤM) ---
 
@@ -145,9 +147,9 @@ public class PlaceBidHandler implements IMessageHandler {
                 }
 
                 // Phát loa và cập nhật số dư O(1) cực nhanh không lo nghẽn luồng nghiệp vụ
-                broadcastNewBid(context, gson, productId, bidAmount, safeUserName);
+                // Sửa dòng cũ thành:
+                broadcastNewBid(context, gson, productId, bidAmount, safeUserName, updatedEndTime);
                 updateClientBalance(context, gson, userEmail);
-
                 // Kích hoạt trận chiến Bot phản công độc lập
                 triggerBotWar(context, gson, productId, currentAuction);
 
@@ -255,6 +257,18 @@ public class PlaceBidHandler implements IMessageHandler {
                     currentAuction.setCurrentPrice(nextBotPrice);
                     currentAuction.setHighestBidder(botUser);
                     currentAuction.setLeaderName(safeBotName);
+                    // Bổ sung gia hạn cho bot
+                    LocalDateTime nowTimeBot = LocalDateTime.now();
+                    long secondsLeftBot = java.time.Duration.between(nowTimeBot, currentAuction.getEndTime()).getSeconds();
+
+                    if (secondsLeftBot >= 0 && secondsLeftBot < 30) {
+                        LocalDateTime newExtendedTimeBot = nowTimeBot.plusSeconds(30);
+                        currentAuction.setEndTime(newExtendedTimeBot);
+                        if (currentAuction.getProduct() != null) {
+                            currentAuction.getProduct().setEndTime(newExtendedTimeBot);
+                        }
+                        LOGGER.info(" [Anti-Sniping BOT] Bot đập búa sát nút! Đã tự động dời giờ kết thúc thêm 30s!");
+                    }
 
                     // Ghi lịch sử giao dịch
                     BidTransaction botTransaction = new BidTransaction();
@@ -289,7 +303,7 @@ public class PlaceBidHandler implements IMessageHandler {
                 }
 
                 // Bắn thông báo Realtime
-                broadcastNewBid(context, gson, productId, successBotPrice, successBotName);
+                broadcastNewBid(context, gson, productId, successBotPrice, successBotName, currentAuction.getEndTime());
                 updateClientBalance(context, gson, successBotEmail);
 
                 LOGGER.info("[BOT BID THÀNH CÔNG] Bot " + successBotEmail + " ăn đỉnh: " + successBotPrice);
@@ -314,11 +328,14 @@ public class PlaceBidHandler implements IMessageHandler {
     }
 
     // TỐI ƯU BẤT ĐỒNG BỘ: Không cho phép việc lặp gửi mạng làm chậm luồng xử lý chính
-    public static void broadcastNewBid(ServerContext context, Gson gson, String productId, double newPrice, String leaderName) {
+    public static void broadcastNewBid(ServerContext context, Gson gson, String productId, double newPrice, String leaderName,LocalDateTime endTime) {
         Response broadcastRes = new Response(MessageType.BROADCAST_NEW_BID, "SUCCESS", "Có mức giá mới!");
         broadcastRes.getData().put("newPrice", newPrice);
         broadcastRes.getData().put("leaderName", leaderName);
         broadcastRes.getData().put("productId", productId);
+        if (endTime != null) {
+            broadcastRes.getData().put("endTime", endTime);
+        }
 
         String message = gson.toJson(broadcastRes);
 
