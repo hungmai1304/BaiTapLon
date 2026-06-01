@@ -180,6 +180,7 @@ public class PlaceBidHandler implements IMessageHandler {
             String successBotEmail = null;
             double successBotPrice = 0;
             String successBotName = null;
+            LocalDateTime successBotEndTime = null;
 
             // --- KHÓA CHỈ DÙNG ĐỂ KIỂM TRA TRẠNG THÁI VÀ ĐỔI BIẾN TRÊN RAM ---
             synchronized (currentAuction) {
@@ -280,6 +281,7 @@ public class PlaceBidHandler implements IMessageHandler {
                     currentAuction.getBiddingHistory().add(botTransaction);
 
                     context.updateAuction(currentAuction);
+                    successBotEndTime = currentAuction.getEndTime();
 
                     // Gom snapshot dữ liệu thành công để tí ra ngoài Lock xử lý I/O mạng
                     botBidSuccessful = true;
@@ -303,7 +305,7 @@ public class PlaceBidHandler implements IMessageHandler {
                 }
 
                 // Bắn thông báo Realtime
-                broadcastNewBid(context, gson, productId, successBotPrice, successBotName, currentAuction.getEndTime());
+                broadcastNewBid(context, gson, productId, successBotPrice, successBotName, successBotEndTime);
                 updateClientBalance(context, gson, successBotEmail);
 
                 LOGGER.info("[BOT BID THÀNH CÔNG] Bot " + successBotEmail + " ăn đỉnh: " + successBotPrice);
