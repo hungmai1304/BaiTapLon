@@ -48,8 +48,7 @@ private static final Logger LOGGER = Logger.getLogger(WonAuctionsController.clas
         colTime.setCellValueFactory(cellData -> {
             LocalDateTime endTime = cellData.getValue().getEndTime();
             if (endTime != null) {
-                // Thêm 7 tiếng để đúng múi giờ Việt Nam (giống BiddingController)
-                return new SimpleStringProperty(endTime.plusHours(7).format(formatter));
+                return new SimpleStringProperty(endTime.format(formatter));
             }
             return new SimpleStringProperty("N/A");
         });

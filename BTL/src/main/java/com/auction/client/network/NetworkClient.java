@@ -86,14 +86,18 @@ public class NetworkClient {
         }
     }
 
-    public static boolean isConnected() {
-        return webSocketClient != null && webSocketClient.isOpen();
-    }
+//    public static boolean isConnected() {
+//
+//        return webSocketClient != null && webSocketClient.isOpen();
+//    }
+//
+//    /**
+//     * Attach a message listener for view controllers to capture incoming text data
+//     */
+//    public static void setListener(MessageListener listener) {
+//
+//        currentListener = listener;
+//    }
 
-    /**
-     * Attach a message listener for view controllers to capture incoming text data
-     */
-    public static void setListener(MessageListener listener) {
-        currentListener = listener;
-    }
+
 }

@@ -43,10 +43,4 @@ public class FileService {
         }
     }
 
-    // Hàm này ĐÉO CẦN NỮA vì ảnh nằm trên mây rồi, Client tự load qua URL
-    /*
-    public static String readImageAsBase64(String path) {
-        return null;
-    }
-    */
 }
