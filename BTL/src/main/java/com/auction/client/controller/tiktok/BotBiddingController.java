@@ -71,7 +71,7 @@ public class BotBiddingController {
         startAuctionCountdown();
     }
 
-    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName, String endTimeStr) {
         Platform.runLater(() -> {
             if (currentAuction != null && currentAuction.getProduct() != null
                     && currentAuction.getProduct().getId().equals(productId)) {
@@ -81,6 +81,19 @@ public class BotBiddingController {
 
                 // 2. Cập nhật RAM
                 currentAuction.setCurrentPrice(newPrice);
+                //  3. XỬ LÝ NHẢY SỐ ĐỒNG HỒ NẾU BỊ DỜI GIỜ (ANTI-SNIPING)
+                if (endTimeStr != null) {
+                    try {
+                        java.time.LocalDateTime newEndTime = java.time.LocalDateTime.parse(endTimeStr, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                        currentAuction.setEndTime(newEndTime);
+                        if (currentAuction.getProduct() != null) {
+                            ((Product) currentAuction.getProduct()).setEndTime(newEndTime);
+                        }
+                        LOGGER.info("[BotBidding UI] Đã giật lùi đồng hồ đếm ngược do có người đập búa sát nút!");
+                    } catch (Exception e) {
+                        LOGGER.warning("Lỗi parse thời gian: " + e.getMessage());
+                    }
+                }
             }
         });
     }

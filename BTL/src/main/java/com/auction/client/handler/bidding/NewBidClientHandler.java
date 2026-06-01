@@ -2,6 +2,7 @@ package com.auction.client.handler.bidding;
 
 import com.auction.client.annotation.ResponseHandler;
 import com.auction.client.controller.tiktok.BiddingController;
+import com.auction.client.controller.tiktok.BotBiddingController;
 import com.auction.client.controller.tiktok.TikTokAuctionController;
 import com.auction.client.network.IClientHandler;
 import com.auction.client.utils.ControllerRegistry;
@@ -34,17 +35,24 @@ public class NewBidClientHandler implements IClientHandler {
 
                     TikTokAuctionController controller = (TikTokAuctionController) ControllerRegistry.get("TikTokAuctionController");
                     BiddingController biddingCtrl = (BiddingController) ControllerRegistry.get("BiddingController");
+                    Object botCtrlRaw = ControllerRegistry.get("BotBiddingController");
                     if (biddingCtrl != null) {
                         biddingCtrl.updateRealtimeBid(productId, newPrice, leaderName, endTimeStr);
                     }
 
                     if (controller != null) {
-                        // Truyền dữ liệu sang UI để nó tự nhảy số
                         controller.updateRealtimeBid(productId, newPrice, leaderName, endTimeStr);
-                    } else {
-                        LOGGER.info("[Client] Giao diện TikTok chưa mở, không cần nhảy số.");
                     }
 
+                    //  ÉP KIỂU VÀ TRUYỀN THỜI GIAN VÀO MÀN HÌNH BOT
+                    if (botCtrlRaw != null) {
+                        BotBiddingController botCtrl = (BotBiddingController) botCtrlRaw;
+                        botCtrl.updateRealtimeBid(productId, newPrice, leaderName, endTimeStr);
+                    }
+
+                    if (biddingCtrl == null && controller == null && botCtrlRaw == null) {
+                        LOGGER.info("[Client] Không có giao diện đấu giá nào đang mở, không cần nhảy số.");
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
