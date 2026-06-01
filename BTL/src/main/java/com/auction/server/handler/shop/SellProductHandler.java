@@ -76,7 +76,7 @@ public class SellProductHandler implements IMessageHandler {
             Object durationObj = data.get("durationMinutes") != null ? data.get("durationMinutes") : data.get("duration_minutes");
             Object startPriceObj = data.get("startPrice") != null ? data.get("startPrice") : data.get("start_price");
 
-            // Tiến hành parse nghiêm ngặt (Nếu null sẽ trả về null chứ không lấy mặc định)
+            // Tiến hành parse nghiêm ngặt
             Double waitingMinutes = parseDoubleStrict(waitingObj);
             Double durationMinutes = parseDoubleStrict(durationObj);
 
@@ -86,9 +86,7 @@ public class SellProductHandler implements IMessageHandler {
                 liveStartPrice = pCheck.getStartPrice();
             }
 
-            // =========================================================================
             // CHẶN LỖI: BẮT BUỘC PHẢI CÓ THỜI GIAN TỪ CLIENT
-            // =========================================================================
             if (waitingMinutes == null) {
                 sendError(conn, "Thất bại: Server không nhận được thời gian chờ hợp lệ từ Client (waitingMinutes)!");
                 return;
@@ -140,28 +138,64 @@ public class SellProductHandler implements IMessageHandler {
                 scheduler.schedule(() -> {
                     try {
                         Auction auctionToStart = context.getAuctionByProductId(productId);
-                        if (auctionToStart != null && "PENDING".equals(auctionToStart.getStatus())) {
-                            auctionToStart.setStatus("ACTIVE");
-                            context.updateAuction(auctionToStart);
-                            LOGGER.info(" [Timer] SP " + productId + " đã CHÍNH THỨC LÊN SÀN ĐẤU GIÁ!");
-                            broadcastNewAuctionSession(context);
+                        if (auctionToStart != null) {
+                            boolean performanceStart = false;
+                            synchronized (auctionToStart) {
+                                if ("PENDING".equals(auctionToStart.getStatus())) {
+                                    auctionToStart.setStatus("ACTIVE");
+                                    performanceStart = true;
+                                }
+                            }
+                            if (performanceStart) {
+                                context.updateAuction(auctionToStart);
+                                LOGGER.info(" [Timer] SP " + productId + " đã CHÍNH THỨC LÊN SÀN ĐẤU GIÁ!");
+                                broadcastNewAuctionSession(context);
+                            }
                         }
                     } catch (Exception e) {
                         LOGGER.severe("[Timer Error] Lỗi khi kích hoạt phiên: " + e.getMessage());
                     }
                 }, delayToActiveSeconds, TimeUnit.SECONDS);
 
-                // HẸN GIỜ 2: ĐÓNG PHIÊN VÀ CHỐT ĐƠN
-                scheduler.schedule(() -> {
-                    try {
-                        Auction auctionToEnd = context.getAuctionByProductId(productId);
-                        if (auctionToEnd != null) {
-                            AuctionManager.getInstance().endAuction(auctionToEnd);
-                            broadcastNewAuctionSession(context);
-                            broadcastToAdmins(context);
+                // HẸN GIỜ 2: ĐÓNG PHIÊN VÀ CHỐT ĐƠN (GẮN ANTI-SNIPING GIA HẠN THỜI GIAN)
+                scheduler.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Auction auctionToEnd = context.getAuctionByProductId(productId);
+                            if (auctionToEnd == null) return;
+
+                            boolean shouldEndNow = false;
+                            long extraSeconds = 0;
+
+                            synchronized (auctionToEnd) {
+                                if (!"COMPLETED".equals(auctionToEnd.getStatus())) {
+                                    LocalDateTime currentTime = LocalDateTime.now();
+
+                                    // Kiểm tra thời gian thực tế so với thời gian kết thúc của phiên (nếu có sự thay đổi do anti-sniping)
+                                    if (!currentTime.isBefore(auctionToEnd.getEndTime())) {
+                                        shouldEndNow = true;
+                                    } else {
+                                        // Phiên đã bị dời giờ (Gia hạn tự động bởi luồng Bidding), tính toán thời gian dời lịch mới
+                                        extraSeconds = java.time.Duration.between(currentTime, auctionToEnd.getEndTime()).getSeconds();
+                                    }
+                                }
+                            }
+
+                            if (shouldEndNow) {
+                                AuctionManager.getInstance().endAuction(auctionToEnd);
+                                broadcastNewAuctionSession(context);
+                                broadcastToAdmins(context);
+                                LOGGER.info("[Timer] SP " + productId + " đã được xử lý chốt đơn bởi Timer.");
+                            } else if (extraSeconds > 0 || !auctionToEnd.getStatus().equals("COMPLETED")) {
+                                // Tái lập lịch, dời lịch đóng phiên dựa theo thời gian gia hạn mới
+                                long sleepTime = extraSeconds > 0 ? extraSeconds : 1;
+                                scheduler.schedule(this, sleepTime, TimeUnit.SECONDS);
+                                LOGGER.info("[Timer Anti-Sniping] SP " + productId + " phát hiện bị dời giờ đấu giá, dời lịch đóng phiên thêm " + sleepTime + "s.");
+                            }
+                        } catch (Exception e) {
+                            LOGGER.severe("[Timer Error] Lỗi khi kết thúc phiên hẹn giờ: " + e.getMessage());
                         }
-                    } catch (Exception e) {
-                        LOGGER.severe("[Timer Error] Lỗi khi kết thúc phiên hẹn giờ: " + e.getMessage());
                     }
                 }, delayToCompletedSeconds, TimeUnit.SECONDS);
 
@@ -207,7 +241,7 @@ public class SellProductHandler implements IMessageHandler {
 
         String message = safeGson.toJson(updateRes);
         for (WebSocket client : context.getConnectedClients()) {
-            if (client.isOpen()) {
+            if (client != null && client.isOpen()) {
                 client.send(message);
             }
         }
@@ -222,7 +256,7 @@ public class SellProductHandler implements IMessageHandler {
 
             String message = safeGson.toJson(responseMap);
             for (WebSocket client : context.getConnectedClients()) {
-                if (client.isOpen()) {
+                if (client != null && client.isOpen()) {
                     client.send(message);
                 }
             }
@@ -233,7 +267,7 @@ public class SellProductHandler implements IMessageHandler {
 
     private void sendError(WebSocket conn, String errorMsg) {
         Response response = new Response(MessageType.SELL_PRODUCT_RESPONSE, "ERROR", errorMsg);
-        if (conn.isOpen()) {
+        if (conn != null && conn.isOpen()) {
             conn.send(safeGson.toJson(response));
         }
     }

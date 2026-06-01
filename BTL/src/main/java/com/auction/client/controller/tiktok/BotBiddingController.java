@@ -14,11 +14,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.XYChart;
-import com.auction.common.model.auction.BidTransaction;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -27,23 +22,22 @@ import java.time.ZoneId;
 import java.util.logging.Logger;
 
 public class BotBiddingController {
-private static final Logger LOGGER = Logger.getLogger(BotBiddingController.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(BotBiddingController.class.getName());
+
     @FXML private Label lblProductName;
     @FXML private Label lblStartPrice;
     @FXML private Label lblPriceStep;
     @FXML private Label lblCurrentPrice;
     @FXML private Label lblBotNotification;
 
-    // Đã thêm ánh xạ UI cho tính năng Đồng hồ và Khóa nút
+    // Ánh xạ UI cho tính năng Đồng hồ và Khóa nút
     @FXML private Label lblCountdown;
     @FXML private Button btnRegisterBot;
 
     @FXML private TextField txtMaxBidPrice;
     @FXML private TextField txtBotPriceStep;
-    @FXML private LineChart<String, Number> priceChart;
 
     private Auction currentAuction;
-    private XYChart.Series<String, Number> priceSeries = new XYChart.Series<>();
     private static Timeline countdownTimeline;
 
     @FXML
@@ -73,28 +67,6 @@ private static final Logger LOGGER = Logger.getLogger(BotBiddingController.class
             }
         }
 
-        priceSeries.setName("Lịch sử giá");
-        if (currentAuction != null && currentAuction.getProduct() != null) {
-            Product p = (Product) currentAuction.getProduct();
-            // Mốc xuất phát
-            priceSeries.getData().add(new XYChart.Data<>("Mở sàn", p.getStartPrice()));
-
-            // Quét lịch sử cũ
-            if (currentAuction.getBiddingHistory() != null && !currentAuction.getBiddingHistory().isEmpty()) {
-                for (BidTransaction tx : currentAuction.getBiddingHistory()) {
-                    String timeStr = tx.getTimeCreated() != null
-                            ? tx.getTimeCreated().atZone(ZoneId.systemDefault()).toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-                            : LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-                    priceSeries.getData().add(new XYChart.Data<>(timeStr, tx.getBidAmount()));
-                }
-            } else {
-                // Nếu chưa ai đặt giá
-                String timeNowInit = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-                priceSeries.getData().add(new XYChart.Data<>(timeNowInit, currentAuction.getCurrentPrice()));
-            }
-        }
-        priceChart.getData().add(priceSeries);
-
         // Khởi động cỗ máy đếm ngược thời gian giống hệt màn hình Bidding
         startAuctionCountdown();
     }
@@ -109,15 +81,6 @@ private static final Logger LOGGER = Logger.getLogger(BotBiddingController.class
 
                 // 2. Cập nhật RAM
                 currentAuction.setCurrentPrice(newPrice);
-
-                // 3. Vẽ thêm điểm mới vào đồ thị
-                String timeNow = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-                priceSeries.getData().add(new XYChart.Data<>(timeNow, newPrice));
-
-                // Dọn bớt biểu đồ nếu dài quá (tùy chọn)
-                if (priceSeries.getData().size() > 20) {
-                    priceSeries.getData().remove(0);
-                }
             }
         });
     }
@@ -195,7 +158,6 @@ private static final Logger LOGGER = Logger.getLogger(BotBiddingController.class
 
     @FXML
     public void handleBackToTikTok(ActionEvent event) {
-
         if (countdownTimeline != null) {
             countdownTimeline.stop();
         }
@@ -221,7 +183,7 @@ private static final Logger LOGGER = Logger.getLogger(BotBiddingController.class
                 return;
             }
 
-            // Chỉ thay đổi trạng thái Disable của nút nếu user khong phải người bán
+            // Chỉ thay đổi trạng thái Disable của nút nếu user không phải người bán
             User currentUser = SomeGlobal.getCurrentUser();
             boolean isSeller = (currentUser != null && p.getOwner() != null && currentUser.getEmail().equalsIgnoreCase(p.getOwner().getEmail()));
 
