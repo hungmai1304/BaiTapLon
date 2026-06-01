@@ -11,6 +11,7 @@ import org.java_websocket.WebSocket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,8 +45,11 @@ public class ServerContext {
     // 3. bảng lưu conn là key, tìm user
     private final Map<WebSocket, User> onlineUserObjects = new ConcurrentHashMap<>();
 
-    // lưu danh sách auction online đang diễn ra
+    // Lưu danh sách auction online đang diễn ra (Key: Auction ID)
     private final Map<String, Auction> activeAuctionsMap = new ConcurrentHashMap<>();
+
+    // TỐI ƯU: Bảng chỉ mục phụ kết nối chéo O(1) từ Product ID -> Auction ID (Chống nghẽn CPU cho Expire Bot)
+    private final Map<String, String> productToAuctionIndex = new ConcurrentHashMap<>();
 
     // Danh sách những người đăng ký nhận tin TikTok
     private final Set<WebSocket> tiktokListeners = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -64,12 +68,10 @@ public class ServerContext {
         this.server = server;
     }
 
-    // getter instance
     public AuctionWebSocketServer getServer() {
         return server;
     }
 
-    // danh sách lưu trữ các cuộc đấu giá online, dễ dàng gửi đi cho client
     public List<Auction> getActiveAuctions() {
         return new ArrayList<>(activeAuctionsMap.values());
     }
@@ -77,8 +79,14 @@ public class ServerContext {
     public void addAuction(Auction auction) {
         if (auction != null && auction.getId() != null) {
             activeAuctionsMap.put(auction.getId(), auction);
+
+            // Đồng bộ xây dựng index phụ cho Product ID
+            if (auction.getProduct() != null && auction.getProduct().getId() != null) {
+                productToAuctionIndex.put(auction.getProduct().getId(), auction.getId());
+            }
+
             LOGGER.info("[ServerContext] Đã thêm Phiên Đấu Giá (ID: " + auction.getId() + ") vào RAM.");
-            broadcastAuctionUpdate(); // Phát loa cập nhật
+            broadcastAuctionUpdate();
         }
     }
 
@@ -86,6 +94,10 @@ public class ServerContext {
         if (auctionId == null) return;
         Auction removed = activeAuctionsMap.remove(auctionId);
         if (removed != null) {
+            // Dọn dẹp index phụ để tránh rác RAM (Memory Leak)
+            if (removed.getProduct() != null && removed.getProduct().getId() != null) {
+                productToAuctionIndex.remove(removed.getProduct().getId());
+            }
             LOGGER.info("[ServerContext] Đã xóa Phiên Đấu Giá (ID: " + auctionId + ") khỏi RAM.");
             broadcastAuctionUpdate();
         }
@@ -95,36 +107,38 @@ public class ServerContext {
         if (updatedAuction == null || updatedAuction.getId() == null) return;
 
         activeAuctionsMap.put(updatedAuction.getId(), updatedAuction);
+
+        // Cập nhật lại chỉ mục phụ nếu cần
+        if (updatedAuction.getProduct() != null && updatedAuction.getProduct().getId() != null) {
+            productToAuctionIndex.put(updatedAuction.getProduct().getId(), updatedAuction.getId());
+        }
+
         LOGGER.info("[ServerContext] Đã cập nhật Auction ID: " + updatedAuction.getId());
         broadcastAuctionUpdate();
     }
 
+    /**
+     * ĐÃ TỐI ƯU TUYỆT ĐỐI O(1): Tìm nhanh phiên đấu giá từ mã sản phẩm thông qua Index phụ, không quét mảng.
+     */
     public Auction getAuctionByProductId(String productId) {
         if (productId == null) return null;
-        return activeAuctionsMap.values().stream()
-                .filter(a -> a.getProduct() != null && productId.equals(a.getProduct().getId()))
-                .findFirst()
-                .orElse(null);
+        String auctionId = productToAuctionIndex.get(productId);
+        return auctionId != null ? activeAuctionsMap.get(auctionId) : null;
     }
 
-    // =========================================================================
-    // HÀM BỔ SUNG MỚI: Xóa phiên đấu giá trên RAM dựa vào Mã sản phẩm (Product ID)
-    // Phục vụ đắc lực cho Expire Bot đồng bộ hóa từ Database lên RAM
-    // =========================================================================
     public void removeAuctionByProductId(String productId) {
         if (productId == null) return;
 
         Auction targetAuction = getAuctionByProductId(productId);
         if (targetAuction != null) {
             activeAuctionsMap.remove(targetAuction.getId());
+            productToAuctionIndex.remove(productId); // Xóa sạch cả 2 bản đồ
             System.out.println("[ServerContext] [ĐỒNG BỘ] Đã xóa Phiên Đấu Giá (ID: "
                     + targetAuction.getId() + ") của sản phẩm hết hạn (ID: " + productId + ") khỏi RAM.");
-            broadcastAuctionUpdate(); // Đẩy danh sách mới về Client (Mất sàn TikTok)
+            broadcastAuctionUpdate();
         }
     }
-    // =========================================================================
 
-    // thêm và xóa cho Listeners tik tok
     public void addTikTokListener(WebSocket conn) {
         if (conn != null) tiktokListeners.add(conn);
     }
@@ -138,39 +152,46 @@ public class ServerContext {
     }
 
     /**
-     * Broadcast danh sách đấu giá mới nhất tới tất cả Listeners (Chạy ASYNC ngầm)
+     * SIÊU TỐI ƯU BROADCAST: Đẩy toàn bộ tác vụ nặng (chụp snapshot + dịch JSON + gửi I/O) xuống luồng ngầm.
      */
     private void broadcastAuctionUpdate() {
         if (tiktokListeners.isEmpty()) return;
 
+        // Chụp nhanh snapshot của danh sách dữ liệu tại thời điểm gọi (Chỉ tốn O(1) sao chép reference mảng)
+        final List<Auction> snapshot = new ArrayList<>(activeAuctionsMap.values());
+
+        // Đẩy toàn bộ "cục tạ" nặng nề xuống ExecutorService ngầm
         asyncExecutor.submit(() -> {
             try {
+                // Luồng ngầm tự chịu trách nhiệm dịch JSON, luồng nghiệp vụ chính đã được giải phóng tự do!
                 Response response = new Response(MessageType.GET_ACTIVE_AUCTIONS_RESPONSE, "SUCCESS", "Cập nhật danh sách đấu giá.");
-                response.getData().put("auctionList", new ArrayList<>(activeAuctionsMap.values()));
-
+                response.getData().put("auctionList", snapshot);
                 String json = gson.toJson(response);
-                LOGGER.info("[AsyncBroadcast] Broadcast cập nhật tới " + tiktokListeners.size() + " listeners.");
 
-                Iterator<WebSocket> it = tiktokListeners.iterator();
-                while (it.hasNext()) {
-                    WebSocket conn = it.next();
+                LOGGER.info("[AsyncBroadcast] Đang phát chuỗi JSON tới " + tiktokListeners.size() + " listeners từ luồng ngầm.");
+
+                for (WebSocket conn : tiktokListeners) {
                     if (conn != null && conn.isOpen()) {
-                        conn.send(json);
-                    } else {
-                        it.remove(); // Tự dọn dẹp connection chết
+                        // Tiếp tục cô lập hành vi blocking ghi mạng của từng client thông qua CompletableFuture
+                        CompletableFuture.runAsync(() -> {
+                            try {
+                                if (conn.isOpen()) {
+                                    conn.send(json);
+                                }
+                            } catch (Exception ignored) {}
+                        }, asyncExecutor);
                     }
                 }
             } catch (Exception e) {
-                LOGGER.severe("[AsyncBroadcast] Lỗi khi xử lý phát loa đấu giá: " + e.getMessage());
+                LOGGER.severe("[AsyncBroadcast] Lỗi hệ thống khi xử lý phát loa đấu giá: " + e.getMessage());
             }
         });
     }
 
-    // quản lí truyền vào user id, trả về conn
     public void addOnlineUser(String userId, WebSocket conn) {
         if (userId == null || conn == null) return;
         onlineUsers.put(userId, conn);
-        connToUserKey.put(conn, userId); // Lưu vào bản đồ ngược để phục vụ getUserByConn với tốc độ O(1)
+        connToUserKey.put(conn, userId);
         LOGGER.info("[ServerContext] User [" + userId + "] đã online!");
     }
 
@@ -183,14 +204,10 @@ public class ServerContext {
         } else {
             onlineUsers.entrySet().removeIf(entry -> entry.getValue().equals(conn));
         }
-        removeOnlineUserObject(conn); // Đồng bộ dọn dẹp luôn object cache bên dưới
+        removeOnlineUserObject(conn);
         removeTikTokListener(conn);
     }
 
-    /**
-     * ĐÃ TỐI ƯU: Tìm kiếm ID/Email từ kết nối mạng đạt tốc độ O(1) tuyệt đối
-     */
-    // trả về email, lấy conn
     public String getUserByConn(WebSocket conn) {
         if (conn == null) return null;
         return connToUserKey.get(conn);
@@ -200,75 +217,51 @@ public class ServerContext {
         return onlineUsers.values();
     }
 
-
-    // các hàm quản lí cho danh sách lưu conn/user
-
-    /**
-     * TỐI ƯU BỔ SUNG: Hàm lấy thông tin User Cache nhanh từ RAM thông qua Email (Tốc độ O(1))
-     * Phục vụ đắc lực cho các hàm xử lý Broadcast của Handler mà không cần chọc DB.
-     */
     public User getUserCacheByEmail(String email) {
         if (email == null || email.trim().isEmpty()) return null;
 
-        // Cách tìm O(1): Lấy Connection thông qua email, rồi dùng Connection lấy Object User ra
         WebSocket conn = onlineUsers.get(email);
         if (conn != null) {
             return onlineUserObjects.get(conn);
         }
 
-        // Dự phòng (Fallback): Nếu cơ chế map chéo bị lệch, duyệt mảng trên RAM (Vẫn nhanh hơn chọc DB)
         return onlineUserObjects.values().stream()
                 .filter(u -> u != null && email.equalsIgnoreCase(u.getEmail()))
                 .findFirst()
                 .orElse(null);
     }
 
-    /**
-     * TỐI ƯU BỔ SUNG: Hàm lấy thông tin User Cache nhanh bằng Object WebSocket
-     */
     public User getUserCacheByConn(WebSocket conn) {
         if (conn == null) return null;
         return onlineUserObjects.get(conn);
     }
 
-    /**
-     * Thêm đối tượng User online vào RAM ứng với kết nối mạng
-     */
     public void addOnlineUserObject(WebSocket conn, User user) {
         if (conn != null && user != null) {
             onlineUserObjects.put(conn, user);
             LOGGER.info("[ServerContext] Lưu trữ thông tin đối tượng User: " + user.getUsername() + " | Trạng thái: " + user.getStatus());
-            broadcastOnlineUsersToAdmins(); // Tự động đồng bộ tới Admin khi có người vào
+            broadcastOnlineUsersToAdmins();
         }
     }
 
-    /**
-     * Xóa đối tượng User ra khỏi RAM khi ngắt kết nối mạng dựa trên WebSocket
-     */
     public void removeOnlineUserObject(WebSocket conn) {
         if (conn != null) {
             User removedUser = onlineUserObjects.remove(conn);
             if (removedUser != null) {
                 LOGGER.info("[ServerContext] Đã xóa đối tượng User khỏi RAM: " + removedUser.getUsername());
-                broadcastOnlineUsersToAdmins(); // Tự động đồng bộ tới Admin khi có người ra
+                broadcastOnlineUsersToAdmins();
             }
         }
     }
 
-    /**
-     * Lấy danh sách toàn bộ đối tượng User đang trực tuyến dưới dạng List công khai
-     */
     public List<User> getOnlineUserList() {
         return new ArrayList<>(onlineUserObjects.values());
     }
 
     public User getUserByConnObject(WebSocket conn) {
-        return getUserCacheByConn(conn); // Điều hướng về hàm tối ưu
+        return getUserCacheByConn(conn);
     }
 
-    /**
-     * Cập nhật trạng thái (status) trực tiếp trên RAM cho một User dựa theo Email.
-     */
     public void updateUserStatusInRam(String email, String newStatus) {
         if (email == null || email.trim().isEmpty()) return;
 
@@ -276,13 +269,10 @@ public class ServerContext {
         if (user != null) {
             user.setStatus(newStatus);
             LOGGER.info("[ServerContext] Đã cập nhật trạng thái của User [" + email + "] trên RAM thành: " + newStatus);
-            broadcastOnlineUsersToAdmins(); // Đồng bộ ngay lập tức sang Admin Client
+            broadcastOnlineUsersToAdmins();
         }
     }
 
-    /**
-     * Xóa một User đang online dựa vào Email, dọn dẹp sạch sẽ ở CẢ 2 DANH SÁCH QUẢN LÝ
-     */
     public void removeOnlineUserByEmail(String email) {
         if (email == null || email.trim().isEmpty()) return;
 
@@ -291,42 +281,49 @@ public class ServerContext {
         if (connToRemove != null) {
             connToUserKey.remove(connToRemove);
             onlineUserObjects.remove(connToRemove);
-            removeTikTokListener(connToRemove); // Dọn dẹp luôn các bộ lắng nghe TikTok nếu có
+            removeTikTokListener(connToRemove);
             LOGGER.info("[ServerContext] Đã xóa hoàn toàn User có email [" + email + "] khỏi các danh sách online.");
-
-            // Phát tín hiệu cập nhật (Broadcast) đồng bộ danh sách mới về cho tất cả Admin
             broadcastOnlineUsersToAdmins();
         }
     }
 
-    /**
-     * Hàm Broadcast gửi danh sách toàn bộ người dùng đang online tới tất cả các kết nối là ADMIN (Chạy ASYNC)
-     */
     public void broadcastOnlineUsersToAdmins() {
+        if (onlineUsers.isEmpty()) return;
+
+        // Chụp nhanh snapshot danh sách user online
+        final List<User> userListSnapshot = getOnlineUserList();
+
         asyncExecutor.submit(() -> {
             try {
                 Response response = new Response(MessageType.GET_ONLINE_USERS_RESPONSE, "SUCCESS", "Cập nhật danh sách user online.");
-                response.getData().put("userList", getOnlineUserList());
-                String jsonResponse = gson.toJson(response);
+                response.getData().put("userList", userListSnapshot);
+                final String jsonResponse = gson.toJson(response);
 
-                onlineUsers.forEach((email, conn) -> {
-                    if (conn != null && conn.isOpen()) {
-                        // Check quyền admin trực tiếp từ RAM Cache thay vì chọc DB
-                        User cachedUser = onlineUserObjects.get(conn);
-                        if (cachedUser != null && "ADMIN".equalsIgnoreCase(cachedUser.getRole())) {
-                            conn.send(jsonResponse);
-                            LOGGER.info("[AsyncAdminBroadcast] Đã đẩy danh sách Online Users tới Admin: " + email);
-                        }
+                List<WebSocket> adminConnections = new ArrayList<>();
+                onlineUserObjects.forEach((conn, user) -> {
+                    if (user != null && "ADMIN".equalsIgnoreCase(user.getRole()) && conn.isOpen()) {
+                        adminConnections.add(conn);
                     }
                 });
+
+                for (WebSocket adminConn : adminConnections) {
+                    CompletableFuture.runAsync(() -> {
+                        try {
+                            if (adminConn.isOpen()) {
+                                adminConn.send(jsonResponse);
+                            }
+                        } catch (Exception ignored) {}
+                    }, asyncExecutor);
+                }
             } catch (Exception e) {
-                LOGGER.severe("[AsyncAdminBroadcast] Lỗi khi xử lý gửi tin tới Admin: " + e.getMessage());
+                LOGGER.severe("[AsyncAdminBroadcast] Lỗi hệ thống khi gửi tin tới Admin: " + e.getMessage());
             }
         });
     }
+
     public WebSocket getConnByUser(String email) {
         if (email == null) return null;
-        return onlineUsers.get(email); // O(1) cực nhanh
+        return onlineUsers.get(email);
     }
 
     public Map<WebSocket, User> getOnlineUserObjects() {

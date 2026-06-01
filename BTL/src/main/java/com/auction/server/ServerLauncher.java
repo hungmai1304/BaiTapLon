@@ -21,27 +21,28 @@ public class ServerLauncher {
             int port;
             InetSocketAddress address;
 
-            if (portStr != null && !portStr.isEmpty()) {
-                // RUNNING ON RENDER: Bind dynamic port provided by environment and listen on all interfaces (0.0.0.0)
-                port = Integer.parseInt(portStr);
-                address = new InetSocketAddress("0.0.0.0", port);
+//            if (portStr != null && !portStr.isEmpty()) {
+//                // RUNNING ON RENDER: Bind dynamic port provided by environment and listen on all interfaces (0.0.0.0)
+//                port = Integer.parseInt(portStr);
+//                address = new InetSocketAddress("0.0.0.0", port);
+//
+//                LOGGER.info("=========================================");
+//                LOGGER.info("AUCTION SERVER RUNNING ON CLOUD (RENDER)");
+//                LOGGER.log(Level.INFO, "PORT: {0}", port);
+//                LOGGER.info("=========================================");
+//            } else {
+//
+//            }
+            // RUNNING ON LOCAL/TAILSCALE: Bind to static Tailscale IP and standard Port 10000
+            port = 10000;
+            String tailscaleIp = "0.0.0.0";
+            address = new InetSocketAddress(tailscaleIp, port);
 
-                LOGGER.info("=========================================");
-                LOGGER.info("AUCTION SERVER RUNNING ON CLOUD (RENDER)");
-                LOGGER.log(Level.INFO, "PORT: {0}", port);
-                LOGGER.info("=========================================");
-            } else {
-                // RUNNING ON LOCAL/TAILSCALE: Bind to static Tailscale IP and standard Port 10000
-                port = 10000;
-                String tailscaleIp = "100.89.94.42";
-                address = new InetSocketAddress(tailscaleIp, port);
-
-                LOGGER.info("=========================================");
-                LOGGER.info("AUCTION SERVER INITIALIZING (TAILSCALE LOCAL)");
-                LOGGER.log(Level.INFO, "TAILSCALE IP: {0}", tailscaleIp);
-                LOGGER.log(Level.INFO, "PORT: {0}", port);
-                LOGGER.info("=========================================");
-            }
+            LOGGER.info("=========================================");
+            LOGGER.info("AUCTION SERVER INITIALIZING (TAILSCALE LOCAL)");
+            LOGGER.log(Level.INFO, "TAILSCALE IP: {0}", tailscaleIp);
+            LOGGER.log(Level.INFO, "PORT: {0}", port);
+            LOGGER.info("=========================================");
 
             // 3. Launch WebSocket Server with the configured address above
             AuctionWebSocketServer server = new AuctionWebSocketServer(address);
@@ -51,7 +52,7 @@ public class ServerLauncher {
                 LOGGER.info("Server started successfully on Render.");
             } else {
                 LOGGER.info("Server started successfully! Client connection link:");
-                LOGGER.info("   -> ws://100.89.94.42:10000");
+                LOGGER.info("-----> ws://100.89.94.42:10000");
             }
             LOGGER.info("Awaiting client connections... ");
 
