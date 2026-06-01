@@ -143,6 +143,7 @@ public class PlaceBidHandler implements IMessageHandler {
     public static void triggerBotWar(ServerContext context, Gson gson, String productId, Auction currentAuction) {
         String auctionId = currentAuction.getId();
 
+        // 1. KIỂM TRA NGAY TỪ ĐẦU: Nếu hàng đợi đang bị đóng băng thì CHẶN LUÔN
         if (AuctionManager.getInstance().isBotFrozen(auctionId)) {
             return;
         }
@@ -164,15 +165,20 @@ public class PlaceBidHandler implements IMessageHandler {
                     return;
                 }
 
-                while (!queue.isEmpty()) {
+                // MÀNG LỌC CHỐNG VÒNG LẶP VÔ HẠN (Infinite Loop Protection)
+                int keysRolled = 0;
+                int totalBots = queue.size();
+
+                while (!queue.isEmpty() && keysRolled < totalBots) {
                     AutoBidConfig currentBot = queue.peek();
                     if (currentBot == null) return;
 
-                    // TH 1: Bot đang dẫn đầu -> Xuống cuối hàng
+                    // TH 1: Bot đầu hàng đang dẫn đầu -> đẩy xuống cuối hàng, tăng biến đếm để tránh lặp vô hạn
                     if (currentAuction.getHighestBidder() != null
                             && currentBot.getEmail().equals(currentAuction.getHighestBidder().getEmail())) {
                         queue.poll();
                         queue.add(currentBot);
+                        keysRolled++; // Đánh dấu đã duyệt qua 1 con bot vô dụng ở lượt này
                         continue;
                     }
 
@@ -180,37 +186,47 @@ public class PlaceBidHandler implements IMessageHandler {
                             ? currentAuction.getStartPrice()
                             : (currentAuction.getCurrentPrice() + currentBot.getStepPrice());
 
-                    // TH 2: Vượt quá giá trần -> Loại bỏ thẳng tay
+                    // TH 2: Vượt quá giá trần -> Cút lập tức, reset bộ đếm vì cấu trúc hàng đợi đã thay đổi
                     if (nextBotPrice > currentBot.getMaxPrice()) {
                         queue.poll();
                         LOGGER.info("[BOT OUT] Bot " + currentBot.getEmail() + " vượt trần, bị loại.");
+                        totalBots = queue.size();
+                        keysRolled = 0;
                         continue;
                     }
 
-                    // TH 3: Check ví tiền Bot
+                    // TH 3: Kiểm tra ví tiền trong DB -> Hết tiền cút lập tức, reset bộ đếm
                     User botUserInfo = UserDao.getInstance().getUserByEmail(currentBot.getEmail());
                     if (botUserInfo == null || botUserInfo.getBalance() < nextBotPrice) {
                         queue.poll();
                         LOGGER.info("[BOT OUT] Bot " + currentBot.getEmail() + " hết tiền, bị loại.");
+                        totalBots = queue.size();
+                        keysRolled = 0;
                         continue;
                     }
 
-                    // Thực hiện rút tiền cho Bot
+                    // =========================================================================
+                    // NẾU VƯỢT QUA CÁC ĐIỀU KIỆN TRÊN -> THỰC HIỆN ĐẶT BID THÀNH CÔNG
+                    // =========================================================================
                     boolean botHold = UserDao.getInstance().withdrawMoney(currentBot.getEmail(), nextBotPrice);
                     if (!botHold) {
                         queue.poll();
+                        totalBots = queue.size();
+                        keysRolled = 0;
                         continue;
                     }
 
-                    // KÍCH HOẠT ĐÓNG BĂNG MÀNG LỌC NGAY ĐỂ TRÁNH TRÙNG LUỒNG TRIGGER
+                    // BẬT CỜ ĐÓNG BĂNG NGAY LẬP TỨC để block tất cả các luồng trigger khác gọi tới
                     AuctionManager.getInstance().setBotFreeze(auctionId, true);
 
                     prevLeaderToRefund = currentAuction.getHighestBidder();
                     prevPriceToRefund = currentAuction.getCurrentPrice();
 
+                    // Rút con Bot này ra khỏi đầu hàng và ném trả về CUỐI HÀNG LUÔN
                     queue.poll();
                     queue.add(currentBot);
 
+                    // Cập nhật trạng thái sàn đấu giá
                     User botUser = new User();
                     botUser.setEmail(currentBot.getEmail());
                     String safeBotName = (botUserInfo.getUsername() != null) ? botUserInfo.getUsername() : currentBot.getEmail();
@@ -220,6 +236,7 @@ public class PlaceBidHandler implements IMessageHandler {
                     currentAuction.setHighestBidder(botUser);
                     currentAuction.setLeaderName(safeBotName);
 
+                    // Ghi lịch sử giao dịch
                     BidTransaction botTransaction = new BidTransaction();
                     botTransaction.setBidder(botUser);
                     botTransaction.setBidAmount(nextBotPrice);
@@ -230,18 +247,18 @@ public class PlaceBidHandler implements IMessageHandler {
 
                     context.updateAuction(currentAuction);
 
-                    // Đánh dấu thành công và gom snapshot dữ liệu để ra ngoài xử lý
+                    // Gom snapshot dữ liệu thành công để tí ra ngoài Lock xử lý I/O mạng
                     botBidSuccessful = true;
                     successBotEmail = currentBot.getEmail();
                     successBotPrice = nextBotPrice;
                     successBotName = safeBotName;
 
-                    break; // THOÁT KHỎI VÒNG LẶP ĐỂ GIẢI PHÓNG LOCK NGAY LẬP TỨC!
+                    break; // THOÁT NGAY VÒNG LẶP ĐỂ GIẢI PHÓNG ĐỒNG BỘ KHÓA RAM!
                 }
             }
-            // --- KẾT THÚC KHÓA CHO BOT ---
+            // --- KẾT THÚC KHÓA (SÀN ĐẤU GIÁ ĐÃ ĐƯỢC GIẢI PHÓNG AN TOÀN) ---
 
-            // Tiến hành xử lý I/O mạng độc lập bên ngoài lock, sàn đấu giá vẫn nhận lượt click khác như thường
+            // Tiến hành xử lý I/O mạng độc lập bên ngoài lock
             if (botBidSuccessful) {
                 final User finalPrevLeader = prevLeaderToRefund;
                 final double finalPrevPrice = prevPriceToRefund;
@@ -251,17 +268,21 @@ public class PlaceBidHandler implements IMessageHandler {
                     updateClientBalance(context, gson, finalPrevLeader.getEmail());
                 }
 
+                // Bắn thông báo Realtime
                 broadcastNewBid(context, gson, productId, successBotPrice, successBotName);
                 updateClientBalance(context, gson, successBotEmail);
 
                 LOGGER.info("[BOT BID THÀNH CÔNG] Bot " + successBotEmail + " ăn đỉnh: " + successBotPrice);
+                LOGGER.info("[KHÓA TUYỆT ĐỐI] Toàn bộ hàng đợi Bot của phiên này chính thức ĐÓNG BĂNG trong 10 giây.");
 
-                // Lên lịch mở khóa đóng băng 10 giây
+                // Hẹn giờ mở khóa sau 10 giây
                 botScheduler.schedule(() -> {
                     synchronized (currentAuction) {
                         if ("ACTIVE".equals(currentAuction.getStatus())) {
                             AuctionManager.getInstance().setBotFreeze(auctionId, false);
-                            LOGGER.info("[MỞ KHÓA] Hết thời gian đóng băng, giải phóng hàng đợi Bot.");
+                            LOGGER.info("[MỞ KHÓA] Hết 10 giây đóng băng, giải phóng hàng đợi Bot để tiếp tục chiến đấu!");
+
+                            // Gọi lại bộ kích hoạt để lượt quét mới diễn ra bình thường
                             triggerBotWar(context, gson, productId, currentAuction);
                         } else {
                             AuctionManager.getInstance().setBotFreeze(auctionId, false);
