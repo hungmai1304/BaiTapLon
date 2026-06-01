@@ -67,13 +67,25 @@ private static final Logger LOGGER = Logger.getLogger(BotBiddingController.class
         startAuctionCountdown();
     }
 
-    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName, String newEndTime) {
         Platform.runLater(() -> {
             if (currentAuction != null && currentAuction.getProduct() != null
                     && currentAuction.getProduct().getId().equals(productId)) {
 
                 lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0f VNĐ", newPrice));
                 currentAuction.setCurrentPrice(newPrice);
+
+                // Cập nhật giờ kết thúc mới nếu có gia hạn Anti-Sniping
+                if (newEndTime != null && !newEndTime.isEmpty()) {
+                    try {
+                        currentAuction.getProduct().setEndTime(java.time.LocalDateTime.parse(newEndTime));
+                        // Restart lại bộ đếm giờ để giao diện cập nhật ngay
+                        startAuctionCountdown();
+                        LOGGER.info("[BotBidding UI] Đã gia hạn giờ kết thúc mới: " + newEndTime);
+                    } catch (Exception e) {
+                        LOGGER.warning("[BotBidding UI] Lỗi parse newEndTime: " + e.getMessage());
+                    }
+                }
             }
         });
     }

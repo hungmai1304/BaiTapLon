@@ -62,6 +62,7 @@ public class PlaceBidHandler implements IMessageHandler {
                     ? currentUser.getUsername() : userEmail;
 
             boolean userBidSuccessful = false;
+            boolean isExtended = false;
 
             // --- PHẠM VI KHÓA ĐƯỢC THU HẸP TỐI ĐA ---
             synchronized (currentAuction) {
@@ -108,6 +109,19 @@ public class PlaceBidHandler implements IMessageHandler {
                 }
                 currentAuction.getBiddingHistory().add(transaction);
 
+                // =========================================================================
+                // TÍNH NĂNG ANTI-SNIPING: Tự động gia hạn nếu Bid ở 30 giây cuối
+                // =========================================================================
+                LocalDateTime now = LocalDateTime.now();
+                long secondsLeft = java.time.Duration.between(now, currentAuction.getEndTime()).getSeconds();
+
+                if (secondsLeft <= 30 && secondsLeft > 0) {
+                    LocalDateTime newEndTime = currentAuction.getEndTime().plusSeconds(30);
+                    currentAuction.setEndTime(newEndTime);
+                    isExtended = true;
+                    LOGGER.info("🔥 [Anti-Sniping] Phiên " + currentAuction.getId() + " được gia hạn thêm 30s. Kết thúc mới: " + newEndTime);
+                }
+
                 context.updateAuction(currentAuction);
                 userBidSuccessful = true;
             }
@@ -125,7 +139,7 @@ public class PlaceBidHandler implements IMessageHandler {
                 }
 
                 // Phát loa và cập nhật số dư O(1) cực nhanh không lo nghẽn luồng nghiệp vụ
-                broadcastNewBid(context, gson, productId, bidAmount, safeUserName);
+                broadcastNewBid(context, gson, productId, bidAmount, safeUserName, isExtended ? currentAuction.getEndTime() : null);
                 updateClientBalance(context, gson, userEmail);
 
                 // Kích hoạt trận chiến Bot phản công độc lập
@@ -155,6 +169,7 @@ public class PlaceBidHandler implements IMessageHandler {
             User prevLeaderToRefund = null;
             double prevPriceToRefund = 0;
             boolean botBidSuccessful = false;
+            boolean botIsExtended = false;
             String successBotEmail = null;
             double successBotPrice = 0;
             String successBotName = null;
@@ -245,6 +260,16 @@ public class PlaceBidHandler implements IMessageHandler {
                     }
                     currentAuction.getBiddingHistory().add(botTransaction);
 
+                    // ANTI-SNIPING CHO BOT
+                    LocalDateTime botNow = LocalDateTime.now();
+                    long botSecondsLeft = java.time.Duration.between(botNow, currentAuction.getEndTime()).getSeconds();
+                    if (botSecondsLeft <= 30 && botSecondsLeft > 0) {
+                        LocalDateTime newEndTime = currentAuction.getEndTime().plusSeconds(30);
+                        currentAuction.setEndTime(newEndTime);
+                        botIsExtended = true;
+                        LOGGER.info("🔥 [Anti-Sniping BOT] Phiên " + currentAuction.getId() + " được gia hạn thêm 30s.");
+                    }
+
                     context.updateAuction(currentAuction);
 
                     // Gom snapshot dữ liệu thành công để tí ra ngoài Lock xử lý I/O mạng
@@ -269,7 +294,7 @@ public class PlaceBidHandler implements IMessageHandler {
                 }
 
                 // Bắn thông báo Realtime
-                broadcastNewBid(context, gson, productId, successBotPrice, successBotName);
+                broadcastNewBid(context, gson, productId, successBotPrice, successBotName, botIsExtended ? currentAuction.getEndTime() : null);
                 updateClientBalance(context, gson, successBotEmail);
 
                 LOGGER.info("[BOT BID THÀNH CÔNG] Bot " + successBotEmail + " ăn đỉnh: " + successBotPrice);
@@ -294,11 +319,15 @@ public class PlaceBidHandler implements IMessageHandler {
     }
 
     // TỐI ƯU BẤT ĐỒNG BỘ: Không cho phép việc lặp gửi mạng làm chậm luồng xử lý chính
-    public static void broadcastNewBid(ServerContext context, Gson gson, String productId, double newPrice, String leaderName) {
+    public static void broadcastNewBid(ServerContext context, Gson gson, String productId, double newPrice, String leaderName, LocalDateTime newEndTime) {
         Response broadcastRes = new Response(MessageType.BROADCAST_NEW_BID, "SUCCESS", "Có mức giá mới!");
         broadcastRes.getData().put("newPrice", newPrice);
         broadcastRes.getData().put("leaderName", leaderName);
         broadcastRes.getData().put("productId", productId);
+
+        if (newEndTime != null) {
+            broadcastRes.getData().put("newEndTime", newEndTime.toString());
+        }
 
         String message = gson.toJson(broadcastRes);
 

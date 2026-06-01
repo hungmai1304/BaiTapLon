@@ -159,7 +159,7 @@ private static final Logger LOGGER = Logger.getLogger(TikTokAuctionController.cl
     }
 
     // THÊM HÀM NÀY ĐỂ XỬ LÝ NHẢY SỐ REAL-TIME TỪ SERVER GỬI VỀ
-    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName, String newEndTime) {
         Platform.runLater(() -> {
             // Lấy món đồ đang được hiển thị trên màn hình hiện tại
             Auction currentAuction = ClientContext.getInstance().getCurrentAuction();
@@ -172,6 +172,14 @@ private static final Logger LOGGER = Logger.getLogger(TikTokAuctionController.cl
 
                 // 2. Cập nhật luôn giá trị vào RAM (để khi người dùng lướt Up/Down quay lại vẫn giữ giá mới)
                 currentAuction.setCurrentPrice(newPrice);
+                
+                // Cập nhật giờ kết thúc mới nếu có gia hạn
+                if (newEndTime != null && !newEndTime.isEmpty()) {
+                    try {
+                        currentAuction.getProduct().setEndTime(java.time.LocalDateTime.parse(newEndTime));
+                    } catch (Exception ignored) {}
+                }
+
                 if (lblTopBidder != null) {
                     lblTopBidder.setText(leaderName + " - " + String.format("%,.0f VNĐ", newPrice));
                 }
