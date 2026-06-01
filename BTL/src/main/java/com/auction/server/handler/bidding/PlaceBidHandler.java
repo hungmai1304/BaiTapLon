@@ -98,6 +98,26 @@ public class PlaceBidHandler implements IMessageHandler {
                 currentAuction.setCurrentPrice(bidAmount);
                 currentAuction.setHighestBidder(newLeader);
                 currentAuction.setLeaderName(safeUserName);
+                //  BỔ SUNG: LOGIC ANTI-SNIPING (GIA HẠN THỜI GIAN) KHI CÓ NGƯỜI ĐẬP BÚA
+
+                LocalDateTime nowTime = LocalDateTime.now();
+                long secondsLeft = java.time.Duration.between(nowTime, currentAuction.getEndTime()).getSeconds();
+
+                // LUẬT: Nếu thời gian còn lại ĐANG DƯỚI 30 GIÂY mà có người trả giá -> Reset lại thành 30 giây
+                if (secondsLeft >= 0 && secondsLeft < 30) {
+                    LocalDateTime newExtendedTime = nowTime.plusSeconds(30);
+
+                    // 1. Cập nhật thời gian kết thúc mới vào bộ nhớ RAM
+                    currentAuction.setEndTime(newExtendedTime);
+
+                    // 2. Cập nhật luôn cho đối tượng Product bên trong
+                    if (currentAuction.getProduct() != null) {
+                        currentAuction.getProduct().setEndTime(newExtendedTime);
+                        // Tùy chọn: Lưu thẳng xuống DB để chắc cốp (Nên mở comment dòng dưới nếu muốn DB khớp Realtime)
+                        // com.auction.server.dao.ProductDao.getInstance().editProduct(currentAuction.getProduct());
+                    }
+                    System.out.println(" [Anti-Sniping] Có người đặt giá sát nút! Đã tự động dời giờ kết thúc thêm 30s!");
+                }
 
                 BidTransaction transaction = new BidTransaction();
                 transaction.setBidder(newLeader);
