@@ -11,7 +11,7 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.TextArea; // 1. NHỚ IMPORT THÊM TEXTAREA
 import javafx.animation.Timeline;
 import javafx.animation.KeyFrame;
 
@@ -26,6 +26,8 @@ private static final Logger LOGGER = Logger.getLogger(TikTokAuctionController.cl
     @FXML private Label lblNotifyMsg;
     @FXML private javafx.scene.image.ImageView productImage;
     @FXML private Label lblProductDesc;
+
+    // 2. KHAI BÁO THÊM BIẾN ĐỂ ÁNH XẠ VỚI TEXTAREA TRÊN FXML
     @FXML private TextArea des;
 
     @FXML
@@ -56,7 +58,7 @@ private static final Logger LOGGER = Logger.getLogger(TikTokAuctionController.cl
                 step.setText("Bước giá: 0 VNĐ");
                 if (lblProductDesc != null) lblProductDesc.setText("Không có mô tả");
 
-                // Khôi phục trạng thái thông tin chi tiết trống từ File 2
+                // 3. THÊM RESET TEXTAREA KHI KHÔNG CÓ PHIÊN ĐẤU GIÁ
                 if (des != null) des.setText("Đang đợi phiên đấu giá tiếp theo...");
             });
         }
@@ -70,18 +72,17 @@ private static final Logger LOGGER = Logger.getLogger(TikTokAuctionController.cl
             if (auction != null && auction.getProduct() instanceof Product) {
                 Product product = (Product) auction.getProduct();
                 name.setText(product.getName());
-
                 // Giá hiển thị là giá hiện tại của phiên (Current Price)
                 price.setText(String.format("%,.0f VNĐ", auction.getCurrentPrice()));
                 step.setText(String.format("Bước giá: %,.0f VNĐ", product.getStepPrice()));
 
-                // Đoạn lấy mô tả ngắn (nếu có) vào Label từ File 2
+                // Đoạn lấy mô tả ngắn (nếu có) vào Label
                 if (lblProductDesc != null) {
                     String desc = product.getDescription();
                     lblProductDesc.setText(desc != null && !desc.isEmpty() ? desc : "Không có mô tả");
                 }
 
-                // Điền mô tả chi tiết vào TextArea 'des' từ File 2
+                // 4. THÊM ĐIỀN MÔ TẢ CHI TIẾT VÀO TEXTAREA 'des' VÀO ĐÂY
                 if (des != null) {
                     String desc = product.getDescription();
                     des.setText(desc != null && !desc.isEmpty() ? desc : "Sản phẩm này chưa có mô tả chi tiết.");
@@ -157,8 +158,8 @@ private static final Logger LOGGER = Logger.getLogger(TikTokAuctionController.cl
         NavigationService.setCenterView("/com/auction/client/view/botBidding.fxml");
     }
 
-    // --- ĐÃ TÍCH HỢP: Xử lý nhảy số Real-time và bổ sung tham số newEndTime phục vụ Anti-Sniping (File 1) ---
-    public void updateRealtimeBid(String productId, double newPrice, String leaderName, String newEndTime) {
+    // THÊM HÀM NÀY ĐỂ XỬ LÝ NHẢY SỐ REAL-TIME TỪ SERVER GỬI VỀ
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
         Platform.runLater(() -> {
             // Lấy món đồ đang được hiển thị trên màn hình hiện tại
             Auction currentAuction = ClientContext.getInstance().getCurrentAuction();
@@ -166,13 +167,11 @@ private static final Logger LOGGER = Logger.getLogger(TikTokAuctionController.cl
             // Nếu ID của món đồ trên màn hình TRÙNG với ID của món vừa được trả giá
             if (currentAuction != null && currentAuction.getProduct() != null
                     && currentAuction.getProduct().getId().equals(productId)) {
-
                 // 1. Nhảy số tiền trực tiếp trên UI
                 price.setText(String.format("%,.0f VNĐ", newPrice));
 
                 // 2. Cập nhật luôn giá trị vào RAM (để khi người dùng lướt Up/Down quay lại vẫn giữ giá mới)
                 currentAuction.setCurrentPrice(newPrice);
-                currentAuction.setLeaderName(leaderName);
                 if (lblTopBidder != null) {
                     lblTopBidder.setText(leaderName + " - " + String.format("%,.0f VNĐ", newPrice));
                 }
@@ -180,8 +179,7 @@ private static final Logger LOGGER = Logger.getLogger(TikTokAuctionController.cl
             }
         });
     }
-
-    // HÀM HIỂN THỊ THÔNG BÁO TẠM THỜI (TỰ MẤT SAU 3 GIÂY) TỪ FILE 2
+    // HÀM HIỂN THỊ THÔNG BÁO TẠM THỜI (TỰ MẤT SAU 3 GIÂY)
     public void showNotification(String message, boolean isError) {
         Platform.runLater(() -> {
             if (lblNotifyMsg != null) {

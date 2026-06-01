@@ -68,20 +68,6 @@ public class AuctionManager {
         }
     }
 
-    // ========== BOT MANAGEMENT & ANTISNIPPING HELPERS ==========
-
-    public boolean isBotFrozen(String auctionId) {
-        return botFreezeMap.getOrDefault(auctionId, false);
-    }
-
-    public void setBotFreeze(String auctionId, boolean freeze) {
-        if (freeze) {
-            botFreezeMap.put(auctionId, true);
-        } else {
-            botFreezeMap.remove(auctionId);
-        }
-    }
-
     public Queue<AutoBidConfig> getBotQueue(String auctionId) {
         if (auctionId == null) return null;
         return botQueuesMap.computeIfAbsent(auctionId, k -> new ConcurrentLinkedQueue<>());
@@ -154,9 +140,6 @@ public class AuctionManager {
         }
     }
 
-    /**
-     * Thông báo cho toàn bộ Client khi có phiên đấu giá chuyển sang ACTIVE
-     */
     private void broadcastNewAuction(Auction auction) {
         try {
             ServerContext context = ServerContext.getInstance();
@@ -189,7 +172,6 @@ public class AuctionManager {
 
         // TÁCH BIẾN RA NGOÀI ĐỂ XỬ LÝ KHÔNG GIỮ LOCK LÂU
         synchronized (auction) {
-            // Chống chốt đơn trùng lặp (Double closing)
             if ("COMPLETED".equals(auction.getStatus())) return;
             auction.setStatus("COMPLETED");
 
@@ -197,7 +179,6 @@ public class AuctionManager {
             finalPrice = auction.getCurrentPrice();
 
             if (product != null) {
-                // TRƯỜNG HỢP 1: CÓ NGƯỜI ĐẤU GIÁ THÀNH CÔNG
                 if (auction.getHighestBidder() != null) {
                     winnerEmail = auction.getHighestBidder().getEmail();
                     winnerName = auction.getHighestBidder().getUsername() != null ? auction.getHighestBidder().getUsername() : winnerEmail;
@@ -224,7 +205,6 @@ public class AuctionManager {
                     }
                 }
 
-                // Hoàn tất dọn dẹp các mốc thời gian trên Product nếu không bán được
                 if (product.getStatus() != ProductStatus.SOLD) {
                     product.setStartTime(null);
                     product.setEndTime(null);

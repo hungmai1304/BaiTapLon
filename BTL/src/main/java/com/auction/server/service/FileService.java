@@ -2,7 +2,6 @@ package com.auction.server.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import io.github.cdimascio.dotenv.Dotenv;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -10,9 +9,9 @@ public class FileService {
     private static final Logger LOGGER = Logger.getLogger(FileService.class.getName());
     // Thông tin lấy từ Dashboard Cloudinary của mày
     private static final Cloudinary cloudinary = new Cloudinary(ObjectUtils.asMap(
-            "cloud_name", dotenv.get("CLOUDINARY_CLOUD_NAME"),
-            "api_key", dotenv.get("CLOUDINARY_API_KEY"),
-            "api_secret", dotenv.get("CLOUDINARY_API_SECRET")
+            "cloud_name", "dlylyya7s",
+            "api_key", "962659778668757",
+            "api_secret", "deA_L_PE49UN4iX23Rtd8lx09vw" // Đã dán hộ mày luôn
     ));
 
     /**

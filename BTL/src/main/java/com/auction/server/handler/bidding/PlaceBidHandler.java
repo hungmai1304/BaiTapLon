@@ -36,38 +36,23 @@ public class PlaceBidHandler implements IMessageHandler {
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
         try {
             String productId = (String) data.get("productId");
+            double bidAmount = ((Number) data.get("bidAmount")).doubleValue();
 
-            // Xử lý an toàn: Lấy bidAmount kèm kiểm tra null chống crash từ File 1
-            Object bidAmountObj = data.get("bidAmount");
-            if (bidAmountObj == null) {
-                sendError(conn, gson, "Lỗi: Không tìm thấy mức giá đặt (bidAmount)!");
-                return;
-            }
-            double bidAmount = ((Number) bidAmountObj).doubleValue();
-
-            // BẢO MẬT CAO: Lấy email từ session kết nối (File 1) thay vì tin tưởng Client hoàn toàn
             String userEmail = context.getUserByConn(conn);
             if (userEmail == null) {
-                sendError(conn, gson, "Lỗi bảo mật: Bạn chưa đăng nhập hoặc phiên làm việc không hợp lệ!");
+                sendError(conn, gson, "Lỗi bảo mật: Chưa đăng nhập!");
                 return;
             }
 
-            if (productId == null) {
-                sendError(conn, gson, "Lỗi: Thiếu ID sản phẩm (productId)!");
-                return;
-            }
-
-            // Kiểm tra trạng thái tài khoản người dùng từ File 2
             User currentUser = UserDao.getInstance().getUserByEmail(userEmail);
             if (currentUser == null || "BLACKLIST".equalsIgnoreCase(currentUser.getStatus())) {
-                sendError(conn, gson, "Tài khoản không hợp lệ hoặc đã bị khóa khỏi sàn!");
+                sendError(conn, gson, "Tài khoản không hợp lệ!");
                 return;
             }
 
-            // Tìm Phiên Đấu Giá chứa Sản phẩm này trên RAM
             Auction currentAuction = context.getAuctionByProductId(productId);
-            if (currentAuction == null) {
-                sendError(conn, gson, "Thất bại: Sản phẩm này hiện không nằm trong phiên đấu giá nào!");
+            if (currentAuction == null || !"ACTIVE".equals(currentAuction.getStatus())) {
+                sendError(conn, gson, "Phiên đấu giá không sẵn sàng!");
                 return;
             }
 
@@ -80,36 +65,25 @@ public class PlaceBidHandler implements IMessageHandler {
 
             // --- PHẠM VI KHÓA ĐƯỢC THU HẸP TỐI ĐA ---
             synchronized (currentAuction) {
-                // Kiểm tra trạng thái nghiêm ngặt từ File 1 & File 2
-                if ("PENDING".equals(currentAuction.getStatus())) {
-                    sendError(conn, gson, "Chưa đến giờ! Sản phẩm đang trong 30 phút quảng cáo.");
-                    return;
-                } else if ("COMPLETED".equals(currentAuction.getStatus()) || !"ACTIVE".equals(currentAuction.getStatus())) {
-                    sendError(conn, gson, "Muộn rồi! Phiên đấu giá này không ở trạng thái sẵn sàng hoặc đã kết thúc.");
-                    return;
-                }
-
-                // Không cho phép người đang dẫn đầu tự đè giá chính mình (File 2)
                 if (currentAuction.getHighestBidder() != null
                         && currentAuction.getHighestBidder().getEmail().equalsIgnoreCase(userEmail)) {
-                    sendError(conn, gson, "Bạn đang dẫn đầu, không cần đặt thêm giá!");
+                    sendError(conn, gson, "Bạn đang dẫn đầu, không cần đặt thêm!");
                     return;
                 }
 
-                // KIỂM TRA LUẬT ĐẤU GIÁ (Giá mới phải >= Giá hiện tại + Bước giá)
                 double minRequiredPrice = (currentAuction.getHighestBidder() == null)
                         ? currentAuction.getStartPrice()
                         : (currentAuction.getCurrentPrice() + currentAuction.getStepPrice());
 
                 if (bidAmount < minRequiredPrice) {
-                    sendError(conn, gson, "Giá bạn đưa ra quá thấp! Giá tối thiểu cần đặt: " + String.format("%,.0fđ", minRequiredPrice));
+                    sendError(conn, gson, "Giá tối thiểu cần đặt: " + String.format("%,.0f", minRequiredPrice));
                     return;
                 }
 
                 // Chấp nhận trừ tiền DB (Lệnh này buộc phải đồng bộ để tránh chi tiêu vượt mức)
                 boolean isHoldSuccess = UserDao.getInstance().withdrawMoney(userEmail, bidAmount);
                 if (!isHoldSuccess) {
-                    sendError(conn, gson, "Số dư ví không đủ để thực hiện lượt đặt giá " + String.format("%,.0fđ", bidAmount) + "!");
+                    sendError(conn, gson, "Số dư ví không đủ!");
                     return;
                 }
 
@@ -117,7 +91,6 @@ public class PlaceBidHandler implements IMessageHandler {
                 previousLeader = currentAuction.getHighestBidder();
                 previousBid = currentAuction.getCurrentPrice();
 
-                // Cập nhật dữ liệu người dẫn đầu mới vào RAM
                 User newLeader = new User();
                 newLeader.setEmail(userEmail);
                 newLeader.setUsername(safeUserName);
@@ -127,7 +100,6 @@ public class PlaceBidHandler implements IMessageHandler {
                 currentAuction.setLeaderName(safeUserName);
 
                 BidTransaction transaction = new BidTransaction();
-                transaction.setId(String.valueOf(currentAuction.getId()));
                 transaction.setBidder(newLeader);
                 transaction.setBidAmount(bidAmount);
 
@@ -136,22 +108,6 @@ public class PlaceBidHandler implements IMessageHandler {
                 }
                 currentAuction.getBiddingHistory().add(transaction);
 
-                // =========================================================================
-                // TÍNH NĂNG ANTI-SNIPING (Từ File 1): Tự động gia hạn nếu Bid ở 30 giây cuối
-                // =========================================================================
-                LocalDateTime now = LocalDateTime.now();
-                long secondsLeft = java.time.Duration.between(now, currentAuction.getEndTime()).getSeconds();
-                boolean isExtended = false;
-
-                if (secondsLeft <= 30 && secondsLeft > 0) {
-                    // Gia hạn thêm 30 giây vào cấu trúc thời gian kết thúc của phiên
-                    LocalDateTime newEndTime = currentAuction.getEndTime().plusSeconds(30);
-                    currentAuction.setEndTime(newEndTime);
-                    isExtended = true;
-                    System.out.println("🔥 [Anti-Sniping] Phiên " + currentAuction.getId() + " được gia hạn thêm 30s. Kết thúc mới: " + newEndTime);
-                }
-
-                // Lưu trạng thái cập nhật mới nhất vào Server Context
                 context.updateAuction(currentAuction);
                 userBidSuccessful = true;
             }
@@ -180,14 +136,10 @@ public class PlaceBidHandler implements IMessageHandler {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
-            sendError(conn, gson, "Lỗi Server khi xử lý đấu giá: " + e.getMessage());
+            sendError(conn, gson, "Lỗi Server: " + e.getMessage());
         }
     }
 
-    // =========================================================================
-    // HỆ THỐNG QUẢN LÝ ROBOT TỰ ĐỘNG (BOT WAR) - GIỮ NGUYÊN 100% TỪ FILE 2
-    // =========================================================================
     public static void triggerBotWar(ServerContext context, Gson gson, String productId, Auction currentAuction) {
         String auctionId = currentAuction.getId();
 
@@ -253,7 +205,9 @@ public class PlaceBidHandler implements IMessageHandler {
                         continue;
                     }
 
-                    // Thực hiện rút tiền tạm giữ tài khoản Bot thành công
+                    // =========================================================================
+                    // NẾU VƯỢT QUA CÁC ĐIỀU KIỆN TRÊN -> THỰC HIỆN ĐẶT BID THÀNH CÔNG
+                    // =========================================================================
                     boolean botHold = UserDao.getInstance().withdrawMoney(currentBot.getEmail(), nextBotPrice);
                     if (!botHold) {
                         queue.poll();
@@ -262,17 +216,17 @@ public class PlaceBidHandler implements IMessageHandler {
                         continue;
                     }
 
-                    // KHÓA ĐÓNG BĂNG HÀNG ĐỢI NGAY LẬP TỨC để ngăn chặn spam
+                    // BẬT CỜ ĐÓNG BĂNG NGAY LẬP TỨC để block tất cả các luồng trigger khác gọi tới
                     AuctionManager.getInstance().setBotFreeze(auctionId, true);
 
                     prevLeaderToRefund = currentAuction.getHighestBidder();
                     prevPriceToRefund = currentAuction.getCurrentPrice();
 
-                    // Rút Bot ra khỏi vị trí đầu tiên và ném về cuối hàng đợi
+                    // Rút con Bot này ra khỏi đầu hàng và ném trả về CUỐI HÀNG LUÔN
                     queue.poll();
                     queue.add(currentBot);
 
-                    // Thiết lập thông tin thực thể Bot dẫn đầu phiên mới trên RAM
+                    // Cập nhật trạng thái sàn đấu giá
                     User botUser = new User();
                     botUser.setEmail(currentBot.getEmail());
                     String safeBotName = (botUserInfo.getUsername() != null) ? botUserInfo.getUsername() : currentBot.getEmail();
@@ -282,30 +236,14 @@ public class PlaceBidHandler implements IMessageHandler {
                     currentAuction.setHighestBidder(botUser);
                     currentAuction.setLeaderName(safeBotName);
 
-                    // Ghi lịch sử giao dịch Bot
+                    // Ghi lịch sử giao dịch
                     BidTransaction botTransaction = new BidTransaction();
-                    botTransaction.setId(String.valueOf(currentAuction.getId()));
                     botTransaction.setBidder(botUser);
                     botTransaction.setBidAmount(nextBotPrice);
-                    botTransaction.setTimeCreated(LocalDateTime.now());
-
                     if (currentAuction.getBiddingHistory() == null) {
                         currentAuction.setBiddingHistory(new ArrayList<>());
                     }
                     currentAuction.getBiddingHistory().add(botTransaction);
-
-                    // =========================================================================
-                    // TÍNH NĂNG BỔ SUNG: ANTI-SNIPING CHO CẢ LƯỢT ĐẶT CỦA BOT (Đảm bảo an toàn)
-                    // =========================================================================
-                    LocalDateTime botNow = LocalDateTime.now();
-                    long botSecondsLeft = java.time.Duration.between(botNow, currentAuction.getEndTime()).getSeconds();
-                    boolean isBotExtended = false;
-                    if (botSecondsLeft <= 30 && botSecondsLeft > 0) {
-                        LocalDateTime newEndTime = currentAuction.getEndTime().plusSeconds(30);
-                        currentAuction.setEndTime(newEndTime);
-                        isBotExtended = true;
-                        System.out.println("🔥 [Anti-Sniping từ BOT] Phiên " + currentAuction.getId() + " được gia hạn thêm 30s. Kết thúc mới: " + newEndTime);
-                    }
 
                     context.updateAuction(currentAuction);
 
@@ -361,10 +299,6 @@ public class PlaceBidHandler implements IMessageHandler {
         broadcastRes.getData().put("newPrice", newPrice);
         broadcastRes.getData().put("leaderName", leaderName);
         broadcastRes.getData().put("productId", productId);
-
-        if (newEndTime != null) {
-            broadcastRes.getData().put("newEndTime", newEndTime.toString());
-        }
 
         String message = gson.toJson(broadcastRes);
 
