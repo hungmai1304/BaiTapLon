@@ -8,7 +8,10 @@ import com.auction.client.controller.mainHome.TopViewController;
 import com.auction.client.controller.shop.ShopSellController;
 import com.auction.common.model.user.User;
 
+import java.util.logging.Logger;
+
 public class SomeGlobal {
+    private static final Logger LOGGER = Logger.getLogger(SomeGlobal.class.getName());
     private static HomeController homeController;
     private static MainController mainController;
     private static ShopSellController shopSellController;
@@ -113,7 +116,7 @@ public class SomeGlobal {
         adminMainController = null;
         bannedListController = null;
         allShopController = null; // BỔ SUNG KHỬ BIẾN KHI LOGOUT
-        System.out.println("[SomeGlobal] Đã xoá toàn bộ references của các bộ điều khiển hệ thống (Clear session thành công).");
+        LOGGER.info("[SomeGlobal] Đã xoá toàn bộ references của các bộ điều khiển hệ thống (Clear session thành công).");
     }
     // Thêm vào danh mục các biến static của SomeGlobal
     private static AdminOnlineAuctions adminOnlineAuctionsController;

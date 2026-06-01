@@ -7,8 +7,10 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 
-public class AdminRequestController {
+import java.util.logging.Logger;
 
+public class AdminRequestController {
+private static final Logger LOGGER = Logger.getLogger(AdminRequestController.class.getName());
     @FXML private TableView<User> userTable;
     @FXML private TableColumn<User, Integer> colNo;
     @FXML private TableColumn<User, String> colName;
@@ -98,7 +100,7 @@ public class AdminRequestController {
      * Xử lý khi Admin nhấn nút Chấp nhận
      */
     private void handleAccept(User user) {
-        System.out.println("Chấp nhận người dùng: " + user.getEmail());
+        LOGGER.info("Chấp nhận người dùng: " + user.getEmail());
         // Thêm hàm gửi Request lên server của bạn tại đây, ví dụ:
         // RequestSender.sendAcceptUserRequest(user.getId());
     }
@@ -107,7 +109,7 @@ public class AdminRequestController {
      * Xử lý khi Admin nhấn nút Từ chối
      */
     private void handleReject(User user) {
-        System.out.println("Từ chối người dùng: " + user.getEmail());
+        LOGGER.info("Từ chối người dùng: " + user.getEmail());
         // Thêm hàm gửi Request lên server của bạn tại đây, ví dụ:
         // RequestSender.sendRejectUserRequest(user.getId());
     }

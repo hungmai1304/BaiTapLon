@@ -8,8 +8,11 @@ import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
 import javafx.application.Platform;
 
+import java.util.logging.Logger;
+
 @ResponseHandler(type = MessageType.EDIT_PRODUCT_RESPONSE)
 public class EditProductClientHandler implements IClientHandler {
+    private static final Logger LOGGER = Logger.getLogger(EditProductClientHandler.class.getName());
     @Override
     public void handle(Response response) {
         if ("SUCCESS".equals(response.getStatus())) {

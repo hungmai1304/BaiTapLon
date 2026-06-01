@@ -13,8 +13,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 public class ClientMessageDispatcher {
+    private static final Logger LOGGER = Logger.getLogger(ClientMessageDispatcher.class.getName());
     // 1. Gia cố Gson: Thêm cả Serializer và Deserializer cho chắc chắn
     public static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
@@ -41,10 +43,10 @@ public class ClientMessageDispatcher {
 
                 // Lưu Key luôn luôn là chữ HOA để tìm kiếm chính xác
                 handlerMap.put(type.trim().toUpperCase(), handlerInstance);
-                System.out.println("[MessageDispatcher] Registered Handler: " + type);
+                LOGGER.info("[MessageDispatcher] Registered Handler: " + type);
             }
         } catch (Exception e) {
-            System.err.println("[MessageDispatcher] Lỗi khởi tạo Dispatcher: " + e.getMessage());
+            LOGGER.severe("[MessageDispatcher] Lỗi khởi tạo Dispatcher: " + e.getMessage());
         }
     }
 
@@ -64,13 +66,13 @@ public class ClientMessageDispatcher {
                     // Thường là handler.handle(response) hoặc handler.onResponse(response)
                     handler.handle(response);
 
-                    System.out.println("[MessageDispatcher] Đã xử lý: " + type);
+                    LOGGER.info("[MessageDispatcher] Đã xử lý: " + type);
                 } else {
-                    System.err.println("[MessageDispatcher] Chưa đăng ký Handler cho: " + type);
+                    LOGGER.severe("[MessageDispatcher] Chưa đăng ký Handler cho: " + type);
                 }
             }
         } catch (Exception e) {
-            System.err.println("[MessageDispatcher] Lỗi Parse: " + e.getMessage());
+            LOGGER.severe("[MessageDispatcher] Lỗi Parse: " + e.getMessage());
             e.printStackTrace();
         }
     }

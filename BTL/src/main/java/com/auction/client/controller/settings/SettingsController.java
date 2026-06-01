@@ -12,8 +12,10 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 public class SettingsController {
+    private static final Logger LOGGER = Logger.getLogger(SettingsController.class.getName());
     @FXML
     public void handleLogoutClicked(ActionEvent event) throws IOException {
         Parent loader= FXMLLoader.load(getClass().getResource("/com/auction/client/view/login.fxml"));

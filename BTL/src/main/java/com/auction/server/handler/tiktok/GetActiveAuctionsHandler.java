@@ -11,10 +11,12 @@ import org.java_websocket.WebSocket;
 
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 // 🚀 Đã gọi chuẩn từ MessageType
 @CommandMap(value = MessageType.GET_ACTIVE_AUCTIONS_REQUEST)
 public class GetActiveAuctionsHandler implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(GetActiveAuctionsHandler.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -53,7 +55,7 @@ public class GetActiveAuctionsHandler implements IMessageHandler {
             // Chỉ gửi trả lại cho ĐÚNG cái thằng vừa xin
             conn.send(gson.toJson(response));
 
-            System.out.println("-> [GetActiveAuctions] Đã gửi " + activeAuctions.size() + " phiên đấu giá cho 1 Client (Sau khi lọc).");
+            LOGGER.info("-> [GetActiveAuctions] Đã gửi " + activeAuctions.size() + " phiên đấu giá cho 1 Client (Sau khi lọc).");
 
         } catch (Exception e) {
             e.printStackTrace();

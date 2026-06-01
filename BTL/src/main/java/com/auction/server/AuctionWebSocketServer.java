@@ -14,140 +14,153 @@ import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.Collection;
+import java.util.logging.Logger;
+import java.util.concurrent.CompletableFuture;
+
 import com.auction.server.service.AuctionManager;
 
 public class AuctionWebSocketServer extends WebSocketServer {
+    private static final Logger LOGGER = Logger.getLogger(AuctionWebSocketServer.class.getName());
 
     private final Gson gson;
     private final MessageDispatcher dispatcher;
-    private Timer auctionTimer;
-    
-    // Giới hạn dung lượng tin nhắn tối đa (Ví dụ: 5MB) để chống tấn công DoS/OOM
-    private static final int MAX_MESSAGE_SIZE = 5 * 1024 * 1024;
 
     // =========================================================================
-    // 1. THAY ĐỔI CHÍNH: Thêm constructor nhận vào InetSocketAddress để chạy Tailscale/Render linh hoạt
+    // 1. Constructor chính chạy linh hoạt cho Tailscale / Render (ĐÃ SỬA SẠCH LỖI)
     // =========================================================================
     public AuctionWebSocketServer(InetSocketAddress address) {
+        // Gọi lên class cha để tự động cấu hình Selector mạng đa luồng mặc định cực kỳ tối ưu
         super(address);
         this.gson = initGson();
 
-        // Khởi tạo ServerContext
+        // Khởi tạo ngữ cảnh Server
         ServerContext context = ServerContext.getInstance();
         context.initData(this);
-
-        // Truyền gson đã cấu hình vào dispatcher
         dispatcher = new MessageDispatcher(gson, context);
     }
 
     // =========================================================================
-    // 2. GIỮ LẠI (TÙY CHỌN): Constructor cũ nhận vào port để không làm gãy code chỗ khác (nếu có)
+    // 2. Constructor cũ nhận vào port để không làm gãy code chỗ khác
     // =========================================================================
     public AuctionWebSocketServer(int port) {
         this(new InetSocketAddress(port));
     }
 
     // =========================================================================
-    // 3. TÁCH BIỆT: Hàm khởi tạo Gson để tái sử dụng ở các constructor, tránh trùng lặp code
+    // 3. Hàm khởi tạo Gson dùng chung cho cả class
     // =========================================================================
     private Gson initGson() {
         return new GsonBuilder()
-                .registerTypeAdapter(LocalDateTime.class, new JsonSerializer<LocalDateTime>() {
-                    @Override
-                    public JsonElement serialize(LocalDateTime src, Type typeOfSrc, JsonSerializationContext context) {
-                        return new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-                    }
-                })
-                .registerTypeAdapter(LocalDateTime.class, new JsonDeserializer<LocalDateTime>() {
-                    @Override
-                    public LocalDateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-                        return LocalDateTime.parse(json.getAsString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-                    }
-                })
+                .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
+                        new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
+                .registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, typeOfT, context) ->
+                        LocalDateTime.parse(json.getAsString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME))
                 .create();
     }
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        System.out.println("⚡ Client vào phòng: " + conn.getRemoteSocketAddress());
-        conn.send("{\"type\":\"SYSTEM_NOTIFICATION\", \"message\":\"Chào mừng bạn đến với sàn đấu giá!\"}");
-        broadcast("{\"type\":\"USER_COUNT_UPDATE\", \"count\":" + getConnections().size() + "}");
+        LOGGER.info("⚡ Client vào phòng: " + conn.getRemoteSocketAddress());
+
+        try {
+            // Gửi lời chào riêng cho Client vừa kết nối thành công
+            conn.send("{\"type\":\"SYSTEM_NOTIFICATION\", \"message\":\"Chào mừng bạn đến với sàn đấu giá!\"}");
+        } catch (Exception e) {
+            LOGGER.warning("Không thể gửi tin nhắn chào mừng: " + e.getMessage());
+        }
+
+        // Phát loa số lượng người dùng độc lập, hoàn toàn bất đồng bộ
+        triggerAsyncUserCountUpdate();
     }
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        // Kiểm tra bảo mật: Chặn tin nhắn quá lớn gây tràn bộ nhớ (DoS/OOM)
-        if (message == null || message.length() > MAX_MESSAGE_SIZE) {
-            System.err.println("⚠️ [Security Warning] Chặn tin nhắn quá lớn từ: " + conn.getRemoteSocketAddress());
-            conn.send("{\"type\":\"ERROR\", \"message\":\"Payload too large!\"}");
-            conn.close();
-            return;
-        }
+        // Kiểm tra an toàn tin nhắn trống
+        if (message == null || message.trim().isEmpty()) return;
 
-        // Debug thông minh: Không in cả cục Base64
+        // Debug thông minh: Không in cả cục Base64 lớn làm nghẽn I/O Console
         if (message.length() > 200) {
-            System.out.println("[Server Nhận] Gói tin lớn: " + message.substring(0, 150) + "... [Độ dài: " + message.length() + "]");
+            LOGGER.info("[Server Nhận] Gói tin lớn: " + message.substring(0, 150) + "... [Độ dài: " + message.length() + "]");
         } else {
-            System.out.println("[Server Nhận]: " + message);
+            LOGGER.info("[Server Nhận]: " + message);
         }
 
         try {
             dispatcher.dispatch(conn, message);
         } catch (Exception e) {
-            System.err.println("Lỗi xử lý message:");
+            LOGGER.severe("Lỗi xử lý message từ client " + conn.getRemoteSocketAddress() + ": " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        System.out.println("Client thoát: " + (conn != null ? conn.getRemoteSocketAddress() : "Unknown"));
+        LOGGER.info("Client thoát: " + (conn != null ? conn.getRemoteSocketAddress() : "Unknown"));
 
-        // Gửi số lượng kết nối thô còn lại phòng hờ hệ thống đo tải
-        broadcast("{\"type\":\"USER_COUNT_UPDATE\", \"count\":" + getConnections().size() + "}");
+        // 1. Xóa thông tin chuỗi email map với Connection và dọn dẹp RAM trước
+        if (conn != null) {
+            ServerContext.getInstance().removeUser(conn);
+            ServerContext.getInstance().removeOnlineUserObject(conn);
+        }
 
-        // 1. Xóa thông tin chuỗi email map với Connection
-        ServerContext.getInstance().removeUser(conn);
-
-        // VIẾT THÊM: Xóa object người dùng ra khỏi danh sách quản lý Online RAM
-        ServerContext.getInstance().removeOnlineUserObject(conn);
+        // 2. Cập nhật số lượng kết nối bất đồng bộ sang luồng khác ngay để giải phóng onClose
+        triggerAsyncUserCountUpdate();
     }
 
     @Override
     public void onError(WebSocket conn, Exception ex) {
-        System.err.println("[WebSocket] WebSocket Error:");
-        ex.printStackTrace();
+        LOGGER.severe("[WebSocket] Lỗi kết nối tại: " + (conn != null ? conn.getRemoteSocketAddress() : "Hệ thống"));
+        if (ex != null) {
+            LOGGER.severe("Chi tiết lỗi: " + ex.getMessage());
+        }
     }
 
     @Override
     public void onStart() {
-        System.out.println("[WebSocketServer] WebSocket Server đã sẵn sàng!");
-
-        // Khởi tạo và chạy Timer kiểm tra đấu giá hết hạn (mỗi 1 giây)
-        auctionTimer = new Timer(true);
-        auctionTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    AuctionManager.getInstance().checkAndEndExpiredAuctions();
-                } catch (Exception e) {
-                    System.err.println("[Timer] Lỗi khi kiểm tra đấu giá hết hạn: " + e.getMessage());
-                }
-            }
-        }, 1000, 1000);
+        LOGGER.info("[WebSocketServer] WebSocket Server đã sẵn sàng và đang lắng nghe!");
     }
 
     public void shutdown() {
-        if (auctionTimer != null) {
-            auctionTimer.cancel();
-        }
         try {
             this.stop();
-            System.out.println("[WebSocketServer] WebSocket Server đã dừng!");
+            LOGGER.info("[WebSocketServer] WebSocket Server đã dừng hoàn toàn!");
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.severe("Lỗi khi dừng WebSocket Server: " + e.getMessage());
         }
+    }
+
+    // =========================================================================
+    // HÀM BỔ SUNG: Phát loa số lượng người dùng bất đồng bộ (CHỐNG SẬP TUYỆT ĐỐI)
+    // =========================================================================
+    private void triggerAsyncUserCountUpdate() {
+        // Đẩy toàn bộ quá trình xử lý I/O mạng ra luồng ngầm độc lập nhằm giải phóng luồng xử lý chính ngay lập tức
+        CompletableFuture.runAsync(() -> {
+            try {
+                int count = getConnections().size();
+                String jsonUpdate = "{\"type\":\"USER_COUNT_UPDATE\", \"count\":" + count + "}";
+
+                // 1. Đồng bộ danh sách online sang luồng Admin
+                ServerContext.getInstance().broadcastOnlineUsersToAdmins();
+
+                // 2. Lấy bản sao danh sách kết nối hiện tại
+                Collection<WebSocket> conns = getConnections();
+
+                // 3. Gửi tin tới từng client một cách biệt lập hoàn toàn
+                for (WebSocket client : conns) {
+                    if (client != null && client.isOpen()) {
+                        try {
+                            client.send(jsonUpdate);
+                        } catch (Exception e) {
+                            // Nếu một client mạng lag đứt kết nối ngầm, lỗi ghi mạng sẽ bị bỏ qua lập tức,
+                            // tuyệt đối không treo luồng và không ảnh hưởng tới việc nhận tin của các máy khác.
+                            LOGGER.warning("[AsyncBroadcast] Không thể gửi số lượng kết nối tới 1 client lag: " + e.getMessage());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.severe("[AsyncBroadcast] Lỗi hệ thống trong luồng phát loa: " + e.getMessage());
+            }
+        });
     }
 }

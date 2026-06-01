@@ -8,8 +8,10 @@ import com.auction.server.db.Db;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class AuctionDao {
+    private static final Logger LOGGER = Logger.getLogger(AuctionDao.class.getName());
 
     private static AuctionDao instance;
 
@@ -72,12 +74,12 @@ public class AuctionDao {
     }
 
     /**
-     * Lưu thông tin khi phiên đấu giá kết thúc thành công.
+     * Lưu thông tin khi phiên đấu giá kết thúc thành công (Hoặc ế hàng).
      */
     public boolean saveCompletedAuction(String auctionId, String productId, String winnerEmail, double finalPrice) {
         // Kiểm tra tính hợp lệ của dữ liệu đầu vào trước khi mở kết nối DB
         if (auctionId == null || auctionId.trim().isEmpty() || productId == null || productId.trim().isEmpty()) {
-            System.err.println("[AuctionDao] Lỗi dữ liệu: id phiên hoặc id sản phẩm bị null/rỗng.");
+            LOGGER.severe("[AuctionDao] Lỗi dữ liệu: id phiên hoặc id sản phẩm bị null/rỗng.");
             return false;
         }
 
@@ -88,13 +90,20 @@ public class AuctionDao {
 
             pstmt.setString(1, auctionId);
             pstmt.setString(2, productId);
-            pstmt.setString(3, winnerEmail != null ? winnerEmail : "No Winner");
+
+            // XỬ LÝ FIX LỖI: Nếu không có người thắng cuộc, lưu giá trị NULL thực sự vào DB thay vì chuỗi rác
+            if (winnerEmail == null || winnerEmail.trim().isEmpty() || "No Winner".equalsIgnoreCase(winnerEmail.trim())) {
+                pstmt.setNull(3, Types.VARCHAR);
+            } else {
+                pstmt.setString(3, winnerEmail.trim());
+            }
+
             pstmt.setDouble(4, finalPrice);
 
             return pstmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("[AuctionDao] Lỗi SQL nghiêm trọng khi lưu lịch sử đấu giá: " + e.getMessage());
+            LOGGER.severe("[AuctionDao] Lỗi SQL nghiêm trọng khi lưu lịch sử đấu giá: " + e.getMessage());
             return false;
         }
     }

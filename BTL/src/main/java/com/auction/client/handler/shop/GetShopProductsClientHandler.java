@@ -13,6 +13,8 @@ import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.logging.Logger;
+
 import com.auction.client.controller.shop.ShopSellController;
 import com.auction.client.controller.mainHome.MainController;
 import com.auction.client.controller.general.SomeGlobal;
@@ -21,6 +23,7 @@ import com.google.gson.JsonDeserializer;
 
 @ResponseHandler(type = "GET_SHOP_PRODUCTS_RESPONSE")
 public class GetShopProductsClientHandler implements IClientHandler {
+    private static final Logger LOGGER = Logger.getLogger(GetShopProductsClientHandler.class.getName());
 
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class,

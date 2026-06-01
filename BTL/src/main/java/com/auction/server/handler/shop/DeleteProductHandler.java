@@ -14,9 +14,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap(value = MessageType.DELETE_PRODUCT_REQUEST)
 public class DeleteProductHandler implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(DeleteProductHandler.class.getName());
 
     private static final Gson safeGson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
@@ -51,7 +53,7 @@ public class DeleteProductHandler implements IMessageHandler {
 
             if (!isMyProduct) {
                 conn.send(safeGson.toJson(new Response(MessageType.DELETE_PRODUCT_RESPONSE, "ERROR", "Bạn không có quyền xóa sản phẩm này!")));
-                System.out.println(" [CẢNH BÁO BẢO MẬT] User " + userEmail + " cố tình xóa trái phép sản phẩm ID: " + productId);
+                LOGGER.info(" [CẢNH BÁO BẢO MẬT] User " + userEmail + " cố tình xóa trái phép sản phẩm ID: " + productId);
                 return;
             }
             // =================================================================
@@ -67,7 +69,7 @@ public class DeleteProductHandler implements IMessageHandler {
                 response.getData().put("products", updatedList);
 
                 conn.send(safeGson.toJson(response));
-                System.out.println("[DeleteProduct] Đã xóa DB thành công ID: " + productId + " bởi " + userEmail);
+                LOGGER.info("[DeleteProduct] Đã xóa DB thành công ID: " + productId + " bởi " + userEmail);
             } else {
                 conn.send(safeGson.toJson(new Response(MessageType.DELETE_PRODUCT_RESPONSE, "ERROR", "Không thể xóa trong Database!")));
             }

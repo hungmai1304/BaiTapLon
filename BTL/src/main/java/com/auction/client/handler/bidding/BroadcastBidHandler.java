@@ -5,8 +5,10 @@ import com.auction.client.utils.ControllerRegistry;
 import com.auction.protocol.Response;
 import com.auction.client.network.IClientHandler;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class BroadcastBidHandler implements IClientHandler {
+    private static final Logger LOGGER = Logger.getLogger(BroadcastBidHandler.class.getName());
     @Override
     public void handle(Response response) {
         try {
@@ -26,13 +28,13 @@ public class BroadcastBidHandler implements IClientHandler {
                 // Gọi hàm xịn mà anh em mình vừa code bên BiddingController
                 biddingController.updateAuctionPriceRealtime(newPrice, leaderName);
 
-                System.out.println("🔹 [Broadcast] Đã ép nhảy số trên màn hình lên: " + newPrice);
+                LOGGER.info("🔹 [Broadcast] Đã ép nhảy số trên màn hình lên: " + newPrice);
             } else {
-                System.out.println("🔹 [Broadcast] Nhận giá mới nhưng người dùng không ở màn Bidding.");
+                LOGGER.info("🔹 [Broadcast] Nhận giá mới nhưng người dùng không ở màn Bidding.");
             }
 
         } catch (Exception e) {
-            System.err.println("Lỗi khi bóc tách Broadcast: " + e.getMessage());
+            LOGGER.severe("Lỗi khi bóc tách Broadcast: " + e.getMessage());
         }
     }
 }

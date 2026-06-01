@@ -16,9 +16,11 @@ import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap(value = MessageType.EDIT_PRODUCT_REQUEST)
 public class EditProductHandler implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(EditProductHandler.class.getName());
     private static final Gson safeGson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
                     new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
@@ -102,7 +104,7 @@ public class EditProductHandler implements IMessageHandler {
                 response.getData().put("products", updatedList);
 
                 conn.send(safeGson.toJson(response));
-                System.out.println("[EditProduct] Đã sửa thành công dưới DB và gửi lại danh sách Shop cho user: " + userEmail);
+                LOGGER.info("[EditProduct] Đã sửa thành công dưới DB và gửi lại danh sách Shop cho user: " + userEmail);
 
             } else {
                 sendError(conn, gson, "Lỗi cập nhật Database!");

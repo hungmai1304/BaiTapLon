@@ -22,8 +22,12 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+
+import java.util.logging.Logger;
+
 @ResponseHandler(type = "AUCTION_RESULT_NOTIFICATION")
 public class AuctionResultClientHandler implements IClientHandler {
+    private static final Logger LOGGER = Logger.getLogger(AuctionResultClientHandler.class.getName());
     @Override
     public void handle(Response response) {
         Platform.runLater(() -> {
@@ -32,7 +36,7 @@ public class AuctionResultClientHandler implements IClientHandler {
 
             // BẪY CHẶN TIN NHẮN MẬT CỦA SELLER ĐỂ BẢO VỆ POPUP CHÍNH
             if (rawMessage.contains("của bạn đã bán thành công") || rawMessage.contains("của bạn đã kết thúc")) {
-                System.out.println(" [Mật thư Seller]: " + rawMessage);
+                LOGGER.info(" [Mật thư Seller]: " + rawMessage);
                 // Bỏ qua, không bật Popup để nhường chỗ cho tin nhắn Public bật Popup chuẩn!
                 return;
             }
@@ -49,7 +53,7 @@ public class AuctionResultClientHandler implements IClientHandler {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("[Data Warning] Không đọc được winnerName từ Map.");
+                LOGGER.severe("[Data Warning] Không đọc được winnerName từ Map.");
             }
 
             try {
@@ -98,7 +102,7 @@ public class AuctionResultClientHandler implements IClientHandler {
                     GlobalMarqueeController.addNotification(winnerEmail, productName, finalPrice);
                 }
             } catch (Exception e) {
-                System.err.println("[Parser Error] Lỗi bóc tách chuỗi văn bản từ Server.");
+                LOGGER.severe("[Parser Error] Lỗi bóc tách chuỗi văn bản từ Server.");
             }
             // 2. KHỞI TẠO CỬA SỔ POPUP Ô VUÔNG (Giữ nguyên giao diện chuẩn phối dải màu của ông)
             Stage dialog = new Stage();
@@ -185,7 +189,7 @@ public class AuctionResultClientHandler implements IClientHandler {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("[Filter Error] Lỗi kiểm tra bộ lọc hiển thị phòng: " + e.getMessage());
+                LOGGER.severe("[Filter Error] Lỗi kiểm tra bộ lọc hiển thị phòng: " + e.getMessage());
             }
 
             // Thực thi lệnh hiển thị Popup ô vuông dựa trên bộ lọc
@@ -193,7 +197,7 @@ public class AuctionResultClientHandler implements IClientHandler {
                 dialog.show(); // Thỏa mãn điều kiện -> Hiện ô vuông giữa màn hình
             } else {
                 // Đang ở màn hình chính hoặc phòng khác -> Im lặng hoàn toàn (Chỉ chạy dải chữ trên đầu App)
-                System.out.println("[UX Blocked] Đã chặn popup ô vuông của '" + productName + "' thành công do rời phòng.");
+                LOGGER.info("[UX Blocked] Đã chặn popup ô vuông của '" + productName + "' thành công do rời phòng.");
             }
         });
     }

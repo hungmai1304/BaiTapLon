@@ -12,9 +12,10 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 public class AllShopController implements Initializable {
-
+private static final Logger LOGGER = Logger.getLogger(AllShopController.class.getName());
     @FXML
     private TableView<ShopItem> userTable; // Đổi kiểu dữ liệu sang ShopItem để nhận trường productCount
 
@@ -50,7 +51,7 @@ public class AllShopController implements Initializable {
             return new SimpleStringProperty(String.valueOf(index + 1));
         });
 
-        System.out.println("[AllShopController] Đã map thành công các fx:id và cấu hình bảng hiển thị cửa hàng.");
+        LOGGER.info("[AllShopController] Đã map thành công các fx:id và cấu hình bảng hiển thị cửa hàng.");
     }
 
     /**

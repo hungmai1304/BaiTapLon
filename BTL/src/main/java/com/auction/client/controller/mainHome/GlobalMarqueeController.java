@@ -12,9 +12,10 @@ import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.logging.Logger;
 
 public class GlobalMarqueeController {
-
+private static final Logger LOGGER = Logger.getLogger(GlobalMarqueeController.class.getName());
     private static class MarqueeData {
         String username;
         String productName;

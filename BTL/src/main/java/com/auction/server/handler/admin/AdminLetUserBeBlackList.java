@@ -10,9 +10,11 @@ import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap("ADMIN_LET_USER_BE_BLACKLIST") // Đặt annotation trùng khớp chính xác với chuỗi client gửi lên
 public class AdminLetUserBeBlackList implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(AdminLetUserBeBlackList.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -23,7 +25,7 @@ public class AdminLetUserBeBlackList implements IMessageHandler {
         // =========================================================================
         String adminEmail = context.getUserByConn(conn);
         if (adminEmail == null) {
-            System.err.println("[AdminLetUserBeBlackList] Từ chối: Thao tác từ một kết nối chưa đăng nhập!");
+            LOGGER.severe("[AdminLetUserBeBlackList] Từ chối: Thao tác từ một kết nối chưa đăng nhập!");
             ResponseSender.send(conn, responseType, "ERROR", "Bạn cần đăng nhập để thực hiện thao tác này!", null);
             return;
         }
@@ -32,7 +34,7 @@ public class AdminLetUserBeBlackList implements IMessageHandler {
         User currentRequester = userDao.getUserByEmail(adminEmail);
 
         if (currentRequester == null || !"ADMIN".equalsIgnoreCase(currentRequester.getRole())) {
-            System.err.println("[AdminLetUserBeBlackList] Cảnh báo: Tài khoản " + adminEmail + " cố tình hack quyền BLACKLIST!");
+            LOGGER.severe("[AdminLetUserBeBlackList] Cảnh báo: Tài khoản " + adminEmail + " cố tình hack quyền BLACKLIST!");
             ResponseSender.send(conn, responseType, "ERROR", "Bạn không có quyền thực hiện hành động này!", null);
             return;
         }
@@ -43,17 +45,17 @@ public class AdminLetUserBeBlackList implements IMessageHandler {
         String targetEmail = (String) data.get("email");
 
         if (targetEmail == null || targetEmail.trim().isEmpty()) {
-            System.err.println("[AdminLetUserBeBlackList] Thất bại: Thiếu thông tin email của user cần đưa vào danh sách đen!");
+            LOGGER.severe("[AdminLetUserBeBlackList] Thất bại: Thiếu thông tin email của user cần đưa vào danh sách đen!");
             ResponseSender.send(conn, responseType, "ERROR", "Email người dùng không hợp lệ!", null);
             return;
         }
 
-        System.out.println("[AdminLetUserBeBlackList] Admin [" + adminEmail + "] yêu cầu BLACKLIST tài khoản user: " + targetEmail);
+        LOGGER.info("[AdminLetUserBeBlackList] Admin [" + adminEmail + "] yêu cầu BLACKLIST tài khoản user: " + targetEmail);
 
         // Chỉ cập nhật trạng thái xuống Database thành "BLACKLIST" (Không kick out user)
         boolean isDbUpdated = userDao.updateUserStatus(targetEmail, "BLACKLIST");
         if (!isDbUpdated) {
-            System.err.println("[AdminLetUserBeBlackList] Thất bại: Không thể cập nhật trạng thái BLACKLIST trong DB cho: " + targetEmail);
+            LOGGER.severe("[AdminLetUserBeBlackList] Thất bại: Không thể cập nhật trạng thái BLACKLIST trong DB cho: " + targetEmail);
             ResponseSender.send(conn, responseType, "ERROR", "Không thể cập nhật trạng thái tài khoản sang danh sách đen trong cơ sở dữ liệu!", null);
             return;
         }

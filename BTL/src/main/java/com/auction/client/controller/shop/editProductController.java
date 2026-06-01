@@ -18,11 +18,12 @@ import javafx.stage.FileChooser;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Logger;
 
 import static com.auction.common.model.product.ProductStatus.AVAILABLE;
 
 public class editProductController {
-
+private static final Logger LOGGER = Logger.getLogger(editProductController.class.getName());
     @FXML private TextField name;
     @FXML private TextField price;
     @FXML private ComboBox<String> categoryComboBox;
@@ -127,9 +128,9 @@ public class editProductController {
     // Đổ dữ liệu từ màn hình Shop vào màn hình Edit
     public void fillProductData(Product product) {
         // --- 3 DÒNG NÀY ĐỂ DEBUG XEM LỖI Ở ĐÂU ---
-        System.out.println("=== KIỂM TRA DỮ LIỆU KHI BẤM EDIT ===");
-        System.out.println("ImagePath (Trong DB): " + product.getImagePath());
-        System.out.println("ImageBase64: " + (product.getImageBase64() != null ? "Có dữ liệu (Độ dài: " + product.getImageBase64().length() + ")" : "RỖNG (NULL)!!!"));
+        LOGGER.info("=== KIỂM TRA DỮ LIỆU KHI BẤM EDIT ===");
+        LOGGER.info("ImagePath (Trong DB): " + product.getImagePath());
+        LOGGER.info("ImageBase64: " + (product.getImageBase64() != null ? "Có dữ liệu (Độ dài: " + product.getImageBase64().length() + ")" : "RỖNG (NULL)!!!"));
 
         // Lưu lại trọn vẹn đối tượng sản phẩm (Bao gồm cả trường Owner bên trong)
         this.originalProduct = product;
@@ -167,7 +168,7 @@ public class editProductController {
                 this.selectedImageBase64 = product.getImageBase64();
 
             } catch (Exception e) {
-                System.err.println("[Client Error] Không thể dựng ảnh từ dữ liệu Base64!");
+                LOGGER.severe("[Client Error] Không thể dựng ảnh từ dữ liệu Base64!");
                 e.printStackTrace(); // In ra chi tiết lỗi giải mã (nếu có)
                 setDefaultUploadState();
             }

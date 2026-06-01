@@ -11,8 +11,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class RequestSender {
+    private static final Logger LOGGER = Logger.getLogger(RequestSender.class.getName());
     // NÂNG CẤP GSON: Đăng ký cả bộ Serializer để gửi đi mượt mà không lỗi chuỗi định dạng
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
@@ -30,10 +32,10 @@ public class RequestSender {
             requestMap.put("data", data);
 
             String json = gson.toJson(requestMap);
-            System.out.println("[RequestSender] JSON Gửi đi: " + json); // Log ra để dễ debug theo dõi
+            LOGGER.info("[RequestSender] JSON Gửi đi: " + json); // Log ra để dễ debug theo dõi
             NetworkClient.sendCommand(json);
         } catch (Exception e) {
-            System.err.println("[RequestSender Error] Lỗi khi tạo JSON string: " + e.getMessage());
+            LOGGER.severe("[RequestSender Error] Lỗi khi tạo JSON string: " + e.getMessage());
             e.printStackTrace();
         }
     }

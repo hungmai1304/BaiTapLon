@@ -14,11 +14,12 @@ import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.logging.Logger;
 
 // Đổi thành "ADMIN_GET_ONLINE_AUCTIONS_RESPONSE" để khớp chính xác gói tin Server trả về
 @ResponseHandler(type = "ADMIN_GET_ONLINE_AUCTIONS_RESPONSE")
 public class AdminGetOnlineAuctionsResponse implements IClientHandler {
-
+private static final Logger LOGGER = Logger.getLogger(AdminGetOnlineAuctionsResponse.class.getName());
     // Cấu hình Gson chuẩn xử lý Date/Time để đồng bộ dữ liệu RAM từ Server nếu mở rộng
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (com.google.gson.JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
@@ -49,14 +50,14 @@ public class AdminGetOnlineAuctionsResponse implements IClientHandler {
                     if (controller != null) {
                         // Đổ dữ liệu vào TableView và làm mới giao diện
                         controller.updateTableData(listAuctions);
-                        System.out.println("[AdminGetOnlineAuctionsResponse] Đã tải thành công dữ liệu " + listAuctions.size() + " phiên đấu giá trực tuyến lên bảng.");
+                        LOGGER.info("[AdminGetOnlineAuctionsResponse] Đã tải thành công dữ liệu " + listAuctions.size() + " phiên đấu giá trực tuyến lên bảng.");
                     } else {
-                        System.err.println("[AdminGetOnlineAuctionsResponse] chưa mở hoặc Chưa khởi tạo hoặc không tìm thấy màn hình AdminOnlineAuctions!");
+                        LOGGER.severe("[AdminGetOnlineAuctionsResponse] chưa mở hoặc Chưa khởi tạo hoặc không tìm thấy màn hình AdminOnlineAuctions!");
                     }
                 });
             }
         } else {
-            System.err.println("[AdminGetOnlineAuctionsResponse] Từ chối từ hệ thống Server: " + response.getMessage());
+            LOGGER.severe("[AdminGetOnlineAuctionsResponse] Từ chối từ hệ thống Server: " + response.getMessage());
         }
     }
 }

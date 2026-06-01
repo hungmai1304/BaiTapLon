@@ -10,14 +10,16 @@ import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 // Đăng ký Handler với MessageType tương ứng cho tính năng xem số dư
 @CommandMap(value = MessageType.GET_BALANCE_REQUEST)
 public class GetBalanceRequestHandler implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(GetBalanceRequestHandler.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
-        System.out.println("[GetBalanceHandler] Đang xử lý yêu cầu kiểm tra số dư...");
+        LOGGER.info("[GetBalanceHandler] Đang xử lý yêu cầu kiểm tra số dư...");
 
         try {
             // 1. Kiểm tra trạng thái đăng nhập từ Connection Session
@@ -42,7 +44,7 @@ public class GetBalanceRequestHandler implements IMessageHandler {
 
             // 4. Gửi dữ liệu qua WebSocket dưới dạng JSON
             conn.send(gson.toJson(response));
-            System.out.println("[GetBalanceHandler] Đã gửi số dư cho [" + userEmail + "]: " + currentBalance);
+            LOGGER.info("[GetBalanceHandler] Đã gửi số dư cho [" + userEmail + "]: " + currentBalance);
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -17,11 +17,12 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 import static com.auction.client.utils.NavigationService.navigate;
 
 public class AdminMainController implements Initializable {
-
+private static final Logger LOGGER = Logger.getLogger(AdminMainController.class.getName());
     @FXML
     private BorderPane mainBorderPane; // Khớp hoàn toàn với fx:id="mainBorderPane"
 
@@ -47,9 +48,9 @@ public class AdminMainController implements Initializable {
      */
     @FXML
     private void handleOnlineAuctionsClick(ActionEvent event) {
-        System.out.println("Chuyển sang màn hình quản lý đấu giá trực tuyến");
+        LOGGER.info("Chuyển sang màn hình quản lý đấu giá trực tuyến");
         loadCenterView("/com/auction/client/view/adminOnlineAuctions.fxml");
-        System.out.println("(AdminMainController) dang gui ADMIN_GET_ONLINE_AUCTIONS_REQUEST");
+        LOGGER.info("(AdminMainController) dang gui ADMIN_GET_ONLINE_AUCTIONS_REQUEST");
         RequestSender.send("ADMIN_GET_ONLINE_AUCTIONS",null);
 
 
@@ -60,9 +61,9 @@ public class AdminMainController implements Initializable {
      */
     @FXML
     private void handleAllShopClick(ActionEvent event) {
-        System.out.println("Chuyển sang màn hình quản lý toàn bộ cửa hàng");
+        LOGGER.info("Chuyển sang màn hình quản lý toàn bộ cửa hàng");
         loadCenterView("/com/auction/client/view/adminAllShop.fxml");
-        System.out.println("(AdminMainController) dang gui ADMIN_GET_ALL_SHOP");
+        LOGGER.info("(AdminMainController) dang gui ADMIN_GET_ALL_SHOP");
         RequestSender.send("ADMIN_GET_ALL_SHOP",null);
     }
 
@@ -74,13 +75,13 @@ public class AdminMainController implements Initializable {
      */
     @FXML
     private void handleBannedListClick(ActionEvent event) {
-        System.out.println("Chuyển sang màn hình quản lý danh sách tài khoản bị cấm");
+        LOGGER.info("Chuyển sang màn hình quản lý danh sách tài khoản bị cấm");
 
         // 1. Tải giao diện bảng Banned List lên vùng hiển thị trung tâm (Center của BorderPane)
         loadCenterView("/com/auction/client/view/bannedList.fxml");
 
         // 2. Gửi gói tin lệnh lên Server yêu cầu trả về danh sách User bị BANNED
-        System.out.println("[Client] Đang gửi yêu cầu ADMIN_GET_BANNED_LIST lên server qua WebSocket...");
+        LOGGER.info("[Client] Đang gửi yêu cầu ADMIN_GET_BANNED_LIST lên server qua WebSocket...");
 
         // Truyền String lệnh thuần túy khớp với @CommandMap phía Server, tham số data truyền null vì không cần điều kiện lọc
         RequestSender.send("ADMIN_GET_BANNED_LIST", null);
@@ -91,13 +92,13 @@ public class AdminMainController implements Initializable {
      */
     @FXML
     private void handleMoreAdmin(ActionEvent event) {
-        System.out.println("Chuyển sang màn hình duyệt danh sách xin làm Admin");
+        LOGGER.info("Chuyển sang màn hình duyệt danh sách xin làm Admin");
 
         // 1. Tải giao diện bảng duyệt lên vùng hiển thị trung tâm trước
         loadCenterView("/com/auction/client/view/acceptAdmin.fxml");
 
         // 2. Gửi gói tin request "GET_ADMIN_REQUEST_LIST" lên Server qua WebSocket
-        System.out.println("[Client] Đang gửi yêu cầu GET_ADMIN_REQUEST_LIST lên server qua WebSocket...");
+        LOGGER.info("[Client] Đang gửi yêu cầu GET_ADMIN_REQUEST_LIST lên server qua WebSocket...");
         RequestSender.send(MessageType.GET_ADMIN_REQUEST_LIST, null);
     }
 
@@ -106,14 +107,14 @@ public class AdminMainController implements Initializable {
      */
     public void loadCenterView(String fxmlPath) {
         if (mainBorderPane == null) {
-            System.err.println("[LỖI] mainBorderPane vẫn bị null. Kiểm tra lại file FXML!");
+            LOGGER.severe("[LỖI] mainBorderPane vẫn bị null. Kiểm tra lại file FXML!");
             return;
         }
 
         try {
             URL fxmlUrl = getClass().getResource(fxmlPath);
             if (fxmlUrl == null) {
-                System.err.println("[LỖI] Không tìm thấy tập tin FXML tại đường dẫn: " + fxmlPath);
+                LOGGER.severe("[LỖI] Không tìm thấy tập tin FXML tại đường dẫn: " + fxmlPath);
                 return;
             }
 
@@ -122,10 +123,10 @@ public class AdminMainController implements Initializable {
 
             // Thay đổi giao diện vùng Center thành công
             mainBorderPane.setCenter(node);
-            System.out.println("[AdminMainController] Thay đổi vùng Center thành công: " + fxmlPath);
+            LOGGER.info("[AdminMainController] Thay đổi vùng Center thành công: " + fxmlPath);
 
         } catch (IOException e) {
-            System.err.println("[LỖI] Gặp sự cố khi nạp giao diện con: " + fxmlPath);
+            LOGGER.severe("[LỖI] Gặp sự cố khi nạp giao diện con: " + fxmlPath);
             e.printStackTrace();
         }
     }
@@ -148,7 +149,7 @@ public class AdminMainController implements Initializable {
         prStage.show();
 
         // Đồng thời gửi yêu cầu đăng xuất lên Server xóa Session kết nối
-        System.out.println("[AdminMainController] Đang gửi yêu cầu đăng xuất LOGOUT_REQUEST lên server...");
+        LOGGER.info("[AdminMainController] Đang gửi yêu cầu đăng xuất LOGOUT_REQUEST lên server...");
         RequestSender.send(MessageType.LOGOUT_REQUEST, null);
     }
     @FXML

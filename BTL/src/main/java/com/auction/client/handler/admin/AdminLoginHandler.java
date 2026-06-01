@@ -11,11 +11,13 @@ import com.auction.common.model.user.User;
 import com.auction.client.controller.general.SomeGlobal;
 import javafx.application.Platform;
 
+import java.util.logging.Logger;
+
 import static com.auction.client.utils.NavigationService.navigate;
 
 @ResponseHandler(type=MessageType.ADMIN_LOGIN_RESPONSE)
 public class AdminLoginHandler implements IClientHandler {
-
+private static final Logger LOGGER = Logger.getLogger(AdminLoginHandler.class.getName());
     @Override
     public void handle(Response response) {
         LoginController controller = ControllerRegistry.get("LoginController");
@@ -43,7 +45,7 @@ public class AdminLoginHandler implements IClientHandler {
 
                 // Lưu thông tin Admin vào hệ thống toàn cục
                 SomeGlobal.setCurrentUser(admin);
-                System.out.println("[DEBUG - AdminLoginHandler] Đã lưu thông tin Admin toàn cục với quyền: " + admin.getRole());
+                LOGGER.info("[DEBUG - AdminLoginHandler] Đã lưu thông tin Admin toàn cục với quyền: " + admin.getRole());
 
                 // Thực hiện chuyển màn hình sang Admin Main (Bọc trong Platform.runLater để an toàn cho UI FX)
                 Platform.runLater(() -> {

@@ -18,6 +18,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
+import com.auction.common.model.auction.BidTransaction;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.ZoneId;
+import java.util.logging.Logger;
+
+
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -30,7 +37,7 @@ import java.time.ZoneId;
  * Đã gộp logic kiểm tra chủ sản phẩm (File 2) và tính năng tự động gia hạn Anti-Sniping (File 1).
  */
 public class BiddingController {
-
+private static final Logger LOGGER = Logger.getLogger(BiddingController.class.getName());
     @FXML private Label lblProductName;
     @FXML private Label lblProductDesc;
     @FXML private Label lblStartPrice;
@@ -286,7 +293,7 @@ public class BiddingController {
                 bidCount++;
                 priceSeries.getData().add(new XYChart.Data<>(String.valueOf(bidCount), newPrice));
 
-                System.out.println("[Bidding UI] Đã nhảy số và vẽ biểu đồ realtime!");
+                LOGGER.info("[Bidding UI] Đã nhảy số và vẽ biểu đồ realtime!");
             }
         });
     }

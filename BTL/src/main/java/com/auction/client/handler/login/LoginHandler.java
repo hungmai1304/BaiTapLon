@@ -12,10 +12,13 @@ import com.auction.common.model.user.User;
 import com.auction.client.controller.general.SomeGlobal;
 import javafx.application.Platform;
 
+import java.util.logging.Logger;
+
 import static com.auction.client.utils.NavigationService.navigate;
 
 @ResponseHandler(type = "LOGIN_RESPONSE")
 public class LoginHandler implements IClientHandler {
+    private static final Logger LOGGER = Logger.getLogger(LoginHandler.class.getName());
 
     @Override
     public void handle(Response response) {

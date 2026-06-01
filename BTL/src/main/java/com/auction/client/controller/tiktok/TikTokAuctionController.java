@@ -15,12 +15,10 @@ import javafx.scene.control.TextArea;
 import javafx.animation.Timeline;
 import javafx.animation.KeyFrame;
 
-/**
- * Controller quản lý màn hình danh sách/luồng đấu giá phong cách TikTok.
- * Đã gộp thành công cơ chế đồng bộ mô tả chi tiết (File 2) và nhận diện gia hạn Anti-Sniping (File 1).
- */
-public class TikTokAuctionController {
+import java.util.logging.Logger;
 
+public class TikTokAuctionController {
+private static final Logger LOGGER = Logger.getLogger(TikTokAuctionController.class.getName());
     @FXML private Label name;
     @FXML private Label price;
     @FXML private Label step;
@@ -110,7 +108,7 @@ public class TikTokAuctionController {
                             javafx.scene.image.Image img = new javafx.scene.image.Image(imageSource, true);
                             productImage.setImage(img);
                         } catch (Exception e) {
-                            System.out.println("[TikTok UI] Không thể load ảnh từ Cloudinary: " + e.getMessage());
+                            LOGGER.info("[TikTok UI] Không thể load ảnh từ Cloudinary: " + e.getMessage());
                             productImage.setImage(null);
                         }
                     } else {
@@ -128,7 +126,7 @@ public class TikTokAuctionController {
         if (hasPrev) {
             renderCurrentAuction();
         } else {
-            System.out.println("[TikTokController] Đã ở đầu danh sách!");
+            LOGGER.info("[TikTokController] Đã ở đầu danh sách!");
         }
     }
 
@@ -139,7 +137,7 @@ public class TikTokAuctionController {
         if (hasNext) {
             renderCurrentAuction();
         } else {
-            System.out.println("[TikTokController] Hết danh sách! Đang tải thêm...");
+            LOGGER.info("[TikTokController] Hết danh sách! Đang tải thêm...");
             RequestSender.sendGetActiveAuctionsRequest();
         }
     }
@@ -178,22 +176,7 @@ public class TikTokAuctionController {
                 if (lblTopBidder != null) {
                     lblTopBidder.setText(leaderName + " - " + String.format("%,.0f VNĐ", newPrice));
                 }
-
-                // 3. TÍNH NĂNG CHỈ ĐỊNH: Cập nhật gia hạn thời gian kết thúc (Anti-Sniping) từ File 1
-                if (newEndTime != null && !newEndTime.isEmpty()) {
-                    try {
-                        java.time.LocalDateTime extendedTime = java.time.LocalDateTime.parse(newEndTime);
-                        currentAuction.setEndTime(extendedTime);
-                        if (currentAuction.getProduct() instanceof Product) {
-                            ((Product) currentAuction.getProduct()).setEndTime(extendedTime);
-                        }
-                        System.out.println("[TikTok UI] Đã đồng bộ Anti-Sniping. Thời gian mới: " + extendedTime);
-                    } catch (Exception e) {
-                        System.err.println("[TikTok UI] Lỗi parse thời gian gia hạn Anti-Sniping: " + e.getMessage());
-                    }
-                }
-
-                System.out.println("[TikTok UI] Đã nhảy số trực tiếp trên màn hình: " + newPrice);
+                LOGGER.info("[TikTok UI] Đã nhảy số trực tiếp trên màn hình: " + newPrice);
             }
         });
     }
@@ -211,7 +194,7 @@ public class TikTokAuctionController {
                 }));
                 timeline.play();
             } else {
-                System.out.println("[Notification] " + message);
+                LOGGER.info("[Notification] " + message);
             }
         });
     }

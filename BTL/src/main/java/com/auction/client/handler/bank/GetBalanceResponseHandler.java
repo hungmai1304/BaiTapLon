@@ -7,9 +7,11 @@ import com.auction.client.network.IClientHandler;
 import com.auction.client.utils.ClientContext;
 import com.auction.protocol.Response;
 
+import java.util.logging.Logger;
+
 @ResponseHandler(type = "GET_BALANCE_RESPONSE")
 public class GetBalanceResponseHandler implements IClientHandler {
-
+private static final Logger LOGGER = Logger.getLogger(GetBalanceResponseHandler.class.getName());
     @Override
     public void handle(Response response) {
         if (response == null) return;
@@ -33,13 +35,13 @@ public class GetBalanceResponseHandler implements IClientHandler {
                     }
 
 
-                    System.out.println("[GetBalanceResponseHandler] Cập nhật số dư thành công: " + currentBalance);
+                    LOGGER.info("[GetBalanceResponseHandler] Cập nhật số dư thành công: " + currentBalance);
                 }
             } else {
-                System.err.println("[GetBalanceResponseHandler] Lỗi từ Server: " + response.getMessage());
+                LOGGER.severe("[GetBalanceResponseHandler] Lỗi từ Server: " + response.getMessage());
             }
         } catch (Exception e) {
-            System.err.println("[GetBalanceResponseHandler] Lỗi xử lý gói tin số dư: " + e.getMessage());
+            LOGGER.severe("[GetBalanceResponseHandler] Lỗi xử lý gói tin số dư: " + e.getMessage());
         }
     }
 }

@@ -8,9 +8,11 @@ import com.auction.server.model.ServerContext;
 import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap(value = MessageType.LOGOUT_REQUEST)
 public class LogOutHandler implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(LogOutHandler.class.getName());
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
         try {

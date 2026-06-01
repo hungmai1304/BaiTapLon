@@ -9,12 +9,11 @@ import com.auction.protocol.MessageType;
 import com.auction.protocol.Response;
 import javafx.application.Platform;
 
-/**
- * Handler xử lý sự kiện Broadcast giá mới từ Server gửi về cho Client.
- * Đã gộp hoàn chỉnh cơ chế đồng bộ biến thời gian kết thúc mới (newEndTime) phục vụ Anti-Sniping.
- */
+import java.util.logging.Logger;
+
 @ResponseHandler(type = MessageType.BROADCAST_NEW_BID)
 public class NewBidClientHandler implements IClientHandler {
+    private static final Logger LOGGER = Logger.getLogger(NewBidClientHandler.class.getName());
 
     @Override
     public void handle(Response response) {
@@ -26,8 +25,7 @@ public class NewBidClientHandler implements IClientHandler {
                     String leaderName = (String) response.getData().get("leaderName");
                     String productId = (String) response.getData().get("productId");
 
-                    // Lấy biến gia hạn thời gian kết thúc (Anti-Sniping) từ File 1
-                    String newEndTime = (String) response.getData().get("newEndTime");
+                    LOGGER.info("[Client] Nhận giá mới: " + newPrice + " từ " + leaderName);
 
                     // In log kiểm tra trạng thái gói tin nhận được
                     System.out.println("[Client] Nhận giá mới: " + newPrice + " từ " + leaderName
@@ -47,7 +45,7 @@ public class NewBidClientHandler implements IClientHandler {
                         // Truyền đầy đủ dữ liệu (bao gồm cả newEndTime) sang UI để tự động nhảy số tiền và cập nhật bộ đếm giờ
                         controller.updateRealtimeBid(productId, newPrice, leaderName, newEndTime);
                     } else {
-                        System.out.println("[Client] Giao diện TikTok chưa mở, không cần nhảy số.");
+                        LOGGER.info("[Client] Giao diện TikTok chưa mở, không cần nhảy số.");
                     }
 
                 } catch (Exception e) {

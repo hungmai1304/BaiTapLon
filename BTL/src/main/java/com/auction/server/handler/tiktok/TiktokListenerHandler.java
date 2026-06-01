@@ -8,9 +8,11 @@ import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap(value = "TIK_TOK_LISTENER_REQUEST")
 public class TiktokListenerHandler implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(TiktokListenerHandler.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
@@ -30,6 +32,6 @@ public class TiktokListenerHandler implements IMessageHandler {
         Response success = new Response("TIK_TOK_LISTENER_RESPONSE", "SUCCESS", "Đã đăng ký nhận tin TikTok thành công!");
         conn.send(gson.toJson(success));
 
-        System.out.println("-> [TikTokListener] User " + userEmail + " đã đăng ký nhận tin.");
+        LOGGER.info("-> [TikTokListener] User " + userEmail + " đã đăng ký nhận tin.");
     }
 }

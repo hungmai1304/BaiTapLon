@@ -14,11 +14,12 @@ import javafx.scene.control.TextField;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 import static com.auction.client.utils.NavigationService.navigate;
 
 public class RegisterController implements Initializable {
-
+private static final Logger LOGGER = Logger.getLogger(RegisterController.class.getName());
     @FXML private TextField boxfield_register_name;
     @FXML private TextField textfield_register_email;
     @FXML private PasswordField password_register_pass;

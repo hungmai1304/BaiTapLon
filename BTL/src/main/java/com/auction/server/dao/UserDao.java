@@ -10,8 +10,10 @@ import org.mindrot.jbcrypt.BCrypt;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class UserDao {
+    private static final Logger LOGGER = Logger.getLogger(UserDao.class.getName());
 
     private static UserDao instance;
 
@@ -31,7 +33,7 @@ public class UserDao {
     public boolean insertBidder(String email, String password, String name, String id, Timestamp timeCreated, double balance, String role, String status) {
         // Check trùng email trước khi insert
         if (getUserByEmail(email) != null) {
-            System.err.println("[UserDao]Lỗi: Email " + email + " đã tồn tại!");
+            LOGGER.severe("[UserDao]Lỗi: Email " + email + " đã tồn tại!");
             return false;
         }
 
@@ -54,7 +56,7 @@ public class UserDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("[UserDao] Lỗi insert với role " + role + ": " + e.getMessage());
+            LOGGER.severe("[UserDao] Lỗi insert với role " + role + ": " + e.getMessage());
             return false;
         }
     }
@@ -66,7 +68,7 @@ public class UserDao {
     public boolean insertSeller(String email, String password, String name, String id, Timestamp timeCreated, String shopName, double balance, String status) {
         // Check trùng email trước khi insert
         if (getUserByEmail(email) != null) {
-            System.err.println("[UserDao] Lỗi: Email " + email + " đã tồn tại!");
+            LOGGER.severe("[UserDao] Lỗi: Email " + email + " đã tồn tại!");
             return false;
         }
 
@@ -89,7 +91,7 @@ public class UserDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("[UserDao] Lỗi insert Seller: " + e.getMessage());
+            LOGGER.severe("[UserDao] Lỗi insert Seller: " + e.getMessage());
             return false;
         }
     }
@@ -106,7 +108,7 @@ public class UserDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("[UserDao] Lỗi getUserByEmail: " + e.getMessage());
+            LOGGER.severe("[UserDao] Lỗi getUserByEmail: " + e.getMessage());
         }
         return null;
     }
@@ -125,7 +127,7 @@ public class UserDao {
 
 
         if ("BANNED".equalsIgnoreCase(user.getStatus())) {
-            System.err.println("[UserDao] Từ chối xác thực: Tài khoản [" + email + "] đang bị khóa (BANNED)!");
+            LOGGER.severe("[UserDao] Từ chối xác thực: Tài khoản [" + email + "] đang bị khóa (BANNED)!");
             return null;
         }
 
@@ -203,7 +205,7 @@ public class UserDao {
                 if (rs.next()) return mapResultSetToUser(rs);
             }
         } catch (SQLException e) {
-            System.err.println("[UserDao] Lỗi findById: " + e.getMessage());
+            LOGGER.severe("[UserDao] Lỗi findById: " + e.getMessage());
         }
         return null;
     }
@@ -215,7 +217,7 @@ public class UserDao {
      */
     public boolean depositMoney(String email, double amount) {
         if (amount <= 0) {
-            System.err.println(" Lỗi: Số tiền nạp phải lớn hơn 0!");
+            LOGGER.severe(" Lỗi: Số tiền nạp phải lớn hơn 0!");
             return false;
         }
 
@@ -229,7 +231,7 @@ public class UserDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println(" Lỗi khi thực hiện nạp tiền cho: " + email + " - " + e.getMessage());
+            LOGGER.severe(" Lỗi khi thực hiện nạp tiền cho: " + email + " - " + e.getMessage());
             return false;
         }
     }
@@ -241,7 +243,7 @@ public class UserDao {
      */
     public boolean withdrawMoney(String email, double amount) {
         if (amount <= 0) {
-            System.err.println("❌ Lỗi: Số tiền rút phải lớn hơn 0!");
+            LOGGER.severe("❌ Lỗi: Số tiền rút phải lớn hơn 0!");
             return false;
         }
 
@@ -260,11 +262,11 @@ public class UserDao {
                 return true;
             } else {
                 // Nếu update thất bại (0 dòng bị ảnh hưởng), có thể do không đủ tiền hoặc tài khoản không tồn tại
-                System.err.println(" Lỗi: Rút tiền thất bại cho [" + email + "]. Lý do: Không đủ số dư hoặc tài khoản không tồn tại.");
+                LOGGER.severe(" Lỗi: Rút tiền thất bại cho [" + email + "]. Lý do: Không đủ số dư hoặc tài khoản không tồn tại.");
                 return false;
             }
         } catch (SQLException e) {
-            System.err.println(" Lỗi khi thực hiện rút tiền cho: " + email + " - " + e.getMessage());
+            LOGGER.severe(" Lỗi khi thực hiện rút tiền cho: " + email + " - " + e.getMessage());
             return false;
         }
 
@@ -286,7 +288,7 @@ public class UserDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println(" Lỗi getBalanceByEmail: " + e.getMessage());
+            LOGGER.severe(" Lỗi getBalanceByEmail: " + e.getMessage());
         }
         return 0.0;
     }
@@ -311,7 +313,7 @@ public class UserDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("[UserDao] Lỗi trong hàm getUsersByRole: " + e.getMessage());
+            LOGGER.severe("[UserDao] Lỗi trong hàm getUsersByRole: " + e.getMessage());
         }
         return userList;
     }
@@ -331,7 +333,7 @@ public class UserDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("[UserDao] Lỗi khi cập nhật role cho user ID " + id + ": " + e.getMessage());
+            LOGGER.severe("[UserDao] Lỗi khi cập nhật role cho user ID " + id + ": " + e.getMessage());
             return false;
         }
     }
@@ -354,7 +356,7 @@ public class UserDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("[UserDao] Lỗi updateUserAvatar cho " + email + ": " + e.getMessage());
+            LOGGER.severe("[UserDao] Lỗi updateUserAvatar cho " + email + ": " + e.getMessage());
             return false;
         }
     }
@@ -375,7 +377,7 @@ public class UserDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("[UserDao] Lỗi khi trừ tiền của user " + email + ": " + e.getMessage());
+            LOGGER.severe("[UserDao] Lỗi khi trừ tiền của user " + email + ": " + e.getMessage());
             return false;
         }
     }
@@ -399,11 +401,11 @@ public class UserDao {
 
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
-                System.out.println("[UserDao] Cập nhật status tài khoản [" + email + "] thành công sang: " + newStatus);
+                LOGGER.info("[UserDao] Cập nhật status tài khoản [" + email + "] thành công sang: " + newStatus);
                 return true;
             }
         } catch (SQLException e) {
-            System.err.println("[UserDao] Lỗi trong hàm updateUserStatus khi cập nhật email " + email + ": " + e.getMessage());
+            LOGGER.severe("[UserDao] Lỗi trong hàm updateUserStatus khi cập nhật email " + email + ": " + e.getMessage());
         }
         return false;
     }
@@ -434,7 +436,7 @@ public class UserDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("[UserDao] Lỗi trong hàm getUsersByStatus khi tìm trạng thái " + status + ": " + e.getMessage());
+            LOGGER.severe("[UserDao] Lỗi trong hàm getUsersByStatus khi tìm trạng thái " + status + ": " + e.getMessage());
         }
         return userList;
     }
@@ -456,7 +458,7 @@ public class UserDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("[UserDao] Lỗi trong hàm countProductsByOwnerId cho User ID " + userId + ": " + e.getMessage());
+            LOGGER.severe("[UserDao] Lỗi trong hàm countProductsByOwnerId cho User ID " + userId + ": " + e.getMessage());
         }
         return 0;
     }

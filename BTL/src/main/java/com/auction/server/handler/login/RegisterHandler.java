@@ -13,13 +13,15 @@ import org.java_websocket.WebSocket;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap(value = MessageType.REGISTER_REQUEST)
 public class RegisterHandler implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(RegisterHandler.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
-        System.out.println("[RegisterHandler] Đang xử lý đăng ký...");
+        LOGGER.info("[RegisterHandler] Đang xử lý đăng ký...");
 
         try {
             // 1. Lấy dữ liệu cơ bản
@@ -71,7 +73,7 @@ public class RegisterHandler implements IMessageHandler {
                         "Đăng ký thành công! Chào mừng " + name
                 );
                 conn.send(gson.toJson(response));
-                System.out.println("[RegisterHandler] Đăng ký thành công cho: " + email + " với role: " + role + " | Status: " + initialStatus);
+                LOGGER.info("[RegisterHandler] Đăng ký thành công cho: " + email + " với role: " + role + " | Status: " + initialStatus);
             } else {
                 sendError(conn, gson, "Đăng ký thất bại! Email có thể đã tồn tại.");
             }

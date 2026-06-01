@@ -8,8 +8,10 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.application.Platform;
 import java.io.IOException;
+import java.util.logging.Logger;
 
 public class NavigationService {
+    private static final Logger LOGGER = Logger.getLogger(NavigationService.class.getName());
     private static Stage primaryStage;
 
     private NavigationService() {}
@@ -38,7 +40,7 @@ public class NavigationService {
                 primaryStage.setResizable(true);
                 primaryStage.show();
             } catch (IOException e) {
-                System.err.println("[Navigation] Lỗi khi chuyển màn hình: " + fxmlPath);
+                LOGGER.severe("[Navigation] Lỗi khi chuyển màn hình: " + fxmlPath);
                 e.printStackTrace();
             }
         });
@@ -52,10 +54,10 @@ public class NavigationService {
                 if (homeController != null && homeController.getBorderpaneHome() != null) {
                     homeController.getBorderpaneHome().setCenter(view);
                 } else {
-                    System.err.println("[Navigation] Lỗi: Không tìm thấy HomeController hoặc BorderPane!");
+                    LOGGER.severe("[Navigation] Lỗi: Không tìm thấy HomeController hoặc BorderPane!");
                 }
             } catch (IOException e) {
-                System.err.println("[Navigation] Lỗi load FXML: " + fxmlPath);
+                LOGGER.severe("[Navigation] Lỗi load FXML: " + fxmlPath);
                 e.printStackTrace();
             }
         });
@@ -70,10 +72,10 @@ public class NavigationService {
                     // Thay đổi view ở vùng TOP của BorderPane
                     homeController.getBorderpaneHome().setTop(view);
                 } else {
-                    System.err.println("Lỗi: Không tìm thấy HomeController hoặc BorderPane khi setTop!");
+                    LOGGER.severe("Lỗi: Không tìm thấy HomeController hoặc BorderPane khi setTop!");
                 }
             } catch (IOException e) {
-                System.err.println("Lỗi load FXML ở vùng Top: " + fxmlPath);
+                LOGGER.severe("Lỗi load FXML ở vùng Top: " + fxmlPath);
                 e.printStackTrace();
             }
         });

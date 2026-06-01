@@ -13,7 +13,10 @@ import javafx.scene.Scene;
 
 import javafx.stage.Stage;
 
+import java.util.logging.Logger;
+
 public class AuctionClient extends Application {
+    private static final Logger LOGGER = Logger.getLogger(AuctionClient.class.getName());
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -30,7 +33,7 @@ public class AuctionClient extends Application {
         stage.setTitle("Auction App");
         //-----------------------------------------------------------------------------------
         stage.setOnCloseRequest(event -> {
-            System.out.println("Đang đóng ứng dụng...");
+            LOGGER.info("Đang đóng ứng dụng...");
             AdminContext.getInstance().clear();
             Platform.exit(); // Dừng JavaFX Runtime
             System.exit(0);  // Khai tử hoàn toàn Process (Dùng khi có thread ngầm cứng đầu)

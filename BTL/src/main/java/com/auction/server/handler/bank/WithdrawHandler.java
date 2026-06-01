@@ -11,13 +11,15 @@ import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 @CommandMap(value = MessageType.WITHDRAW_REQUEST)
 public class WithdrawHandler implements IMessageHandler {
+    private static final Logger LOGGER = Logger.getLogger(WithdrawHandler.class.getName());
 
     @Override
     public void handle(WebSocket conn, Map<String, Object> data, Gson gson, ServerContext context) {
-        System.out.println("[WithdrawHandler] Đang xử lý yêu cầu rút tiền...");
+        LOGGER.info("[WithdrawHandler] Đang xử lý yêu cầu rút tiền...");
 
         try {
             // 1. Kiểm tra trạng thái đăng nhập
@@ -63,7 +65,7 @@ public class WithdrawHandler implements IMessageHandler {
                 response.getData().put("newBalance", updatedUser.getBalance());
 
                 conn.send(gson.toJson(response));
-                System.out.println("[WithdrawHandler] Rút tiền thành công cho " + userEmail + ": -" + amount);
+                LOGGER.info("[WithdrawHandler] Rút tiền thành công cho " + userEmail + ": -" + amount);
             } else {
                 sendError(conn, gson, "Rút tiền thất bại! Vui lòng kiểm tra lại tài khoản.");
             }

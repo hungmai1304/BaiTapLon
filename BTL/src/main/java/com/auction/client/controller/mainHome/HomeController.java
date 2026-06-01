@@ -16,11 +16,12 @@ import javafx.scene.layout.VBox;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 import com.auction.client.controller.general.SomeGlobal;
 
 public class HomeController implements Initializable {
-
+private static final Logger LOGGER = Logger.getLogger(HomeController.class.getName());
     @FXML
     private BorderPane borderpane_home;
 
@@ -64,7 +65,7 @@ public class HomeController implements Initializable {
             backToAdmin.setVisible(true);
             backToAdmin.setManaged(true);
         } else {
-            System.out.println("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
+            LOGGER.info("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
             backToAdmin.setVisible(false);
             backToAdmin.setManaged(false);
         }
@@ -110,7 +111,7 @@ public class HomeController implements Initializable {
         String role = (currentUser != null && currentUser.getRole() != null) ? currentUser.getRole().trim() : "";
 
         if ("ADMIN".equalsIgnoreCase(role)) {
-            System.out.println("[HomeController] Đang gói dữ liệu dạng Object để gửi lên Server...");
+            LOGGER.info("[HomeController] Đang gói dữ liệu dạng Object để gửi lên Server...");
 
             // BỎ DÒNG CŨ: RequestSender.send("BACK_TO_ADMIN_COMMAND", currentUser.getEmail());
 
@@ -121,7 +122,7 @@ public class HomeController implements Initializable {
             // Gửi map này đi
             RequestSender.send("BACK_TO_ADMIN_COMMAND", requestPayload);
         } else {
-            System.out.println("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
+            LOGGER.info("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
         }
     }
 }
