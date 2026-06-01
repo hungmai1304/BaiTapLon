@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.chart.CategoryAxis?>
-<?import javafx.scene.chart.LineChart?>
-<?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -19,85 +14,84 @@
 
 <AnchorPane prefHeight="887.0" prefWidth="1458.0" style="-fx-background-color: #1a1a1a;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.tiktok.BotBiddingController">
     <children>
-        <GridPane hgap="20.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="20.0">
+        <GridPane hgap="30.0" AnchorPane.bottomAnchor="40.0" AnchorPane.leftAnchor="100.0" AnchorPane.rightAnchor="100.0" AnchorPane.topAnchor="40.0">
             <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="30.0" /> <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="40.0" /> <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="30.0" /> </columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="50.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="50.0" />
+            </columnConstraints>
             <rowConstraints>
                 <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
             </rowConstraints>
             <children>
 
-                <VBox spacing="15.0" style="-fx-background-color: #262626; -fx-background-radius: 15; -fx-padding: 20;">
+                <VBox spacing="20.0" style="-fx-background-color: #262626; -fx-background-radius: 15; -fx-padding: 30;">
                     <children>
                         <Label text="THÔNG TIN SẢN PHẨM" textFill="#f0a500">
-                            <font><Font name="System Bold" size="22.0" /></font>
+                            <font><Font name="System Bold" size="26.0" /></font>
                         </Label>
-                        <Label fx:id="lblProductName" text="Tên sản phẩm: iPhone 15 Pro Max" textFill="WHITE" wrapText="true">
-                            <font><Font size="18.0" /></font>
+                        <Label fx:id="lblProductName" text="Tên sản phẩm: Đang tải..." textFill="WHITE" wrapText="true">
+                            <font><Font size="20.0" /></font>
                         </Label>
                         <Separator prefWidth="200.0" style="-fx-opacity: 0.2;" />
-                        <Label fx:id="lblStartPrice" text="Giá khởi điểm: 1,000,000đ" textFill="#bdc3c7" />
-                        <Label fx:id="lblPriceStep" text="Bước giá hệ thống: 50,000đ" textFill="#bdc3c7" />
-                        <Label fx:id="lblCurrentPrice" style="-fx-font-weight: bold; -fx-font-size: 20;" text="Giá hiện tại: 1,250,000đ" textFill="#2ecc71" />
+                        <Label fx:id="lblStartPrice" text="Giá khởi điểm: 0đ" textFill="#bdc3c7">
+                            <font><Font size="16.0" /></font>
+                        </Label>
+                        <Label fx:id="lblPriceStep" text="Bước giá hệ thống: 0đ" textFill="#bdc3c7">
+                            <font><Font size="16.0" /></font>
+                        </Label>
+                        <Label fx:id="lblCurrentPrice" style="-fx-font-weight: bold; -fx-font-size: 24;" text="Giá hiện tại: 0đ" textFill="#2ecc71" />
 
-                        <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-padding: 10 0 0 0;">
+                        <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-padding: 20 0 0 0;">
                             <children>
-                                <Label text="⏳" textFill="#f39c12">
-                                    <font><Font size="24.0" /></font>
-                                </Label>
                                 <Label fx:id="lblCountdown" text="Đang đợi tải..." textFill="#f39c12">
-                                    <font><Font name="System Bold" size="20.0" /></font>
+                                    <font><Font name="System Bold" size="22.0" /></font>
                                 </Label>
                             </children>
                         </HBox>
                     </children>
                 </VBox>
 
-                <VBox alignment="CENTER" style="-fx-background-color: #262626; -fx-background-radius: 15; -fx-padding: 10;" GridPane.columnIndex="1">
-                    <children>
-                        <Label text="DIỄN BIẾN GIÁ ĐẤU" textFill="#6c63ff">
-                            <font><Font name="System Bold" size="22.0" /></font>
-                        </Label>
-                        <LineChart fx:id="priceChart" createSymbols="true">
-                            <xAxis><CategoryAxis side="BOTTOM" tickLabelFill="WHITE" /></xAxis>
-                            <yAxis><NumberAxis side="LEFT" tickLabelFill="WHITE" /></yAxis>
-                        </LineChart>
-                    </children>
-                </VBox>
-
-                <VBox spacing="20.0" style="-fx-background-color: #262626; -fx-background-radius: 15; -fx-padding: 20;" GridPane.columnIndex="2">
+                <VBox spacing="25.0" style="-fx-background-color: #262626; -fx-background-radius: 15; -fx-padding: 30;" GridPane.columnIndex="1">
                     <children>
                         <Label text="BOT BIDDING SETUP" textFill="#3498db">
-                            <font><Font name="System Bold" size="22.0" /></font>
+                            <font><Font name="System Bold" size="26.0" /></font>
                         </Label>
 
-                        <Label style="-fx-font-style: italic;" text="Bot sẽ tự động đấu giá thay bạn cho đến khi đạt mức tối đa." textFill="#bdc3c7" wrapText="true" />
+                        <Label style="-fx-font-style: italic;" text="Bot sẽ tự động đấu giá thay bạn cho đến khi đạt mức tối đa." textFill="#bdc3c7" wrapText="true">
+                            <font><Font size="16.0" /></font>
+                        </Label>
 
                         <Separator prefWidth="200.0" style="-fx-opacity: 0.2;" />
 
-                        <VBox spacing="5.0">
+                        <VBox spacing="10.0">
                             <children>
-                                <Label text="Giá tối đa chấp nhận trả:" textFill="WHITE" />
-                                <TextField fx:id="txtMaxBidPrice" prefHeight="45.0" promptText="Ví dụ: 5,000,000" style="-fx-background-color: #333333; -fx-text-fill: #2ecc71; -fx-font-size: 16; -fx-font-weight: bold;" />
+                                <Label text="Giá tối đa chấp nhận trả:" textFill="WHITE">
+                                    <font><Font size="16.0" /></font>
+                                </Label>
+                                <TextField fx:id="txtMaxBidPrice" prefHeight="50.0" promptText="Ví dụ: 5000000" style="-fx-background-color: #333333; -fx-text-fill: #2ecc71; -fx-font-size: 18; -fx-font-weight: bold;" />
                             </children>
                         </VBox>
-
-                        <VBox spacing="5.0">
-                            <children>
-                                <Label text="Bước giá Bot (Tự tăng):" textFill="WHITE" />
-                                <TextField fx:id="txtBotPriceStep" prefHeight="45.0" promptText="Ví dụ: 100,000" style="-fx-background-color: #333333; -fx-text-fill: white; -fx-font-size: 16;" />
-                            </children>
-                        </VBox>
-
-                        <Label fx:id="lblBotNotification" text="Trạng thái: Chưa đăng ký" textFill="#f1c40f" wrapText="true" />
 
                         <VBox spacing="10.0">
                             <children>
-                                <Button fx:id="btnRegisterBot" maxWidth="Infinity" onAction="#handleRegisterBot" prefHeight="50.0" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="XÁC NHẬN ĐĂNG KÝ BOT" />
-                                <HBox spacing="10.0">
+                                <Label text="Bước giá Bot (Tự tăng):" textFill="WHITE">
+                                    <font><Font size="16.0" /></font>
+                                </Label>
+                                <TextField fx:id="txtBotPriceStep" prefHeight="50.0" promptText="Ví dụ: 100000" style="-fx-background-color: #333333; -fx-text-fill: white; -fx-font-size: 18;" />
+                            </children>
+                        </VBox>
+
+                        <Label fx:id="lblBotNotification" text="Trạng thái: Chưa đăng ký" textFill="#f1c40f" wrapText="true">
+                            <font><Font size="16.0" /></font>
+                        </Label>
+
+                        <VBox spacing="15.0">
+                            <children>
+                                <Button fx:id="btnRegisterBot" maxWidth="Infinity" onAction="#handleRegisterBot" prefHeight="55.0" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18; -fx-cursor: hand; -fx-background-radius: 8;" text="XÁC NHẬN ĐĂNG KÝ BOT" />
+                                <HBox spacing="15.0">
                                     <children>
-                                        <Button fx:id="btnClear" onAction="#handleClear" prefHeight="40.0" prefWidth="100.0" style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-cursor: hand;" text="Xóa" />
-                                        <Button fx:id="btnBack" maxWidth="Infinity" onAction="#handleBackToTikTok" prefHeight="40.0" style="-fx-background-color: #6c63ff; -fx-text-fill: white; -fx-cursor: hand;" text="Quay lại TikTok" HBox.hgrow="ALWAYS" />
+                                        <Button fx:id="btnClear" onAction="#handleClear" prefHeight="45.0" prefWidth="120.0" style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-size: 16; -fx-cursor: hand; -fx-background-radius: 8;" text="Xóa" />
+                                        <Button fx:id="btnBack" maxWidth="Infinity" onAction="#handleBackToTikTok" prefHeight="45.0" style="-fx-background-color: #6c63ff; -fx-text-fill: white; -fx-font-size: 16; -fx-cursor: hand; -fx-background-radius: 8;" text="Quay lại TikTok" HBox.hgrow="ALWAYS" />
                                     </children>
                                 </HBox>
                             </children>
