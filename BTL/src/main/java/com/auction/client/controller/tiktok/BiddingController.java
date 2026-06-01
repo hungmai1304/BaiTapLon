@@ -262,7 +262,7 @@ private static final Logger LOGGER = Logger.getLogger(BiddingController.class.ge
         NavigationService.setCenterView("/com/auction/client/view/tiktokAuction.fxml");
     }
 
-    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName, String endTimeStr) {
         Platform.runLater(() -> {
             if (this.currentAuctionData != null && this.currentAuctionData.getProduct().getId().equals(productId)) {
                 lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0fđ", newPrice));
@@ -273,6 +273,20 @@ private static final Logger LOGGER = Logger.getLogger(BiddingController.class.ge
 
                 bidCount++;
                 priceSeries.getData().add(new XYChart.Data<>(String.valueOf(bidCount), newPrice));
+                
+                //  XỬ LÝ NHẢY SỐ ĐỒNG HỒ NẾU BỊ DỜI GIỜ (ANTI-SNIPING)
+                if (endTimeStr != null) {
+                    try {
+                        java.time.LocalDateTime newEndTime = java.time.LocalDateTime.parse(endTimeStr, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                        this.currentAuctionData.setEndTime(newEndTime);
+                        if (this.currentAuctionData.getProduct() != null) {
+                            ((Product) this.currentAuctionData.getProduct()).setEndTime(newEndTime);
+                        }
+                        LOGGER.info("[Bidding UI] Đã giật lùi đồng hồ đếm ngược do có người đập búa sát nút!");
+                    } catch (Exception e) {
+                        LOGGER.warning("Lỗi parse thời gian: " + e.getMessage());
+                    }
+                }
 
                 LOGGER.info("[Bidding UI] Đã nhảy số và vẽ biểu đồ realtime!");
             }

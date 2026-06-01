@@ -159,7 +159,7 @@ private static final Logger LOGGER = Logger.getLogger(TikTokAuctionController.cl
     }
 
     // THÊM HÀM NÀY ĐỂ XỬ LÝ NHẢY SỐ REAL-TIME TỪ SERVER GỬI VỀ
-    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName, String endTimeStr) {
         Platform.runLater(() -> {
             // Lấy món đồ đang được hiển thị trên màn hình hiện tại
             Auction currentAuction = ClientContext.getInstance().getCurrentAuction();
@@ -174,6 +174,16 @@ private static final Logger LOGGER = Logger.getLogger(TikTokAuctionController.cl
                 currentAuction.setCurrentPrice(newPrice);
                 if (lblTopBidder != null) {
                     lblTopBidder.setText(leaderName + " - " + String.format("%,.0f VNĐ", newPrice));
+                }
+                //  BỔ SUNG: CẬP NHẬT LUÔN THỜI GIAN VÀO RAM KHI ĐANG Ở MÀN HÌNH TIKTOK
+                if (endTimeStr != null) {
+                    try {
+                        java.time.LocalDateTime newEndTime = java.time.LocalDateTime.parse(endTimeStr, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                        currentAuction.setEndTime(newEndTime);
+                        ((Product) currentAuction.getProduct()).setEndTime(newEndTime);
+                    } catch (Exception e) {
+                        LOGGER.warning("Lỗi parse thời gian bên TikTok: " + e.getMessage());
+                    }
                 }
                 LOGGER.info("[TikTok UI] Đã nhảy số trực tiếp trên màn hình: " + newPrice);
             }
