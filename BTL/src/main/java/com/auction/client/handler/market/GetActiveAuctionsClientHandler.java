@@ -17,6 +17,7 @@ import com.auction.common.model.product.Art;
 import com.auction.common.model.product.Electronics;
 import com.auction.common.model.product.Jewelry;
 import com.auction.common.model.product.Vehicle;
+import com.auction.common.model.product.Fashion;
 
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -30,11 +31,12 @@ public class GetActiveAuctionsClientHandler implements IClientHandler {
     // 1. KHỞI TẠO NHÀ MÁY ĐA HÌNH (Dạy cho Client biết nhận diện từng mặt hàng)
     // ====================================================================================
     private static final RuntimeTypeAdapterFactory<Product> productAdapterFactory = RuntimeTypeAdapterFactory
-            .of(Product.class, "category") // Chìa khóa phân biệt nằm ở trường "category"
+            .of(Product.class, "category")
             .registerSubtype(Art.class, "Art")
             .registerSubtype(Electronics.class, "Electronics")
             .registerSubtype(Jewelry.class, "Jewelry")
-            .registerSubtype(Vehicle.class, "Vehicle");
+            .registerSubtype(Vehicle.class, "Vehicle")
+            .registerSubtype(Fashion.class, "Fashion");
     // CẬP NHẬT: Bộ Gson an toàn đọc được cả chuỗi Local lẫn chuỗi có Múi giờ (+07:00)
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
