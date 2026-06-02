@@ -65,4 +65,8 @@ public class Product extends Item {
 
     public ProductStatus getStatus() { return status; }
     public void setStatus(ProductStatus status) { this.status = status; }
+    // Phương thức để các class con tự định nghĩa thông tin riêng
+    public String getSpecialDetails() {
+        return "";
+    }
 }

@@ -60,8 +60,13 @@ private static final Logger LOGGER = Logger.getLogger(BiddingController.class.ge
             lblProductName.setText("Tên sản phẩm: " + p.getName());
 
             if (lblProductDesc != null) {
+                // GỌI ĐA HÌNH (POLYMORPHISM) - Không cần if-else, tự nó biết là xe hay tranh để lấy thông tin!
+                String extraInfo = p.getSpecialDetails();
+
                 String desc = p.getDescription();
-                lblProductDesc.setText("Mô tả: " + (desc != null && !desc.isEmpty() ? desc : "Không có mô tả"));
+                String finalDesc = (desc != null && !desc.isEmpty() ? desc : "Không có mô tả") + extraInfo;
+
+                lblProductDesc.setText("Mô tả: " + finalDesc);
             }
 
             lblStartPrice.setText("Giá khởi điểm: " + String.format("%,.0fđ", p.getStartPrice()));
