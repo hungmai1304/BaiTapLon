@@ -76,18 +76,23 @@ private static final Logger LOGGER = Logger.getLogger(TikTokAuctionController.cl
                 price.setText(String.format("%,.0f VNĐ", auction.getCurrentPrice()));
                 step.setText(String.format("Bước giá: %,.0f VNĐ", product.getStepPrice()));
 
-                // Đoạn lấy mô tả ngắn (nếu có) vào Label
+                // GỌI ĐA HÌNH (POLYMORPHISM) ĐỂ TỰ LẤY ĐẶC TẢ CHI TIẾT CỦA MÓN HÀNG
+                // ====================================================================
+                String extraInfo = product.getSpecialDetails();
+                String desc = product.getDescription();
+
+                // Gộp mô tả gốc và thông tin đặc thù
+                String finalDesc = (desc != null && !desc.isEmpty() ? desc : "Sản phẩm này chưa có mô tả chi tiết.") + extraInfo;
+
+                // Gắn lên Label mô tả ngắn (nếu UI có dùng)
                 if (lblProductDesc != null) {
-                    String desc = product.getDescription();
-                    lblProductDesc.setText(desc != null && !desc.isEmpty() ? desc : "Không có mô tả");
+                    lblProductDesc.setText(finalDesc);
                 }
 
-                // 4. THÊM ĐIỀN MÔ TẢ CHI TIẾT VÀO TEXTAREA 'des' VÀO ĐÂY
+                // Gắn lên TextArea rộng rãi (để lướt TikTok đọc cho sướng)
                 if (des != null) {
-                    String desc = product.getDescription();
-                    des.setText(desc != null && !desc.isEmpty() ? desc : "Sản phẩm này chưa có mô tả chi tiết.");
+                    des.setText(finalDesc);
                 }
-
                 if (lblTopBidder != null) {
                     // Kiểm tra xem đã có ai đặt giá chưa
                     String leader = (auction.getLeaderName() != null && !auction.getLeaderName().isEmpty())
