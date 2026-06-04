@@ -14,7 +14,7 @@ Hệ thống là một ứng dụng desktop (Client-Server) cho phép người d
 - **Cơ sở dữ liệu:** PostgreSQL (Lưu trữ thông tin người dùng, sản phẩm, phiên đấu giá)
 - **Giao tiếp mạng:** WebSockets (Java-WebSocket) - Đảm bảo cập nhật thời gian thực.
 - **Định dạng dữ liệu:** JSON (Sử dụng Gson & Jackson)
-- **Lưu trữ hình ảnh:** Cloudinary API
+- **Lưu trữ hình ảnh:** Cloudinary API & Database
 - **Quản lý dự án & Thư viện:** Maven
 - **Bảo mật:** jBCrypt (Mã hóa mật khẩu)
 
@@ -93,6 +93,7 @@ mvn javafx:run
 - [x] Đấu giá trực tiếp thời gian thực (Real-time bidding).
 - [x] Tự động cập nhật giá thầu cao nhất mà không cần tải lại trang.
 - [x] Chức năng Đấu giá tự động (Bot Bidding) cho người dùng.
+- [x] Tính năng Anti-Snipping gia hạn thời gian cho phiên đấu giá
 - [x] Xem danh sách các sản phẩm đã đấu giá thắng (Won Auctions).
 - [x] Chế độ xem TikTok Mode: Lướt xem nhanh các phiên đấu giá đang diễn ra.
 
@@ -108,3 +109,11 @@ mvn javafx:run
 - [x] Khóa tài khoản (Ban) hoặc đưa vào danh sách đen (Blacklist).
 - [x] Buộc người dùng đăng xuất từ xa.
 - [x] Hủy các phiên đấu giá đang diễn ra nếu có vi phạm.
+
+## 6.Link báo cáo sản phẩm
+
+### File PDF :
+[Báo cáo Bài Tập Lớn](./Bao_Cao_BTL_Dau_Gia_Truc_Tuyen%20.pdf)
+
+### Video demo:
+[Thử nghiệm tính năng](https://drive.google.com/file/d/1f-XlxKqS0mLCbhe7yYmK1XMqxb4OC4Q0/view?usp=sharing)
