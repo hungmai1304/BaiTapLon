@@ -8,7 +8,6 @@ public class Property extends Product {
     // 2. Constructor mặc định (rất quan trọng để Gson có thể parse được dữ liệu)
     public Property() {}
 
-    // 3. Getter và Setter
     public String getAddress() {
         return address;
     }

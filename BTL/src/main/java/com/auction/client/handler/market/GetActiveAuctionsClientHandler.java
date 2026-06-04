@@ -19,6 +19,7 @@ import com.auction.common.model.product.Jewelry;
 import com.auction.common.model.product.Vehicle;
 import com.auction.common.model.product.Fashion;
 import com.auction.common.model.product.Other;
+import com.auction.common.model.product.Property;
 
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -36,10 +37,9 @@ public class GetActiveAuctionsClientHandler implements IClientHandler {
             .registerSubtype(Art.class, "Art")
             .registerSubtype(Electronics.class, "Electronics")
             .registerSubtype(Jewelry.class, "Jewelry")
-            .registerSubtype(Vehicle.class, "Vehicles")
-            .registerSubtype(Fashion.class, "Fashion")
+            .registerSubtype(Vehicle.class, "Vehicle")
             .registerSubtype(Other.class, "Other")
-            .registerSubtype(Other.class, "Property");
+            .registerSubtype(Property.class, "Property");
     // CẬP NHẬT: Bộ Gson an toàn đọc được cả chuỗi Local lẫn chuỗi có Múi giờ (+07:00)
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
