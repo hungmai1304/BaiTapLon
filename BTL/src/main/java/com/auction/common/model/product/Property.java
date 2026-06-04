@@ -6,15 +6,7 @@ public class Property extends Product {
     private double area;    // Diện tích (m2)
 
     // 2. Constructor mặc định (rất quan trọng để Gson có thể parse được dữ liệu)
-    public Property() {
-        super(); // Gọi constructor của class cha (Product)
-
-        // LƯU Ý TỪ LỖI LÚC TRƯỚC:
-        // Nếu trong class cha Product của anh có một biến để phân biệt loại (ví dụ: String type;)
-        // thì anh BẮT BUỘC phải gán giá trị cho nó ở đây để nó map đúng với GsonUtil.
-        // Mở comment dòng dưới nếu class Product của anh dùng biến type:
-        // this.type = "Property";
-    }
+    public Property() {}
 
     // 3. Getter và Setter
     public String getAddress() {
