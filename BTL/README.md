@@ -93,6 +93,7 @@ mvn javafx:run
 - [x] Đấu giá trực tiếp thời gian thực (Real-time bidding).
 - [x] Tự động cập nhật giá thầu cao nhất mà không cần tải lại trang.
 - [x] Chức năng Đấu giá tự động (Bot Bidding) cho người dùng.
+- [x] Tính năng Anti-Snipping gia hạn thời gian cho phiên đấu giá
 - [x] Xem danh sách các sản phẩm đã đấu giá thắng (Won Auctions).
 - [x] Chế độ xem TikTok Mode: Lướt xem nhanh các phiên đấu giá đang diễn ra.
 
