@@ -78,6 +78,16 @@
                                             </children>
                                         </HBox>
 
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                            <children>
+                                                <Label styleClass="label-title" style="-fx-font-size: 13px;" text="Tăng/Giảm nhanh:" />
+                                                <Button onAction="#handleAddDay" prefHeight="32.0" styleClass="btn3" text="+1 Ngày" />
+                                                <Button onAction="#handleAddHour" prefHeight="32.0" styleClass="btn3" text="+1 Giờ" />
+                                                <Button onAction="#handleMinusDay" prefHeight="32.0" styleClass="btn3" text="-1 Ngày" />
+                                                <Button onAction="#handleMinusHour" prefHeight="32.0" styleClass="btn3" text="-1 Giờ" />
+                                            </children>
+                                        </HBox>
+
                                         <VBox spacing="8.0">
                                             <children>
                                                 <Label styleClass="label-title" text="Danh mục" />

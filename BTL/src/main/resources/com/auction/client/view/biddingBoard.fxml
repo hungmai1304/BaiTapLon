@@ -89,6 +89,9 @@
                                     <font><Font size="14.0" /></font>
                                 </Label>
                                 <TextField fx:id="txtBidAmount" prefHeight="50.0" promptText="Ví dụ: 1500000" style="-fx-background-color: #333333; -fx-text-fill: white; -fx-font-size: 18; -fx-border-color: #444444; -fx-border-radius: 5;" />
+
+                                <Button fx:id="btnQuickBid" maxWidth="1.7976931348623157E308" onAction="#handleQuickBidCalculate" prefHeight="35.0" style="-fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 5;" text="TỰ ĐỘNG ĐIỀN GIÁ TỐI THIỂU (+BƯỚC GIÁ)" />
+
                                 <Label fx:id="lblNotification" text="" textFill="#3498db" wrapText="true">
                                     <font><Font name="System Italic" size="13.0" /></font>
                                 </Label>
