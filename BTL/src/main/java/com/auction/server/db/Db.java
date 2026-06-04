@@ -1,39 +1,42 @@
 package com.auction.server.db;
 
-// import io.github.cdimascio.dotenv.Dotenv; // Temporarily commented out
+import io.github.cdimascio.dotenv.Dotenv;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Db {
-	private static final Logger LOGGER = Logger.getLogger(Db.class.getName());
 	private static Connection connection;
 
 	public static Connection getConnection() {
 		try {
-			// Establish a new connection only if it does not exist or has been closed
+			// Ch? t?o k?t n?i m?i n?u ch?a c� ho?c ?� b? ?�ng
 			if (connection == null || connection.isClosed()) {
+				// T?i c�c bi?n t? file .env
+				Dotenv dotenv =  Dotenv
+						.configure()
+						.ignoreIfMissing()
+						.load();
+				String DB_URL = dotenv.get("DB_URL");
+				String DB_USER = dotenv.get("DB_USER");
+				String DB_PASSWORD = dotenv.get("DB_PASSWORD");
 
-				String dbUrl = "jdbc:postgresql://localhost:5432/auction_db";
-				String dbUser = "postgres";
-				String dbPassword = "enix";
-
-				// Explicitly load the PostgreSQL JDBC Driver
+				// ??ng k� Driver PostgreSQL
 				Class.forName("org.postgresql.Driver");
 
-				connection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
-				LOGGER.info("====== DATABASE CONNECTION ESTABLISHED SUCCESSFULLY ======");
+				// M? k?t n?i
+				connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+				System.out.println("K?t n?i Database Render th�nh c�ng!");
 			}
 		} catch (ClassNotFoundException e) {
-			LOGGER.log(Level.SEVERE, "PostgreSQL JDBC Driver not found. Please verify your dependency configuration in pom.xml!", e);
+			System.err.println("Kh�ng t�m th?y Driver PostgreSQL. Ki?m tra l?i pom.xml!");
 		} catch (SQLException e) {
-			LOGGER.log(Level.SEVERE, "Database connection error encountered", e);
+			System.err.println("L?i k?t n?i Database: " + e.getMessage());
 		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "An unexpected error occurred during database operations", e);
+			System.err.println("L?i kh�ng x�c ??nh ho?c kh�ng t�m th?y file .env: " + e.getMessage());
 		}
 
 		return connection;
 	}
+
 }
