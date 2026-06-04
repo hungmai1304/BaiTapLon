@@ -19,8 +19,10 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import java.time.ZoneId;
+import java.util.logging.Logger;
 
 public class BotBiddingController {
+    private static final Logger LOGGER = Logger.getLogger(BotBiddingController.class.getName());
 
     @FXML private Label lblProductName;
     @FXML private Label lblStartPrice;
@@ -28,6 +30,7 @@ public class BotBiddingController {
     @FXML private Label lblCurrentPrice;
     @FXML private Label lblBotNotification;
 
+    // Ánh xạ UI cho tính năng Đồng hồ và Khóa nút
     @FXML private Label lblCountdown;
     @FXML private Button btnRegisterBot;
 
@@ -51,6 +54,7 @@ public class BotBiddingController {
             lblPriceStep.setText("Bước giá hệ thống: " + String.format("%,.0f VNĐ", product.getStepPrice()));
             lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0f VNĐ", currentAuction.getCurrentPrice()));
 
+            // NGHIỆP VỤ: Đóng băng ô nhập liệu nếu User hiện tại (từ SomeGlobal) chính là Seller
             User currentUser = SomeGlobal.getCurrentUser();
             if (currentUser != null && product.getOwner() != null) {
                 if (currentUser.getEmail().equalsIgnoreCase(product.getOwner().getEmail())) {
@@ -63,16 +67,33 @@ public class BotBiddingController {
             }
         }
 
+        // Khởi động cỗ máy đếm ngược thời gian giống hệt màn hình Bidding
         startAuctionCountdown();
     }
 
-    public void updateRealtimeBid(String productId, double newPrice, String leaderName) {
+    public void updateRealtimeBid(String productId, double newPrice, String leaderName, String endTimeStr) {
         Platform.runLater(() -> {
             if (currentAuction != null && currentAuction.getProduct() != null
                     && currentAuction.getProduct().getId().equals(productId)) {
 
+                // 1. Cập nhật chữ trên giao diện
                 lblCurrentPrice.setText("Giá hiện tại: " + String.format("%,.0f VNĐ", newPrice));
+
+                // 2. Cập nhật RAM
                 currentAuction.setCurrentPrice(newPrice);
+                //  3. XỬ LÝ NHẢY SỐ ĐỒNG HỒ NẾU BỊ DỜI GIỜ (ANTI-SNIPING)
+                if (endTimeStr != null) {
+                    try {
+                        java.time.LocalDateTime newEndTime = java.time.LocalDateTime.parse(endTimeStr, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                        currentAuction.setEndTime(newEndTime);
+                        if (currentAuction.getProduct() != null) {
+                            ((Product) currentAuction.getProduct()).setEndTime(newEndTime);
+                        }
+                        LOGGER.info("[BotBidding UI] Đã giật lùi đồng hồ đếm ngược do có người đập búa sát nút!");
+                    } catch (Exception e) {
+                        LOGGER.warning("Lỗi parse thời gian: " + e.getMessage());
+                    }
+                }
             }
         });
     }
@@ -80,6 +101,7 @@ public class BotBiddingController {
     @FXML
     public void handleRegisterBot(ActionEvent event) {
         try {
+            // Chặn click gửi gói tin cố ý từ Client
             if (currentAuction != null && currentAuction.getProduct() instanceof Product) {
                 Product product = (Product) currentAuction.getProduct();
                 User currentUser = SomeGlobal.getCurrentUser();
@@ -88,7 +110,7 @@ public class BotBiddingController {
                         && currentUser.getEmail().equalsIgnoreCase(product.getOwner().getEmail())) {
                     lblBotNotification.setText("Bạn không có quyền đăng ký Bot cho sản phẩm của chính mình!");
                     lblBotNotification.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
-                    System.out.println("[Client Block] Từ chối người bán tự cài Bot qua SomeGlobal.");
+                    LOGGER.info("[Client Block] Từ chối người bán tự cài Bot qua SomeGlobal.");
                     return;
                 }
             }
@@ -174,20 +196,23 @@ public class BotBiddingController {
                 return;
             }
 
+            // Chỉ thay đổi trạng thái Disable của nút nếu user không phải người bán
             User currentUser = SomeGlobal.getCurrentUser();
             boolean isSeller = (currentUser != null && p.getOwner() != null && currentUser.getEmail().equalsIgnoreCase(p.getOwner().getEmail()));
 
             if (nowMillis < startMillis) {
+                // Trong thời gian quảng cáo sẽ khóa nút đăng ký Bot
                 if (btnRegisterBot != null) btnRegisterBot.setDisable(true);
                 long diffSeconds = (startMillis - nowMillis) / 1000;
                 if (diffSeconds < 0) diffSeconds = 0;
 
                 if (lblCountdown != null) {
                     lblCountdown.setText(String.format("Đợi quảng cáo: %02d:%02d", diffSeconds / 60, diffSeconds % 60));
-                    lblCountdown.setStyle("-fx-text-fill: #f39c12;");
+                    lblCountdown.setStyle("-fx-text-fill: #f39c12;"); // Màu vàng cam
                 }
 
             } else if (nowMillis >= startMillis && nowMillis < endMillis) {
+                // Đang trong phiên đấu giá mở khóa nút đăng ký Bot
                 if (btnRegisterBot != null) btnRegisterBot.setDisable(isSeller);
 
                 long diffSeconds = (endMillis - nowMillis) / 1000;
@@ -195,14 +220,15 @@ public class BotBiddingController {
 
                 if (lblCountdown != null) {
                     lblCountdown.setText(String.format("Thời gian còn lại: %02d:%02d", diffSeconds / 60, diffSeconds % 60));
-                    lblCountdown.setStyle("-fx-text-fill: #2ecc71;");
+                    lblCountdown.setStyle("-fx-text-fill: #2ecc71;"); // Màu xanh lá
                 }
 
             } else {
+                // Phiên đấu giá kết thúc khóa vĩnh viễn nút đăng ký Bot
                 if (btnRegisterBot != null) btnRegisterBot.setDisable(true);
                 if (lblCountdown != null) {
                     lblCountdown.setText("Phiên đấu giá ĐÃ KẾT THÚC!");
-                    lblCountdown.setStyle("-fx-text-fill: #e74c3c;");
+                    lblCountdown.setStyle("-fx-text-fill: #e74c3c;"); // Màu đỏ
                 }
                 countdownTimeline.stop();
             }

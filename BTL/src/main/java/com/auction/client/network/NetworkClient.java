@@ -4,19 +4,22 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class NetworkClient {
+    private static final Logger LOGGER = Logger.getLogger(NetworkClient.class.getName());
 
     // =========================================================================
-    // C?U H�NH ???NG D?N SERVER URL
+    // SERVER URL CONFIGURATION
     // =========================================================================
-    // Khi ch?y production tr�n Render
+    // Production environment (Render)
     // private static final String SERVER_URL ="wss://baitaplon-qegw.onrender.com";
 
-    // Khi ch?y local m?t m�nh test m�y c?a b?n
+    // Local environment for standalone testing
     // private static final String SERVER_URL = "ws://localhost:10000";
 
-    // KHI CH?Y NH�M QUA TAILSCALE: G�n c?ng IP Tailscale c?a m�y b?n (Server)
+    // Team testing via Tailscale: Configure your server's Tailscale IP address
     private static final String SERVER_URL = "ws://100.89.94.42:10000";
     // =========================================================================
 
@@ -24,12 +27,12 @@ public class NetworkClient {
     private static MessageListener currentListener;
 
     private NetworkClient() {
+        // Private constructor to prevent instantiation of utility class
     }
 
     public static void connectAndKeepAlive() {
-
         if (webSocketClient != null && webSocketClient.isOpen()) {
-            System.out.println("? ?� ???c k?t n?i t?i server.");
+            LOGGER.info("Already connected to the server.");
             return;
         }
 
@@ -38,35 +41,33 @@ public class NetworkClient {
 
                 @Override
                 public void onOpen(ServerHandshake handshakeData) {
-                    System.out.println("? ?� k?t n?i t?i server th�nh c�ng!");
+                    LOGGER.info("Successfully connected to the server!");
                 }
 
                 @Override
                 public void onMessage(String message) {
-                    // V?n dispatch b�nh th??ng ?? x? l� logic
+                    // Dispatch incoming message for logic processing
                     ClientMessageDispatcher.dispatch(message);
                 }
 
                 @Override
                 public void onClose(int code, String reason, boolean remote) {
-                    System.out.println("? M?t k?t n?i");
-                    System.out.println("Code: " + code);
-                    System.out.println("Reason: " + reason);
+                    LOGGER.log(Level.WARNING, "Connection closed. Code: {0}, Reason: {1}, Remote: {2}",
+                            new Object[]{code, reason, remote});
                 }
 
                 @Override
                 public void onError(Exception ex) {
-                    System.err.println("? L?i m?ng:");
-                    ex.printStackTrace();
+                    LOGGER.log(Level.SEVERE, "Network connection error occurred", ex);
                 }
             };
 
-            System.out.println("? ?ang k?t n?i t?i server Tailscale t?i: " + SERVER_URL);
+            LOGGER.log(Level.INFO, "Connecting to Tailscale server at: {0}", SERVER_URL);
             webSocketClient.connectBlocking();
-            System.out.println("? K?t n?i ho�n t?t.");
+            LOGGER.info("Connection process completed.");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Fatal error during connection initialization", e);
         }
     }
 
@@ -75,22 +76,28 @@ public class NetworkClient {
             webSocketClient.send(command);
 
             if (command.length() > 200) {
-                System.out.println("? [Client] ?� g?i g�i tin l?n (Size: " + command.length() + " chars)");
+                LOGGER.log(Level.INFO, "[Client] Sent large payload (Size: {0} chars)", command.length());
             } else {
-                System.out.println("? [Client] ?� g?i: " + command);
+                LOGGER.log(Level.INFO, "[Client] Sent: {0}", command);
             }
 
         } else {
-            System.err.println("?? Ch?a k?t n?i m?ng!");
+            LOGGER.severe("Network Error: Not connected to the server!");
         }
     }
 
-    public static boolean isConnected() {
-        return webSocketClient != null && webSocketClient.isOpen();
-    }
+//    public static boolean isConnected() {
+//
+//        return webSocketClient != null && webSocketClient.isOpen();
+//    }
+//
+//    /**
+//     * Attach a message listener for view controllers to capture incoming text data
+//     */
+//    public static void setListener(MessageListener listener) {
+//
+//        currentListener = listener;
+//    }
 
-    // H�m ?? c�c m�n h�nh kh�c g?n tai nghe v�o
-    public static void setListener(MessageListener listener) {
-        currentListener = listener;
-    }
+
 }
