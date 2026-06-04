@@ -32,7 +32,15 @@ public class RequestSender {
             requestMap.put("data", data);
 
             String json = gson.toJson(requestMap);
-            LOGGER.info("[RequestSender] JSON Gửi đi: " + json); // Log ra để dễ debug theo dõi
+
+            // --- XỬ LÝ IN LOG THÔNG MINH: Nếu chuỗi quá dài (chứa ảnh Base64), ta cắt bớt khi in ra console ---
+            if (json.length() > 500) {
+                LOGGER.info("[RequestSender] JSON Gửi đi (Rút gọn do dữ liệu lớn): " + json.substring(0, 300) + "... [DATA TOO LARGE]");
+            } else {
+                LOGGER.info("[RequestSender] JSON Gửi đi: " + json);
+            }
+            // -----------------------------------------------------------------------------------------
+
             NetworkClient.sendCommand(json);
         } catch (Exception e) {
             LOGGER.severe("[RequestSender Error] Lỗi khi tạo JSON string: " + e.getMessage());
