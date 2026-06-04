@@ -38,7 +38,8 @@ public class GetActiveAuctionsClientHandler implements IClientHandler {
             .registerSubtype(Jewelry.class, "Jewelry")
             .registerSubtype(Vehicle.class, "Vehicles")
             .registerSubtype(Fashion.class, "Fashion")
-            .registerSubtype(Other.class, "Other");
+            .registerSubtype(Other.class, "Other")
+            .registerSubtype(Other.class, "Property");
     // CẬP NHẬT: Bộ Gson an toàn đọc được cả chuỗi Local lẫn chuỗi có Múi giờ (+07:00)
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
