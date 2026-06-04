@@ -17,10 +17,11 @@ import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.logging.Logger;
 
 @ResponseHandler(type = MessageType.GET_ADMIN_REQUEST_LIST_RESPONSE)
 public class AdminRequestHandler implements IClientHandler {
-
+private static final Logger LOGGER = Logger.getLogger(AdminRequestHandler.class.getName());
     // Tận dụng Gson để parse danh sách Object từ Server tránh lỗi ép kiểu LinkedTreeMap của Gson
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, new TypeAdapter<LocalDateTime>() {
@@ -48,7 +49,7 @@ public class AdminRequestHandler implements IClientHandler {
     @Override
     public void handle(Response response) {
         if (response == null) {
-            System.err.println("[AdminRequest] Lỗi: Phản hồi từ server bị trống (null)!");
+            LOGGER.severe("[AdminRequest] Lỗi: Phản hồi từ server bị trống (null)!");
             return;
         }
 
@@ -66,14 +67,14 @@ public class AdminRequestHandler implements IClientHandler {
 
                     // Đẩy dữ liệu mới vào Context phục vụ cập nhật UI tự động thông qua ObservableList
                     AdminContext.getInstance().setAdminRequests(requestList);
-                    System.out.println("[AdminRequest] Đã cập nhật thành công " + requestList.size() + " tài khoản chờ duyệt vào hệ thống hiển thị.");
+                    LOGGER.info("[AdminRequest] Đã cập nhật thành công " + requestList.size() + " tài khoản chờ duyệt vào hệ thống hiển thị.");
 
                 } catch (Exception e) {
-                    System.err.println("[AdminRequest] Lỗi trong quá trình phân tích danh sách người dùng: " + e.getMessage());
+                    LOGGER.severe("[AdminRequest] Lỗi trong quá trình phân tích danh sách người dùng: " + e.getMessage());
                     e.printStackTrace();
                 }
             } else {
-                System.err.println("[AdminRequest] Nhận gói tin SUCCESS nhưng không tìm thấy dữ liệu 'users'.");
+                LOGGER.severe("[AdminRequest] Nhận gói tin SUCCESS nhưng không tìm thấy dữ liệu 'users'.");
             }
         } else {
             // Trường hợp SERVER trả về lỗi (Ví dụ: Không có quyền truy cập, tài khoản không phải Admin,...)
@@ -81,7 +82,7 @@ public class AdminRequestHandler implements IClientHandler {
                     ? response.getMessage()
                     : "Không xác định được nguyên nhân thất bại từ Server.";
 
-            System.err.println("[AdminRequest] Thao tác thất bại: " + errorMsg);
+            LOGGER.severe("[AdminRequest] Thao tác thất bại: " + errorMsg);
         }
     }
 }

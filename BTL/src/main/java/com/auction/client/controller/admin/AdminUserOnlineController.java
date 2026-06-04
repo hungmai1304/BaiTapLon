@@ -15,9 +15,10 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 public class AdminUserOnlineController implements Initializable {
-
+private static final Logger LOGGER = Logger.getLogger(AdminUserOnlineController.class.getName());
     @FXML
     private TableView<User> userTable;
 
@@ -79,7 +80,7 @@ public class AdminUserOnlineController implements Initializable {
         // 5. Liên kết dữ liệu trực tiếp với AdminContext
         userTable.setItems(AdminContext.getInstance().getOnlineUsers());
 
-        System.out.println("[AdminUserOnlineController] Đã map chính xác các fx:id từ file FXML của bạn.");
+        LOGGER.info("[AdminUserOnlineController] Đã map chính xác các fx:id từ file FXML của bạn.");
     }
 
     /**
@@ -119,12 +120,12 @@ public class AdminUserOnlineController implements Initializable {
                                     String email = selectedUser.getEmail();
                                     Map<String, Object> requestData = new HashMap<>();
                                     requestData.put("email", email);
-                                    System.out.println("[AdminUserOnlineController] Admin yêu cầu đăng xuất tài khoản: " + email);
+                                    LOGGER.info("[AdminUserOnlineController] Admin yêu cầu đăng xuất tài khoản: " + email);
                                     RequestSender.send("ADMIN_LET_USER_LOGOUT", requestData);
                                 }
                             }
                             else {
-                                System.out.println("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
+                                LOGGER.info("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
                             }
                         });
 
@@ -135,7 +136,7 @@ public class AdminUserOnlineController implements Initializable {
                                 User selectedUser = getTableView().getItems().get(getIndex());
                                 if (selectedUser != null && selectedUser.getEmail() != null) {
                                     String email = selectedUser.getEmail();
-                                    System.out.println("[AdminUserOnlineController] Admin yêu cầu BAN tài khoản: " + email);
+                                    LOGGER.info("[AdminUserOnlineController] Admin yêu cầu BAN tài khoản: " + email);
 
                                     Map<String, Object> requestData = new HashMap<>();
                                     requestData.put("email", email);
@@ -144,7 +145,7 @@ public class AdminUserOnlineController implements Initializable {
                                 }
                             }
                             else {
-                                System.out.println("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
+                                LOGGER.info("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
                             }
                         });
 
@@ -155,7 +156,7 @@ public class AdminUserOnlineController implements Initializable {
                                 User selectedUser = getTableView().getItems().get(getIndex());
                                 if (selectedUser != null && selectedUser.getEmail() != null) {
                                     String email = selectedUser.getEmail();
-                                    System.out.println("[AdminUserOnlineController] Admin yêu cầu BLACKLIST tài khoản: " + email);
+                                    LOGGER.info("[AdminUserOnlineController] Admin yêu cầu BLACKLIST tài khoản: " + email);
 
                                     // Bọc email vào Map để đồng bộ cấu trúc JSON gửi lên Server
                                     Map<String, Object> requestData = new HashMap<>();
@@ -166,7 +167,7 @@ public class AdminUserOnlineController implements Initializable {
                                 }
                             }
                             else {
-                                System.out.println("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
+                                LOGGER.info("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
                             }
                         });
 

@@ -22,4 +22,11 @@ public class Art extends Product {
     public void setAge(int age) {
         this.age = age;
     }
+
+    @Override
+    public String getSpecialDetails() {
+        return "\n\n[Đặc tả Nghệ thuật]"
+                + "\n- Tác giả: " + (getArtistName() != null && !getArtistName().isEmpty() ? getArtistName() : "Khuyết danh")
+                + "\n- Tuổi đời: " + getAge() + " năm";
+    }
 }

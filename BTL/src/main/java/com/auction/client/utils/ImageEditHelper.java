@@ -7,8 +7,10 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.logging.Logger;
 
 public class ImageEditHelper {
+    private static final Logger LOGGER = Logger.getLogger(ImageEditHelper.class.getName());
 //1. Đọc file ảnh sang mảng byte
 
     public static byte[] fileToBytes(File file) throws IOException {

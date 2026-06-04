@@ -22,4 +22,11 @@ public class Jewelry extends Product {
     public void setType(String type) {
         this.type = type;
     }
+
+    @Override
+    public String getSpecialDetails() {
+        return "\n\n[Đặc tả Trang sức]"
+                + "\n- Loại trang sức: " + (type != null && !type.isEmpty() ? type : "Chưa cập nhật")
+                + "\n- Chất liệu: " + (material != null && !material.isEmpty() ? material : "Chưa cập nhật");
+    }
 }

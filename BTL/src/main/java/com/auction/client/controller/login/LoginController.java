@@ -17,9 +17,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.logging.Logger;
 
 public class LoginController {
-
+private static final Logger LOGGER = Logger.getLogger(LoginController.class.getName());
     @FXML private Label announcement;
     @FXML private TextField mail;
     @FXML private PasswordField passwordtext;
@@ -48,7 +49,7 @@ public class LoginController {
                     // handleGetText(null);
                 }
             } catch (IOException e) {
-                System.err.println("Không thể đọc file ghi nhớ.");
+                LOGGER.severe("Không thể đọc file ghi nhớ.");
             }
         }
     }
@@ -96,7 +97,7 @@ public class LoginController {
                 writer.write(password);
             }
         } catch (IOException e) {
-            System.err.println("Lỗi lưu file: " + e.getMessage());
+            LOGGER.severe("Lỗi lưu file: " + e.getMessage());
         }
     }
 

@@ -16,8 +16,10 @@ import javafx.scene.layout.VBox;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class BankController {
+    private static final Logger LOGGER = Logger.getLogger(BankController.class.getName());
     @FXML
     private VBox withdraw;
     @FXML
@@ -46,7 +48,7 @@ public class BankController {
         }
 
         // --- Cải tiến 1: Tự động yêu cầu Server cập nhật số dư mới nhất khi mở màn hình ---
-        System.out.println("[BankController] Yêu cầu cập nhật số dư mới nhất...");
+        LOGGER.info("[BankController] Yêu cầu cập nhật số dư mới nhất...");
         RequestSender.send(MessageType.GET_BALANCE_REQUEST, null);
     }
 

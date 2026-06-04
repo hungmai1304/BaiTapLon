@@ -14,9 +14,10 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 public class BannedListController implements Initializable {
-
+private static final Logger LOGGER = Logger.getLogger(BannedListController.class.getName());
     @FXML
     private TableView<User> userTable;
 
@@ -89,7 +90,7 @@ public class BannedListController implements Initializable {
         // Khởi tạo cột chức năng duy nhất: Bỏ cấm (đã bao gồm check quyền)
         setupActionColumn();
 
-        System.out.println("[UI] Khởi tạo BannedListController xong. Tự động gọi lệnh đòi danh sách từ Server...");
+        LOGGER.info("[UI] Khởi tạo BannedListController xong. Tự động gọi lệnh đòi danh sách từ Server...");
 
         // Chủ động gửi lệnh đòi danh sách bị cấm từ Server khi mở tab này
         RequestSender.send("ADMIN_GET_BANNED_LIST", new HashMap<>());
@@ -127,7 +128,7 @@ public class BannedListController implements Initializable {
                                 User selectedUser = getTableView().getItems().get(getIndex());
                                 if (selectedUser != null && selectedUser.getEmail() != null) {
                                     String email = selectedUser.getEmail();
-                                    System.out.println("[BannedListController] Admin yêu cầu BỎ CẤM tài khoản: " + email);
+                                    LOGGER.info("[BannedListController] Admin yêu cầu BỎ CẤM tài khoản: " + email);
 
                                     // Bọc email vào một đối tượng Map trước khi gửi để Server đồng bộ JSON tránh lỗi crash
                                     Map<String, Object> requestData = new HashMap<>();
@@ -136,7 +137,7 @@ public class BannedListController implements Initializable {
                                     RequestSender.send("ADMIN_LET_USER_UNBAN", requestData);
                                 }
                             } else {
-                                System.out.println("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
+                                LOGGER.info("[Từ chối hành động] Hệ thống ghi nhận bạn không có quyền Admin thực tế.");
                             }
                         });
 

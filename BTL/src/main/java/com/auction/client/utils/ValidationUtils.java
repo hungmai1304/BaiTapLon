@@ -1,6 +1,9 @@
 package com.auction.client.utils;
 
+import java.util.logging.Logger;
+
 public class ValidationUtils {
+    private static final Logger LOGGER = Logger.getLogger(ValidationUtils.class.getName());
 
     public static boolean isValidCredentials(String email, String password) {
         String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";

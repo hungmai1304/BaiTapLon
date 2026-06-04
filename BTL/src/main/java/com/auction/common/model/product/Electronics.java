@@ -22,4 +22,12 @@ public class Electronics extends Product {
     public void setCondition(String condition) {
         this.condition = condition;
     }
+
+    @Override
+    public String getSpecialDetails() {
+        return "\n\n[Đặc tả Thiết bị điện tử]"
+                + "\n- Xuất xứ: " + (origin != null && !origin.isEmpty() ? origin : "Chưa cập nhật")
+                + "\n- Tình trạng: " + (condition != null && !condition.isEmpty() ? condition : "Chưa cập nhật");
+    }
+
 }

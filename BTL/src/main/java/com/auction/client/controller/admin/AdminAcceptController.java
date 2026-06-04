@@ -15,10 +15,12 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
+
 import javafx.scene.control.cell.PropertyValueFactory;
 
 public class AdminAcceptController implements Initializable {
-
+private static final Logger LOGGER = Logger.getLogger(AdminAcceptController.class.getName());
     @FXML
     private TableView<User> userTable;
 
@@ -114,7 +116,7 @@ public class AdminAcceptController implements Initializable {
                         // --- XỬ LÝ SỰ KIỆN KHI BẤM NÚT DUYỆT ---
                         btnAllow.setOnAction(event -> {
                             User selectedUser = getTableView().getItems().get(getIndex());
-                            System.out.println("[AdminAccept] Chấp nhận yêu cầu làm Admin của: " + selectedUser.getEmail());
+                            LOGGER.info("[AdminAccept] Chấp nhận yêu cầu làm Admin của: " + selectedUser.getEmail());
 
                             // 1. Cập nhật trạng thái trực tiếp vào Object User dưới Client bộ nhớ tạm
                             selectedUser.setRole("ADMIN");
@@ -133,7 +135,7 @@ public class AdminAcceptController implements Initializable {
                         // --- XỬ LÝ SỰ KIỆN KHI BẤM NÚT TỪ CHỐI ---
                         btnReject.setOnAction(event -> {
                             User selectedUser = getTableView().getItems().get(getIndex());
-                            System.out.println("[AdminAccept] Từ chối yêu cầu làm Admin của: " + selectedUser.getEmail());
+                            LOGGER.info("[AdminAccept] Từ chối yêu cầu làm Admin của: " + selectedUser.getEmail());
 
                             // 1. Cập nhật trạng thái trực tiếp vào Object User dưới Client bộ nhớ tạm
                             selectedUser.setRole("BIDDER");

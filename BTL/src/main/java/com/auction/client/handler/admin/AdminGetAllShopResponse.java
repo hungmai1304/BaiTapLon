@@ -14,10 +14,11 @@ import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.logging.Logger;
 
 @ResponseHandler(type="ADMIN_GET_ALL_SHOP_RESPONSE")
 public class AdminGetAllShopResponse implements IClientHandler {
-
+private static final Logger LOGGER = Logger.getLogger(AdminGetAllShopResponse.class.getName());
     // Cấu hình Gson chuẩn xử lý Date nếu cấu trúc có mở rộng sau này
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, (com.google.gson.JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
@@ -46,14 +47,14 @@ public class AdminGetAllShopResponse implements IClientHandler {
                     AllShopController controller = SomeGlobal.getAllShopController();
                     if (controller != null) {
                         controller.updateTableData(listShops);
-                        System.out.println("[AdminGetAllShopResponse] Đã vẽ thành công dữ liệu của " + listShops.size() + " cửa hàng lên giao diện.");
+                        LOGGER.info("[AdminGetAllShopResponse] Đã vẽ thành công dữ liệu của " + listShops.size() + " cửa hàng lên giao diện.");
                     } else {
-                        System.err.println("[AdminGetAllShopResponse] Lỗi: Chưa khởi tạo hoặc không tìm thấy màn hình AllShopController!");
+                        LOGGER.severe("[AdminGetAllShopResponse] Lỗi: Chưa khởi tạo hoặc không tìm thấy màn hình AllShopController!");
                     }
                 });
             }
         } else {
-            System.err.println("[AdminGetAllShopResponse] Server báo lỗi: " + response.getMessage());
+            LOGGER.severe("[AdminGetAllShopResponse] Server báo lỗi: " + response.getMessage());
         }
     }
 }
