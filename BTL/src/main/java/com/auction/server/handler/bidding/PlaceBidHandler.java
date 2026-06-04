@@ -209,7 +209,7 @@ public class PlaceBidHandler implements IMessageHandler {
                             ? currentAuction.getStartPrice()
                             : (currentAuction.getCurrentPrice() + currentBot.getStepPrice());
 
-                    // TH 2: Vượt quá giá trần -> Cút lập tức, reset bộ đếm vì cấu trúc hàng đợi đã thay đổi
+                    // TH 2: Vượt quá giá trần ->  lập tức, reset bộ đếm vì cấu trúc hàng đợi đã thay đổi
                     if (nextBotPrice > currentBot.getMaxPrice()) {
                         queue.poll();
                         LOGGER.info("[BOT OUT] Bot " + currentBot.getEmail() + " vượt trần, bị loại.");
@@ -218,7 +218,7 @@ public class PlaceBidHandler implements IMessageHandler {
                         continue;
                     }
 
-                    // TH 3: Kiểm tra ví tiền trong DB -> Hết tiền cút lập tức, reset bộ đếm
+                    // TH 3: Kiểm tra ví tiền trong DB -> Hết tiền lập tức, reset bộ đếm
                     User botUserInfo = UserDao.getInstance().getUserByEmail(currentBot.getEmail());
                     if (botUserInfo == null || botUserInfo.getBalance() < nextBotPrice) {
                         queue.poll();
