@@ -36,7 +36,7 @@ public class GetActiveAuctionsClientHandler implements IClientHandler {
             .registerSubtype(Art.class, "Art")
             .registerSubtype(Electronics.class, "Electronics")
             .registerSubtype(Jewelry.class, "Jewelry")
-            .registerSubtype(Vehicle.class, "Vehicle")
+            .registerSubtype(Vehicle.class, "Vehicles")
             .registerSubtype(Fashion.class, "Fashion")
             .registerSubtype(Other.class, "Other");
     // CẬP NHẬT: Bộ Gson an toàn đọc được cả chuỗi Local lẫn chuỗi có Múi giờ (+07:00)
